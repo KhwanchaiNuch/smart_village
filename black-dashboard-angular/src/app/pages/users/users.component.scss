@@ -1,0 +1,10 @@
+@use "../../shared/sv-theme" as sv;
+
+.sv-page { padding: 16px; }
+.sv-header { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom: 14px; }
+.sv-title { margin:0; font-weight:700; }
+.sv-subtitle { margin-top:4px; opacity:0.8; }
+.sv-header-actions { display:flex; align-items:center; gap:10px; }
+.sv-search { width: 360px; }
+.sv-card { @include sv.card; background:#fff; }
+.sv-table { width:100%; }

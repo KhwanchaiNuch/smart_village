@@ -1,0 +1,78 @@
+<div class="content">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h4 class="card-title mb-0">รายงานสรุปชุมชน</h4>
+          <button class="btn btn-sm btn-primary" (click)="exportCsv()">
+            <i class="tim-icons icon-cloud-download-93"></i> Export CSV
+          </button>
+        </div>
+
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-3">
+              <label class="form-label">จังหวัด</label>
+              <select class="form-control">
+                <option>-- ทั้งหมด --</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">อำเภอ</label>
+              <select class="form-control">
+                <option>-- ทั้งหมด --</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">ตำบล</label>
+              <select class="form-control">
+                <option>-- ทั้งหมด --</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">หมู่บ้าน</label>
+              <select class="form-control">
+                <option>-- ทั้งหมด --</option>
+              </select>
+            </div>
+            <div class="col-md-6 mt-2">
+              <label class="form-label">ค้นหา</label>
+              <input class="form-control" [(ngModel)]="filters.keyword" placeholder="พิมพ์ชื่อพื้นที่ เช่น หมู่ 1" />
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table tablesorter">
+              <thead class="text-primary">
+                <tr>
+                  <th>พื้นที่</th>
+                  <th class="text-right">ครัวเรือน</th>
+                  <th class="text-right">ประชากร</th>
+                  <th class="text-right">ติดเตียง</th>
+                  <th class="text-right">ปัญหา (เปิด)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of filteredRows">
+                  <td>{{r.area}}</td>
+                  <td class="text-right">{{r.households}}</td>
+                  <td class="text-right">{{r.persons}}</td>
+                  <td class="text-right">{{r.bedridden}}</td>
+                  <td class="text-right">{{r.issuesOpen}}</td>
+                </tr>
+                <tr *ngIf="filteredRows.length===0">
+                  <td colspan="5" class="text-center text-muted py-4">ไม่พบข้อมูล</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-info mt-3 mb-0">
+            <b>หมายเหตุ:</b> หน้านี้เป็น UI จริง + mock data เพื่อให้เดินหน้าทำหน้าจอทั้งหมดก่อน
+            เดี๋ยวรอบถัดไปค่อยเชื่อม API และกำหนดสิทธิ์ตามจังหวัด/อำเภอ/ตำบล/หมู่บ้าน
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

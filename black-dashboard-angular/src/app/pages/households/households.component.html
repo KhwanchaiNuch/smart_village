@@ -1,0 +1,86 @@
+<div class="content">
+  <div class="row">
+    <div class="col-12">
+      <div class="sv-page">
+  <div class="sv-header">
+    <div>
+      <h2 class="sv-title">ครัวเรือน</h2>
+      <div class="sv-subtitle">เพิ่ม/แก้ไข/ลบข้อมูลครัวเรือน และค้นหาได้ทันที (ตัวอย่างหน้าจอ – ยังไม่ผูก API)</div>
+    </div>
+    <div class="sv-header-actions">
+      <mat-form-field appearance="outline" class="sv-search">
+        <mat-label>ค้นหา</mat-label>
+        <input matInput [(ngModel)]="filterText" placeholder="บ้านเลขที่/หัวหน้าครัวเรือน/พื้นที่" />
+        <button mat-icon-button matSuffix *ngIf="filterText" (click)="filterText=''" aria-label="clear">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" class="sv-btn" (click)="add()">
+        <mat-icon>add</mat-icon>
+        เพิ่มครัวเรือน
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="sv-card">
+    <div class="table-responsive">
+      <table mat-table [dataSource]="filteredRows" class="sv-table">
+
+        <ng-container matColumnDef="house_no">
+          <th mat-header-cell *matHeaderCellDef>บ้านเลขที่</th>
+          <td mat-cell *matCellDef="let r">{{r.house_no}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="village_name">
+          <th mat-header-cell *matHeaderCellDef>หมู่บ้าน</th>
+          <td mat-cell *matCellDef="let r">{{r.village_name}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="moo">
+          <th mat-header-cell *matHeaderCellDef>หมู่</th>
+          <td mat-cell *matCellDef="let r">{{r.moo}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="tambon">
+          <th mat-header-cell *matHeaderCellDef>ตำบล</th>
+          <td mat-cell *matCellDef="let r">{{r.tambon}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="amphur">
+          <th mat-header-cell *matHeaderCellDef>อำเภอ</th>
+          <td mat-cell *matCellDef="let r">{{r.amphur}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="province">
+          <th mat-header-cell *matHeaderCellDef>จังหวัด</th>
+          <td mat-cell *matCellDef="let r">{{r.province}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="head_name">
+          <th mat-header-cell *matHeaderCellDef>หัวหน้าครัวเรือน</th>
+          <td mat-cell *matCellDef="let r">{{r.head_name}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="members">
+          <th mat-header-cell *matHeaderCellDef>สมาชิก</th>
+          <td mat-cell *matCellDef="let r">{{r.members}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef style="width: 120px;">จัดการ</th>
+          <td mat-cell *matCellDef="let r">
+            <button mat-icon-button (click)="edit(r)" aria-label="edit"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="remove(r)" aria-label="delete"><mat-icon>delete</mat-icon></button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

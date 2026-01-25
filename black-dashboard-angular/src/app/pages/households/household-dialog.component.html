@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>
+  {{ data.mode === 'add' ? 'เพิ่มครัวเรือน' : 'แก้ไขครัวเรือน' }}
+</h2>
+
+<div mat-dialog-content>
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>เลขที่บ้าน</mat-label>
+      <input matInput formControlName="house_no" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>หมู่ (Moo)</mat-label>
+      <input matInput formControlName="moo" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="col2">
+      <mat-label>ชื่อหมู่บ้าน</mat-label>
+      <input matInput formControlName="village_name" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>ตำบล</mat-label>
+      <input matInput formControlName="tambon" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>อำเภอ</mat-label>
+      <input matInput formControlName="amphur" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>จังหวัด</mat-label>
+      <input matInput formControlName="province" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="col2">
+      <mat-label>หมายเหตุ</mat-label>
+      <input matInput formControlName="remark" />
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">ยกเลิก</button>
+  <button mat-flat-button color="primary" [disabled]="form.invalid" (click)="save()">
+    บันทึก
+  </button>
+</div>

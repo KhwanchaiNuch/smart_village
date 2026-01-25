@@ -1,0 +1,12 @@
+<div class="content">
+  <div class="row">
+    <div class="col-md-3" *ngFor="let s of stats">
+      <div class="card card-stats">
+        <div class="card-body text-center">
+          <p class="card-category">{{s.label}}</p>
+          <h3 class="card-title">{{s.value}}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

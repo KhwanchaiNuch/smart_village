@@ -1,0 +1,17 @@
+.sv-bg{
+  background: radial-gradient(circle at top, rgba(45,143,45,.45), rgba(0,0,0,.92)),
+              linear-gradient(135deg, rgba(212,175,55,.22), rgba(0,0,0,0));
+}
+.card-login .card-title{
+  color:#2d8f2d;
+  font-weight:800;
+  letter-spacing:1px;
+}
+.card-subtitle{ color:#d4af37; margin-top:-6px; }
+.sv-btn{
+  border:0;
+  background: linear-gradient(90deg, #2d8f2d, #d4af37);
+  color:#0b0b0b;
+  font-weight:700;
+}
+.sv-footer{ color:#d4af37; }

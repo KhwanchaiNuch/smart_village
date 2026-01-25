@@ -1,0 +1,21 @@
+/* Smart Village green-gold helper styles (works with template + Angular Material) */
+
+$green: #0f7b4b;
+$green-2: #0b5f39;
+$gold: #d4af37;
+$bg: #f6fbf8;
+
+// tiny palette helpers
+$gold-200: rgba($gold, 0.35);
+$green-200: rgba($green, 0.25);
+
+@mixin card {
+  border: 1px solid rgba(15, 123, 75, 0.15);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+}
+
+@mixin primaryButton {
+  background: linear-gradient(90deg, $green, $green-2);
+  color: #fff;
+}
