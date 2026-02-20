@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -13,14 +14,17 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-
-    private static final String SECRET =
-            "SMART_VILLAGE_SECRET_KEY_256_BIT_LONG_ENOUGH_123456";
-
-    private static final long EXP = 1000 * 60 * 60 * 8;
-
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+	
+	private final SecretKey key;
+    private long EXP;
+    
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-minutes}") long exp
+    ) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.EXP = exp;
+    }
 
     public String generateToken(String username, String role, Integer scopeId) {
         return Jwts.builder()

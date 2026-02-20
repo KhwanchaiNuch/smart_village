@@ -4,6 +4,8 @@ package com.k2dev.smart_village.controller;
 import com.k2dev.smart_village.entity.Province;
 import com.k2dev.smart_village.repository.ProvinceRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,7 +15,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProvinceController {
 
-    private final ProvinceRepository repo;
+	@Autowired
+    private ProvinceRepository repo;
 
     @GetMapping
     public List<Province> list() {
@@ -25,18 +28,17 @@ public class ProvinceController {
         return repo.findById(id).orElseThrow();
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public Province add(@RequestBody Province p) {
         return repo.save(p);
     }
 
-    @PutMapping("/{id}")
-    public Province edit(@PathVariable Integer id, @RequestBody Province p) {
-        p.setProvinceId(id);
+    @PostMapping("/edit")
+    public Province edit(@RequestBody Province p) {
         return repo.save(p);
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/delete")
     public void delete(@PathVariable Integer id) {
         repo.deleteById(id);
     }

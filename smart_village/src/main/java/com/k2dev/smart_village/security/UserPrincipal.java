@@ -2,6 +2,7 @@ package com.k2dev.smart_village.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +30,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> "ROLE_" + role);
+    	return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override

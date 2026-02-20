@@ -21,15 +21,14 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
+    protected boolean shouldNotFilter(HttpServletRequest request)
+            throws ServletException {
 
-        return uri.startsWith("/api/auth/")
-            || uri.startsWith("/smart_village/api/auth/")
-            || uri.startsWith("/swagger-ui")
-            || uri.startsWith("/smart_village/swagger-ui")
-            || uri.startsWith("/v3/api-docs")
-            || uri.startsWith("/smart_village/v3/api-docs");
+        String path = request.getServletPath();
+
+        return path.equals("/api/auth/login")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs");
     }
 
     @Override
