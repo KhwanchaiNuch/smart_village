@@ -1,5 +1,6 @@
 "use client"
 import ComponentCard from '@/components/common/ComponentCard';
+import DatePicker from '@/components/form/date-picker';
 import Input from '@/components/form/input/InputField';
 import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
@@ -25,8 +26,8 @@ export default function HouseHold() {
 		age: "",
 		marital_status: "",
 		education_level: "",
-		is_registered_in_village: "",
-		is_living_in_village: "",
+		is_registered_in_village: true,
+		is_living_in_village: true,
 		occupation: "",
 		secondary_occupation: "",
 		income_per_month: "",
@@ -56,6 +57,13 @@ export default function HouseHold() {
 		setForm(prev => ({
 			...prev,
 			gender: value,
+		}))
+	}
+
+	const handleRadioRegisterChange = (value: any) => {
+		setForm(prev => ({
+			...prev,
+			is_registered_in_village: value === "true",
 		}))
 	}
 
@@ -129,6 +137,7 @@ export default function HouseHold() {
 						/>
 					</div>
 				</div>
+
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<ComponentCard title="เพศ">
 						<div className="flex gap-6">
@@ -150,7 +159,182 @@ export default function HouseHold() {
 							/>
 						</div>
 					</ComponentCard>
+					<ComponentCard title="วันเกิด">
+						<DatePicker
+							id="date-picker"
+							placeholder="Select a date"
+							onChange={(dates, currentDateString) => {
+								form.birth_date = currentDateString
+								console.log({ dates, currentDateString });
+							}} />
+					</ComponentCard>
+
+					<ComponentCard title="มีทะเบียนบ้านในหมู่บ้านหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="reg-register-yes"
+								name="is_registered_in_village"
+								value="true"
+								checked={form.is_registered_in_village === true}
+								onChange={handleRadioRegisterChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="reg-register-no"
+								name="is_registered_in_village"
+								value="false"
+								checked={form.is_registered_in_village === false}
+								onChange={handleRadioRegisterChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
 				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>อายุ</Label>
+						<Input
+							name="age"
+							value={form.age}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>สถานะสมรส</Label>
+						<Input
+							name="marital_status"
+							value={form.marital_status}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<div>
+						<Label>ระดับการศึกษา</Label>
+						<Input
+							name="education_level"
+							value={form.education_level}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>อาชีพหลัก</Label>
+						<Input
+							name="occupation"
+							value={form.occupation}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>อาชีพรอง</Label>
+						<Input
+							name="secondary_occupation"
+							value={form.secondary_occupation}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<div>
+						<Label>รายได้/เดือน (โดยประมาณ)</Label>
+						<Input
+							name="income_per_month"
+							value={form.income_per_month}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+					<div>
+						<Label>รายการโรคประจำตัว</Label>
+						<Input
+							name="disease_list"
+							value={form.disease_list}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<ComponentCard title="ป่วย/มีโรคเรื้อรังหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="reg-register-yes"
+								name="is_registered_in_village"
+								value="true"
+								checked={form.is_registered_in_village === true}
+								onChange={handleRadioRegisterChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="reg-register-no"
+								name="is_registered_in_village"
+								value="false"
+								checked={form.is_registered_in_village === false}
+								onChange={handleRadioRegisterChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
+					
+
+					<ComponentCard title="ติดเตียงหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="reg-register-yes"
+								name="is_registered_in_village"
+								value="true"
+								checked={form.is_registered_in_village === true}
+								onChange={handleRadioRegisterChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="reg-register-no"
+								name="is_registered_in_village"
+								value="false"
+								checked={form.is_registered_in_village === false}
+								onChange={handleRadioRegisterChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
+					<ComponentCard title="ผู้พิการหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="reg-register-yes"
+								name="is_registered_in_village"
+								value="true"
+								checked={form.is_registered_in_village === true}
+								onChange={handleRadioRegisterChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="reg-register-no"
+								name="is_registered_in_village"
+								value="false"
+								checked={form.is_registered_in_village === false}
+								onChange={handleRadioRegisterChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
+				</div>
+
+
+
 
 
 				<button
