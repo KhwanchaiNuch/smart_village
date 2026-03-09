@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+
+  // ทำให้ build เป็น static
+  output: "export",
+  trailingSlash: true,
+
+  // ถ้าใช้ next/image ต้องปิด optimize
+  images: {
+    unoptimized: true,
+  },
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
@@ -9,16 +18,16 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
-    
-    turbopack: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
-  
+  },
+
 };
 
 export default nextConfig;
