@@ -1,239 +1,199 @@
 "use client"
 import ComponentCard from '@/components/common/ComponentCard';
-import Input from '@/components/form/input/InputField';
-import Radio from '@/components/form/input/Radio';
-import TextArea from '@/components/form/input/TextArea';
-import Label from '@/components/form/Label';
+import Badge from '@/components/ui/badge/Badge';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect, useState } from "react"
 
 export default function HouseHold() {
 
+	interface HouseHold {
+		"houseCondition": string,
+		"houseNo": string,
+		"householdId": number;
+		"internetAccess": boolean,
+		"remark": string,
+		"villageId": number;
+		"waterSystem": string,
+	}
+
+	const [tableData, setData] = useState<HouseHold[]>([]);
+
 	useEffect(() => {
 		document.title = "Smart Village | House Hold"
+		async function fetchData() {
+			try {
+				const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBRE1JTiIsInNjb3BlSWQiOjEsImlhdCI6MTc3MzIxMzExNCwiZXhwIjoxNzczMjE2NzE0fQ.QkkVg4hgnvA65W7o4Tav2Ee3T6__uMjki68tfkwQg2E";
+				const res = await fetch("http://43.229.149.138:8080/smart_village/api/households", {
+					method: "GET",
+					headers: {
+						"Content-Type": "*",
+						"Authorization": `Bearer ${token}`,
+					},
+				});
+				const json = await res.json();
+				setData(json);
+			} catch (err) {
+				console.error(err);
+			} finally {
+			}
+		}
+		fetchData();
 	}, []);
 
 
-	const [form, setForm] = useState({
-		household_id: "",
-		house_no: "",
-		house_registration_status: true,
-		house_registration_type: "",
-		gps_lat: "",
-		gps_lng: "",
-		house_condition: "",
-		water_system: "",
-		internet_access: true,
-		electricity_access: true,
-		remark: "",
-		created_at: "",
-		updated_at: "",
-	})
-
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({
-			...prev,
-			[name]: value,
-		}))
-	}
-
-	const handleRadioChange = (value: string) => {
-		setForm(prev => ({
-			...prev,
-			house_registration_status: value === "true",
-		}))
-	}
-
-	const handleRadioInternetChange = (value: string) => {
-		setForm(prev => ({
-			...prev,
-			internet_access: value === "true",
-		}))
-	}
-
-	const handleRadioElectricityChange = (value: string) => {
-		setForm(prev => ({
-			...prev,
-			electricity_access: value === "true",
-		}))
-	}
-
-	const handleTextAreaChange = (value: string) => {
-		setForm(prev => ({
-			...prev,
-			remark: value,
-		}))
-	}
-
-	const handleSubmit = () => {
-		console.log("ค่าที่กรอก:", form)
-	}
-
 	return (
 		<>
-			<ComponentCard title="รหัสครัวเรือน ( HouseHold )">
+			<ComponentCard title=''>
 
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<Label>รหัสครัวเรือน (PK)</Label>
-						<Input
-							name="household_id"
-							value={form.household_id}
-							onChange={handleChange}
-						/>
-					</div>
+				<div className="flex items-center justify-between mb-4">
+					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+						รหัสครัวเรือน (HouseHold)
+					</h3>
 
-					<div>
-						<Label>เลขที่บ้าน</Label>
-						<Input
-							name="house_no"
-							value={form.house_no}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
+					<a
+						href="/household/add"
+						className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							strokeWidth="1.5"
+							stroke="currentColor"
+							className="size-5"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+							/>
+						</svg>
+
+						Add
+					</a>
 				</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<Label>ประเภททะเบียนบ้าน/ลักษณะการอยู่อาศัย (ท.ร.14/หอพัก/เช่า ฯลฯ)</Label>
-						<Input
-							name="house_registration_type"
-							value={form.house_registration_type}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-					<div>
-						<Label>สภาพบ้าน (ดี/ปานกลาง/ทรุดโทรม)</Label>
-						<Input
-							name="house_condition"
-							value={form.house_condition}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-				</div>
+				<div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+					<div className="max-w-full overflow-x-auto">
+						<div className="min-w-[1102px]">
+							<Table>
+								<TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+									<TableRow>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											ID
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-ce text-theme-xs dark:text-gray-400"
+										>
+											House No.
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											House Condition
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											Internet Access
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											Water System
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											Remark
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											Action
+										</TableCell>
+									</TableRow>
+								</TableHeader>
 
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<ComponentCard title="มีชื่ออยู่ทะเบียนบ้านในหมู่บ้านหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-yes"
-								name="house_registration_status"
-								value="true"
-								checked={form.house_registration_status === true}
-								onChange={handleRadioChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-no"
-								name="house_registration_status"
-								value="false"
-								checked={form.house_registration_status === false}
-								onChange={handleRadioChange}
-								label="ไม่มี ( No )"
-							/>
+								{/* Table Body */}
+								<TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+									{tableData.map((order) => (
+										<TableRow key={order.householdId}>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.householdId}
+											</TableCell>
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.houseNo}
+											</TableCell>
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.houseCondition}
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.internetAccess}
+												<Badge
+													size="sm"
+													color={
+														order.internetAccess == true
+															? "success"
+															: order.internetAccess == false
+																? "warning"
+																: "error"
+													}
+												>
+													ใข้งานได้
+												</Badge>
+
+
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.waterSystem}
+											</TableCell>
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.remark}
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-center">
+													<a href={`/household/${order.householdId}`} className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600">
+														<svg
+
+															className="fill-current"
+															width="20"
+															height="20"
+															viewBox="0 0 20 20"
+															fill="none"
+															xmlns="http://www.w3.org/2000/svg"
+														>
+															<path
+																fillRule="evenodd"
+																clipRule="evenodd"
+																d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+																fill=""
+															/>
+														</svg>
+													</a>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
 						</div>
-					</ComponentCard>
-
-					<ComponentCard title="พิกัดบ้าน (ทำแผนที่/ลงพื้นที่)">
-						<div className="flex gap-6">
-							<div className="w-full">
-								<Label>พิกัดละติจูดบ้าน</Label>
-								<Input
-									className="w-full"
-									name="gps_lat"
-									value={form.gps_lat}
-									onChange={handleChange}
-								/>
-							</div>
-
-							<div className="w-full">
-								<Label>พิกัดลองจิจูดบ้าน</Label>
-								<Input
-									className="w-full"
-									name="gps_lng"
-									value={form.gps_lng}
-									onChange={handleChange}
-									type="text"
-								/>
-							</div>
-						</div>
-					</ComponentCard>
-				</div>
-
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<ComponentCard title="มีอินเทอร์เน็ตหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-yes-internet"
-								name="internet_access"
-								value="true"
-								checked={form.internet_access === true}
-								onChange={handleRadioInternetChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-no-internet"
-								name="internet_access"
-								value="false"
-								checked={form.internet_access === false}
-								onChange={handleRadioInternetChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-
-					<ComponentCard title="มีไฟฟ้าใช้หรือไม่ (ใช้คำนวณ Village Index/แผนโครงสร้างพื้นฐาน)">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-yes-electricity"
-								name="electricity_access"
-								value="true"
-								checked={form.electricity_access === true}
-								onChange={handleRadioElectricityChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-no-electricity"
-								name="electricity_access"
-								value="false"
-								checked={form.electricity_access === false}
-								onChange={handleRadioElectricityChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<Label>แหล่งน้ำใช้ (ประปา/บ่อบาดาล/น้ำฝน ฯลฯ)</Label>
-						<Input
-							name="water_system"
-							value={form.water_system}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-					<div>
-						<Label>Remark</Label>
-						<TextArea
-							value={form.remark}
-							onChange={handleTextAreaChange}
-							rows={1}
-						/>
 					</div>
 				</div>
-
-				<button
-					onClick={handleSubmit}
-					className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-				>
-					บันทึก
-				</button>
-			</ComponentCard>
+			</ComponentCard >
 		</>
 	)
 }

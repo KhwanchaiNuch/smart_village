@@ -1,19 +1,40 @@
-import type { Metadata } from "next";
+"use client"
 import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
-import React from "react";
+import { useEffect } from "react";
 import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
 import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "@/components/ecommerce/StatisticsChart";
 import RecentOrders from "@/components/ecommerce/RecentOrders";
 import DemographicCard from "@/components/ecommerce/DemographicCard";
 
-export const metadata: Metadata = {
-    title:
-        "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-    description: "This is Next.js Home for TailAdmin Dashboard Template",
-};
+export default function Home() {
 
-export default function Ecommerce() {
+    useEffect(() => {
+        document.title = "Smart Village | Home";
+        async function fetchData() {
+            try {
+                const res = await fetch(
+                    "http://43.229.149.138:8080/smart_village/api/auth/login",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            username: "admin",
+                            password: "1234",
+                        }),
+                    }
+                );
+                const json = await res.json();
+                console.log(json);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        fetchData();
+    }, []);
+
     return (
         <div className="grid grid-cols-12 gap-4 md:gap-6">
             <div className="col-span-12 space-y-6 xl:col-span-7">
