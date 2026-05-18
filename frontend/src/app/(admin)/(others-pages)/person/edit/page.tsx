@@ -1,0 +1,403 @@
+"use client"
+import ComponentCard from '@/components/common/ComponentCard';
+import DatePicker from '@/components/form/date-picker';
+import Input from '@/components/form/input/InputField';
+import Radio from '@/components/form/input/Radio';
+import Label from '@/components/form/Label';
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+const axios = require('axios');
+
+export default function PersonEdit() {
+	const searchParams = useSearchParams()
+	const id = searchParams.get("id")
+
+	const [form, setForm] = useState({
+		person_id: "",
+		household_id: "",
+		cid: "",
+		title: "",
+		first_name: "",
+		last_name: "",
+		gender: "",
+		birth_date: "",
+		age: "",
+		marital_status: "",
+		education_level: "",
+		is_registered_in_village: true,
+		is_living_in_village: true,
+		occupation: "",
+		secondary_occupation: "",
+		income_per_month: "",
+		is_sick: false,
+		disease_list: "",
+		is_bedridden: false,
+		is_disabled: false,
+		disability_type: "",
+		is_elderly: "",
+		living_alone: "",
+		welfare_card: "",
+		other_welfare: "",
+		status: "",
+	})
+
+	useEffect(() => {
+		document.title = "Smart Village | Person Edit"
+		async function fetchData() {
+			try {
+				const token = localStorage.getItem("token")
+				const config = {
+					method: 'get',
+					maxBodyLength: Infinity,
+					url: `http://43.229.149.138:8080/smart_village/api/persons/${id}`,
+					headers: {
+						"Authorization": `Bearer ${token}`,
+					}
+				}
+				const response = await axios.request(config)
+				const data = response.data
+				setForm({
+					person_id: data.personId?.toString() || "",
+					household_id: data.householdId?.toString() || "",
+					cid: data.cid || "",
+					title: data.title || "",
+					first_name: data.firstName || "",
+					last_name: data.lastName || "",
+					gender: data.gender || "",
+					birth_date: data.birthDate || "",
+					age: data.age?.toString() || "",
+					marital_status: data.maritalStatus || "",
+					education_level: data.educationLevel || "",
+					is_registered_in_village: data.isRegisteredInVillage ?? true,
+					is_living_in_village: data.isLivingInVillage ?? true,
+					occupation: data.occupation || "",
+					secondary_occupation: data.secondaryOccupation || "",
+					income_per_month: data.incomePerMonth?.toString() || "",
+					is_sick: data.isSick ?? false,
+					disease_list: data.diseaseList || "",
+					is_bedridden: data.isBedridden ?? false,
+					is_disabled: data.isDisabled ?? false,
+					disability_type: data.disabilityType || "",
+					is_elderly: data.isElderly?.toString() || "",
+					living_alone: data.livingAlone?.toString() || "",
+					welfare_card: data.welfareCard || "",
+					other_welfare: data.otherWelfare || "",
+					status: data.status || "",
+				})
+			} catch (err) {
+				console.error(err)
+			}
+		}
+		if (id) fetchData()
+	}, [id])
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target
+		setForm(prev => ({ ...prev, [name]: value }))
+	}
+
+	const handleRadioChange = (value: string) => {
+		setForm(prev => ({ ...prev, gender: value }))
+	}
+
+	const handleRadioRegisterChange = (value: string) => {
+		setForm(prev => ({ ...prev, is_registered_in_village: value === "true" }))
+	}
+
+	const handleRadioSickChange = (value: string) => {
+		setForm(prev => ({ ...prev, is_sick: value === "true" }))
+	}
+
+	const handleRadioBedriddenChange = (value: string) => {
+		setForm(prev => ({ ...prev, is_bedridden: value === "true" }))
+	}
+
+	const handleRadioDisabledChange = (value: string) => {
+		setForm(prev => ({ ...prev, is_disabled: value === "true" }))
+	}
+
+	const handleSubmit = async () => {
+		try {
+			const token = localStorage.getItem("token")
+			const config = {
+				method: 'put',
+				maxBodyLength: Infinity,
+				url: `http://43.229.149.138:8080/smart_village/api/persons/${id}`,
+				headers: {
+					"Authorization": `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+				data: JSON.stringify(form),
+			}
+			const response = await axios.request(config)
+			console.log("อัปเดตสำเร็จ:", response.data)
+		} catch (err) {
+			console.error("อัปเดตล้มเหลว:", err)
+		}
+	}
+
+	return (
+		<>
+			<ComponentCard title="แก้ไขบุคคล ( Edit Person )">
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>รหัสบุคคล (PK)</Label>
+						<Input
+							name="person_id"
+							value={form.person_id}
+							onChange={handleChange}
+							disabled
+						/>
+					</div>
+
+					<div>
+						<Label>รหัสครัวเรือน (FK)</Label>
+						<Input
+							name="household_id"
+							value={form.household_id}
+							onChange={handleChange}
+							disabled
+						/>
+					</div>
+
+					<div>
+						<Label>เลขบัตรประชาชน</Label>
+						<Input
+							name="cid"
+							value={form.cid}
+							onChange={handleChange}
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>คำนำหน้า</Label>
+						<Input
+							name="title"
+							value={form.title}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<div>
+						<Label>ชื่อ</Label>
+						<Input
+							name="first_name"
+							value={form.first_name}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<div>
+						<Label>นามสกุล</Label>
+						<Input
+							name="last_name"
+							value={form.last_name}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<ComponentCard title="เพศ">
+						<div className="flex gap-6">
+							<Radio
+								id="gender-male"
+								name="gender"
+								value="ชาย"
+								checked={form.gender === 'ชาย'}
+								onChange={handleRadioChange}
+								label="ชาย ( Male )"
+							/>
+							<Radio
+								id="gender-female"
+								name="gender"
+								value="หญิง"
+								checked={form.gender === 'หญิง'}
+								onChange={handleRadioChange}
+								label="หญิง ( Female )"
+							/>
+						</div>
+					</ComponentCard>
+					<ComponentCard title="วันเกิด">
+						<DatePicker
+							id="date-picker"
+							placeholder="Select a date"
+							defaultDate={form.birth_date}
+							onChange={(dates, currentDateString) => {
+								setForm(prev => ({ ...prev, birth_date: currentDateString }))
+							}} />
+					</ComponentCard>
+
+					<ComponentCard title="มีทะเบียนบ้านในหมู่บ้านหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="reg-register-yes"
+								name="is_registered_in_village"
+								value="true"
+								checked={form.is_registered_in_village === true}
+								onChange={handleRadioRegisterChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="reg-register-no"
+								name="is_registered_in_village"
+								value="false"
+								checked={form.is_registered_in_village === false}
+								onChange={handleRadioRegisterChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>อายุ</Label>
+						<Input
+							name="age"
+							value={form.age}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>สถานะสมรส</Label>
+						<Input
+							name="marital_status"
+							value={form.marital_status}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>ระดับการศึกษา</Label>
+						<Input
+							name="education_level"
+							value={form.education_level}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div>
+						<Label>อาชีพหลัก</Label>
+						<Input
+							name="occupation"
+							value={form.occupation}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>อาชีพรอง</Label>
+						<Input
+							name="secondary_occupation"
+							value={form.secondary_occupation}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+					<div>
+						<Label>รายได้/เดือน (โดยประมาณ)</Label>
+						<Input
+							name="income_per_month"
+							value={form.income_per_month}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+					<div>
+						<Label>รายการโรคประจำตัว</Label>
+						<Input
+							name="disease_list"
+							value={form.disease_list}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+
+					<ComponentCard title="ป่วย/มีโรคเรื้อรังหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="sick-yes"
+								name="is_sick"
+								value="true"
+								checked={form.is_sick === true}
+								onChange={handleRadioSickChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="sick-no"
+								name="is_sick"
+								value="false"
+								checked={form.is_sick === false}
+								onChange={handleRadioSickChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
+					<ComponentCard title="ติดเตียงหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="bedridden-yes"
+								name="is_bedridden"
+								value="true"
+								checked={form.is_bedridden === true}
+								onChange={handleRadioBedriddenChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="bedridden-no"
+								name="is_bedridden"
+								value="false"
+								checked={form.is_bedridden === false}
+								onChange={handleRadioBedriddenChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+
+					<ComponentCard title="ผู้พิการหรือไม่">
+						<div className="flex gap-6">
+							<Radio
+								id="disabled-yes"
+								name="is_disabled"
+								value="true"
+								checked={form.is_disabled === true}
+								onChange={handleRadioDisabledChange}
+								label="มี ( Yes )"
+							/>
+							<Radio
+								id="disabled-no"
+								name="is_disabled"
+								value="false"
+								checked={form.is_disabled === false}
+								onChange={handleRadioDisabledChange}
+								label="ไม่มี ( No )"
+							/>
+						</div>
+					</ComponentCard>
+				</div>
+
+				<button
+					onClick={handleSubmit}
+					className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+				>
+					บันทึก
+				</button>
+			</ComponentCard>
+		</>
+	)
+}

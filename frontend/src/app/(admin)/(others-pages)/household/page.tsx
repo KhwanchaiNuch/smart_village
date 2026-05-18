@@ -175,7 +175,7 @@ export default function HouseHold() {
 
 											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 												<div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-center">
-													<a href={`/household/${order.householdId}`} className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600">
+													<a href={`/household/edit?id=${order.householdId}`} className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600">
 														<svg
 
 															className="fill-current"
