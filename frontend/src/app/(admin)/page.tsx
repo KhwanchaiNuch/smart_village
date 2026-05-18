@@ -27,7 +27,8 @@ export default function Home() {
                     }
                 );
                 const json = await res.json();
-                console.log(json);
+                console.log("[ RESPONSE ] AUTH LOGIN =>", json);
+                localStorage.setItem("token", json.token);
             } catch (err) {
                 console.error(err);
             }

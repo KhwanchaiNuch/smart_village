@@ -1,349 +1,226 @@
 "use client"
 import ComponentCard from '@/components/common/ComponentCard';
-import DatePicker from '@/components/form/date-picker';
-import Input from '@/components/form/input/InputField';
-import Radio from '@/components/form/input/Radio';
-import TextArea from '@/components/form/input/TextArea';
-import Label from '@/components/form/Label';
+import Badge from '@/components/ui/badge/Badge';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect, useState } from "react"
+const axios = require('axios');
 
-export default function HouseHold() {
+export default function Person() {
+
+	interface Person {
+		"firstName": string,
+		"householdId": number,
+		"isBedridden": boolean,
+		"isSick": boolean,
+		"lastName": string,
+		"occupation": string,
+		"personId": number
+	}
+
+	const [tableData, setData] = useState<Person[]>([]);
 
 	useEffect(() => {
 		document.title = "Smart Village | Person"
+		async function fetchData() {
+			try {
+				let rawtoken = localStorage.getItem("token");
+				const token = rawtoken;
+				let config = {
+					method: 'get',
+					maxBodyLength: Infinity,
+					url: 'http://43.229.149.138:8080/smart_village/api/persons',
+					headers: {
+						"Authorization": `Bearer ${token}`,
+
+					}
+				};
+				axios.request(config)
+					.then((response: any) => {
+						console.log("[ RESPONSE ] PERSON DATAS =>", response.data);
+						setData(response.data);
+					})
+					.catch((error: any) => {
+						console.log(error);
+					});
+			} catch (err) {
+				console.error(err);
+			} finally {
+			}
+		}
+		fetchData();
 	}, []);
 
 
-	const [form, setForm] = useState({
-		person_id: "",
-		household_id: "",
-		cid: "",
-		title: "",
-		first_name: "",
-		last_name: "",
-		gender: "",
-		birth_date: "",
-		age: "",
-		marital_status: "",
-		education_level: "",
-		is_registered_in_village: true,
-		is_living_in_village: true,
-		occupation: "",
-		secondary_occupation: "",
-		income_per_month: "",
-		is_sick: "",
-		disease_list: "",
-		is_bedridden: "",
-		is_disabled: "",
-		disability_type: "",
-		is_elderly: "",
-		living_alone: "",
-		welfare_card: "",
-		other_welfare: "",
-		status: "",
-		created_at: "",
-		updated_at: ""
-	})
-
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({
-			...prev,
-			[name]: value,
-		}))
-	}
-
-	const handleRadioChange = (value: string) => {
-		setForm(prev => ({
-			...prev,
-			gender: value,
-		}))
-	}
-
-	const handleRadioRegisterChange = (value: any) => {
-		setForm(prev => ({
-			...prev,
-			is_registered_in_village: value === "true",
-		}))
-	}
-
-	const handleSubmit = () => {
-		console.log("ค่าที่กรอก:", form)
-	}
-
 	return (
 		<>
-			<ComponentCard title="บุคคล ( Person )">
+			<ComponentCard title=''>
+				<div className="flex items-center justify-between mb-4">
+					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+						รหัสบุคคล (Person)
+					</h3>
+					<a
+						href="/household/add"
+						className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							strokeWidth="1.5"
+							stroke="currentColor"
+							className="size-5"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+							/>
+						</svg>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<div>
-						<Label>รหัสบุคคล (PK)</Label>
-						<Input
-							name="person_id"
-							value={form.person_id}
-							onChange={handleChange}
-						/>
-					</div>
-
-					<div>
-						<Label>รหัสครัวเรือน (PK)</Label>
-						<Input
-							disabled
-							name="household_id"
-							value={form.household_id}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-
-					<div>
-						<Label>เลขบัตรประชาชน</Label>
-						<Input
-							name="cid"
-							value={form.cid}
-							onChange={handleChange}
-						/>
-					</div>
+						Add
+					</a>
 				</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<div>
-						<Label>คำนำหน้า</Label>
-						<Input
-							name="title"
-							value={form.title}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
+				<div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+					<div className="max-w-full overflow-x-auto">
+						<div className="min-w-[1102px]">
+							<Table>
+								<TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+									<TableRow>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											ลำดับ
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-ce text-theme-xs dark:text-gray-400"
+										>
+											ชื่อ
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											นามสกุล
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											อาชีพ
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											ป่วย/มีโรคเรื้อรังหรือไม่
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											ติดเตียงหรือไม่
+										</TableCell>
+										<TableCell
+											isHeader
+											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
+										>
+											Action
+										</TableCell>
+									</TableRow>
+								</TableHeader>
 
-					<div>
-						<Label>ชื่อ</Label>
-						<Input
-							name="first_name"
-							value={form.first_name}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
 
-					<div>
-						<Label>นามสกุล</Label>
-						<Input
-							name="last_name"
-							value={form.last_name}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-				</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<ComponentCard title="เพศ">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-yes"
-								name="gender"
-								value="ชาย"
-								checked={form.gender === 'ชาย'}
-								onChange={handleRadioChange}
-								label="ชาย ( Male )"
-							/>
-							<Radio
-								id="reg-no"
-								name="gender"
-								value="หญิง"
-								checked={form.gender === 'หญิง'}
-								onChange={handleRadioChange}
-								label="หญิง ( Female )"
-							/>
+								{/* Table Body */}
+								<TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+									{tableData.map((order) => (
+										<TableRow key={order.personId}>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.personId}
+											</TableCell>
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.firstName}
+											</TableCell>
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.lastName}
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												{order.occupation}
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<Badge
+													size="sm"
+													color={
+														order.isSick === true
+															? "error"
+															: order.isSick === false
+																? "success"
+																: "warning"
+													}
+												>
+													{order.isSick === true
+														? "ป่วย"
+														: order.isSick === false
+															? "ไม่ป่วย"
+															: "ไม่มีข้อมูล"}
+												</Badge>
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<Badge
+													size="sm"
+													color={
+														order.isBedridden === true
+															? "error"
+															: order.isBedridden === false
+																? "success"
+																: "warning"
+													}
+												>
+													{order.isBedridden === true
+														? "ติดเตียง"
+														: order.isBedridden === false
+															? "ไม่ติดเตียง"
+															: "ไม่มีข้อมูล"}
+												</Badge>
+											</TableCell>
+
+											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-center">
+													<a href={`/person/edit/${order.householdId}`} className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600">
+														<svg
+
+															className="fill-current"
+															width="20"
+															height="20"
+															viewBox="0 0 20 20"
+															fill="none"
+															xmlns="http://www.w3.org/2000/svg"
+														>
+															<path
+																fillRule="evenodd"
+																clipRule="evenodd"
+																d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+																fill=""
+															/>
+														</svg>
+													</a>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
 						</div>
-					</ComponentCard>
-					<ComponentCard title="วันเกิด">
-						<DatePicker
-							id="date-picker"
-							placeholder="Select a date"
-							onChange={(dates, currentDateString) => {
-								form.birth_date = currentDateString
-								console.log({ dates, currentDateString });
-							}} />
-					</ComponentCard>
-
-					<ComponentCard title="มีทะเบียนบ้านในหมู่บ้านหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-register-yes"
-								name="is_registered_in_village"
-								value="true"
-								checked={form.is_registered_in_village === true}
-								onChange={handleRadioRegisterChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-register-no"
-								name="is_registered_in_village"
-								value="false"
-								checked={form.is_registered_in_village === false}
-								onChange={handleRadioRegisterChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<div>
-						<Label>อายุ</Label>
-						<Input
-							name="age"
-							value={form.age}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-					<div>
-						<Label>สถานะสมรส</Label>
-						<Input
-							name="marital_status"
-							value={form.marital_status}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-
-					<div>
-						<Label>ระดับการศึกษา</Label>
-						<Input
-							name="education_level"
-							value={form.education_level}
-							onChange={handleChange}
-							type="text"
-						/>
 					</div>
 				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<div>
-						<Label>อาชีพหลัก</Label>
-						<Input
-							name="occupation"
-							value={form.occupation}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-					<div>
-						<Label>อาชีพรอง</Label>
-						<Input
-							name="secondary_occupation"
-							value={form.secondary_occupation}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-
-					<div>
-						<Label>รายได้/เดือน (โดยประมาณ)</Label>
-						<Input
-							name="income_per_month"
-							value={form.income_per_month}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-					<div>
-						<Label>รายการโรคประจำตัว</Label>
-						<Input
-							name="disease_list"
-							value={form.disease_list}
-							onChange={handleChange}
-							type="text"
-						/>
-					</div>
-
-					<ComponentCard title="ป่วย/มีโรคเรื้อรังหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-register-yes"
-								name="is_registered_in_village"
-								value="true"
-								checked={form.is_registered_in_village === true}
-								onChange={handleRadioRegisterChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-register-no"
-								name="is_registered_in_village"
-								value="false"
-								checked={form.is_registered_in_village === false}
-								onChange={handleRadioRegisterChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-
-					
-
-					<ComponentCard title="ติดเตียงหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-register-yes"
-								name="is_registered_in_village"
-								value="true"
-								checked={form.is_registered_in_village === true}
-								onChange={handleRadioRegisterChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-register-no"
-								name="is_registered_in_village"
-								value="false"
-								checked={form.is_registered_in_village === false}
-								onChange={handleRadioRegisterChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-
-					<ComponentCard title="ผู้พิการหรือไม่">
-						<div className="flex gap-6">
-							<Radio
-								id="reg-register-yes"
-								name="is_registered_in_village"
-								value="true"
-								checked={form.is_registered_in_village === true}
-								onChange={handleRadioRegisterChange}
-								label="มี ( Yes )"
-							/>
-							<Radio
-								id="reg-register-no"
-								name="is_registered_in_village"
-								value="false"
-								checked={form.is_registered_in_village === false}
-								onChange={handleRadioRegisterChange}
-								label="ไม่มี ( No )"
-							/>
-						</div>
-					</ComponentCard>
-
-				</div>
-
-
-
-
-
-				<button
-					onClick={handleSubmit}
-					className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-				>
-					บันทึก
-				</button>
-			</ComponentCard>
+			</ComponentCard >
 		</>
 	)
 }

@@ -3,6 +3,7 @@ import ComponentCard from '@/components/common/ComponentCard';
 import Badge from '@/components/ui/badge/Badge';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect, useState } from "react"
+const axios = require('axios');
 
 export default function HouseHold() {
 
@@ -22,16 +23,25 @@ export default function HouseHold() {
 		document.title = "Smart Village | House Hold"
 		async function fetchData() {
 			try {
-				const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBRE1JTiIsInNjb3BlSWQiOjEsImlhdCI6MTc3MzIxMzExNCwiZXhwIjoxNzczMjE2NzE0fQ.QkkVg4hgnvA65W7o4Tav2Ee3T6__uMjki68tfkwQg2E";
-				const res = await fetch("http://43.229.149.138:8080/smart_village/api/households", {
-					method: "GET",
+				let rawtoken = localStorage.getItem("token");
+				const token = rawtoken;
+				let config = {
+					method: 'get',
+					maxBodyLength: Infinity,
+					url: 'http://43.229.149.138:8080/smart_village/api/households',
 					headers: {
-						"Content-Type": "*",
 						"Authorization": `Bearer ${token}`,
-					},
-				});
-				const json = await res.json();
-				setData(json);
+
+					}
+				};
+				axios.request(config)
+					.then((response: any) => {
+						console.log("[ RESPONSE ] DATA HOUSE HOLDS =>", response.data);
+						setData(response.data);
+					})
+					.catch((error: any) => {
+						console.log(error);
+					});
 			} catch (err) {
 				console.error(err);
 			} finally {
@@ -44,12 +54,10 @@ export default function HouseHold() {
 	return (
 		<>
 			<ComponentCard title=''>
-
 				<div className="flex items-center justify-between mb-4">
 					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
 						รหัสครัวเรือน (HouseHold)
 					</h3>
-
 					<a
 						href="/household/add"
 						className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
@@ -140,21 +148,22 @@ export default function HouseHold() {
 											</TableCell>
 
 											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-												{order.internetAccess}
 												<Badge
 													size="sm"
 													color={
-														order.internetAccess == true
+														order.internetAccess === true
 															? "success"
-															: order.internetAccess == false
-																? "warning"
-																: "error"
+															: order.internetAccess === false
+																? "error"
+																: "warning"
 													}
 												>
-													ใข้งานได้
+													{order.internetAccess === true
+														? "ใช้งานได้"
+														: order.internetAccess === false
+															? "ไม่สามารถใช้งานได้"
+															: "ไม่มีข้อมูล"}
 												</Badge>
-
-
 											</TableCell>
 
 											<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
