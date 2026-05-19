@@ -14,6 +14,7 @@ export default function HouseHoldEdit() {
 
 	const [form, setForm] = useState({
 		household_id: "",
+		village_id: "",
 		house_no: "",
 		house_registration_status: true,
 		house_registration_type: "",
@@ -43,6 +44,7 @@ export default function HouseHoldEdit() {
 				const data = response.data
 				setForm({
 					household_id: data.householdId?.toString() || "",
+					village_id: data.villageId?.toString() || "",
 					house_no: data.houseNo || "",
 					house_registration_status: data.houseRegistrationStatus ?? true,
 					house_registration_type: data.houseRegistrationType || "",
@@ -85,10 +87,11 @@ export default function HouseHoldEdit() {
 	const handleSubmit = async () => {
 		try {
 			const token = localStorage.getItem("token")
+			console.log("[ REQUEST ] HOUSE HOLD DATAS EDIT =>", form);
 			const config = {
-				method: 'put',
+				method: 'post',
 				maxBodyLength: Infinity,
-				url: `http://43.229.149.138:8080/smart_village/api/households/${id}`,
+				url: `http://43.229.149.138:8080/smart_village/api/households/edit`,
 				headers: {
 					"Authorization": `Bearer ${token}`,
 					"Content-Type": "application/json",

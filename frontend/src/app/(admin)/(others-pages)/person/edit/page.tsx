@@ -119,10 +119,11 @@ export default function PersonEdit() {
 	const handleSubmit = async () => {
 		try {
 			const token = localStorage.getItem("token")
+			console.log("[ REQUEST ] PERSON DATAS EDIT =>", form);
 			const config = {
-				method: 'put',
+				method: 'post',
 				maxBodyLength: Infinity,
-				url: `http://43.229.149.138:8080/smart_village/api/persons/${id}`,
+				url: `http://43.229.149.138:8080/smart_village/api/persons/edit`,
 				headers: {
 					"Authorization": `Bearer ${token}`,
 					"Content-Type": "application/json",
