@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
 	BoxCubeIcon,
+	InfoIcon,
 	CalenderIcon,
 	ChevronDownIcon,
 	GridIcon,
@@ -36,6 +37,11 @@ const navItems: NavItem[] = [
 		icon: <UserCircleIcon/>,
 		name: "บุคคล",
 		path: "/person",
+	},
+	{
+		icon: <InfoIcon/>,
+		name: "สุขภาพเชิงตัวเลข",
+		path: "/healthrecord",
 	},
 	{
 		icon: <GridIcon />,
