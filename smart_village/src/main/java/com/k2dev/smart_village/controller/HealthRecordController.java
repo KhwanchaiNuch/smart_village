@@ -40,8 +40,8 @@ public class HealthRecordController {
 		return repo.save(h);
 	}
 
-	@PostMapping("/delete")
-	public void del(@PathVariable Integer id) {
-		repo.deleteById(id);
-	}
+	@DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        repo.deleteById(id);
+    }
 }

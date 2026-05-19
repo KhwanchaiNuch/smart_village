@@ -34,7 +34,7 @@ public class AmphurController {
         return repo.save(a);
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         repo.deleteById(id);
     }

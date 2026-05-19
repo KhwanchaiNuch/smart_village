@@ -38,7 +38,7 @@ public class ProvinceController {
         return repo.save(p);
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         repo.deleteById(id);
     }

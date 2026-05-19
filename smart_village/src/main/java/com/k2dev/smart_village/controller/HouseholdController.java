@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/api/households")
 @RequiredArgsConstructor
 public class HouseholdController {
-	
+
 	@Autowired
 	private HouseholdRepository repo;
 
@@ -33,12 +33,12 @@ public class HouseholdController {
 	}
 
 	@PostMapping("/edit")
-	public Household edit(@PathVariable Integer id, @RequestBody Household h) {
+	public Household edit(@RequestBody Household h) {
 		return repo.save(h);
 	}
 
-	@PostMapping("/delete")
-	public void del(@PathVariable Integer id) {
-		repo.deleteById(id);
-	}
+	@DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        repo.deleteById(id);
+    }
 }

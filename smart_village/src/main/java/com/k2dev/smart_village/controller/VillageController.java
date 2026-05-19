@@ -39,7 +39,7 @@ public class VillageController {
         return repo.save(v);
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         repo.deleteById(id);
     }

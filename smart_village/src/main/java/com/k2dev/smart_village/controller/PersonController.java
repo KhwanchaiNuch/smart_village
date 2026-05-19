@@ -38,8 +38,8 @@ public class PersonController {
 		return repo.save(p);
 	}
 
-	@PostMapping("/delete")
-	public void del(@PathVariable Integer id) {
-		repo.deleteById(id);
-	}
+	@DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        repo.deleteById(id);
+    }
 }
