@@ -4,13 +4,17 @@ import Input from '@/components/form/input/InputField';
 import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
-import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-const axios = require('axios');
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
+import Swal from "sweetalert2";
+
+const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 export default function HouseHoldEdit() {
-	const searchParams = useSearchParams()
-	const id = searchParams.get("id")
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const id = searchParams.get("id");
 
 	const [form, setForm] = useState({
 		household_id: "",
@@ -25,23 +29,19 @@ export default function HouseHoldEdit() {
 		internet_access: true,
 		electricity_access: true,
 		remark: "",
-	})
+	});
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
-		document.title = "Smart Village | House Hold Edit"
+		document.title = "Smart Village | House Hold Edit";
+		if (!id) return;
 		async function fetchData() {
 			try {
-				const token = localStorage.getItem("token")
-				const config = {
-					method: 'get',
-					maxBodyLength: Infinity,
-					url: `http://43.229.149.138:8080/smart_village/api/households/${id}`,
-					headers: {
-						"Authorization": `Bearer ${token}`,
-					}
-				}
-				const response = await axios.request(config)
-				const data = response.data
+				const token = localStorage.getItem("token");
+				const response = await axios.get(`${API_BASE}/households/${id}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const data = response.data;
 				setForm({
 					household_id: data.householdId?.toString() || "",
 					village_id: data.villageId?.toString() || "",
@@ -55,95 +55,74 @@ export default function HouseHoldEdit() {
 					internet_access: data.internetAccess ?? true,
 					electricity_access: data.electricityAccess ?? true,
 					remark: data.remark || "",
-				})
+				});
 			} catch (err) {
-				console.error(err)
+				console.error(err);
+				Swal.fire({
+					icon: "error",
+					title: "โหลดข้อมูลไม่สำเร็จ",
+					text: "ไม่สามารถดึงข้อมูลครัวเรือนได้ กรุณาลองใหม่อีกครั้ง",
+				});
 			}
 		}
-		if (id) fetchData()
-	}, [id])
+		fetchData();
+	}, [id]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({ ...prev, [name]: value }))
-	}
-
-	const handleRadioChange = (value: string) => {
-		setForm(prev => ({ ...prev, house_registration_status: value === "true" }))
-	}
-
-	const handleRadioInternetChange = (value: string) => {
-		setForm(prev => ({ ...prev, internet_access: value === "true" }))
-	}
-
-	const handleRadioElectricityChange = (value: string) => {
-		setForm(prev => ({ ...prev, electricity_access: value === "true" }))
-	}
+		const { name, value } = e.target;
+		setForm(prev => ({ ...prev, [name]: value }));
+	};
 
 	const handleTextAreaChange = (value: string) => {
-		setForm(prev => ({ ...prev, remark: value }))
-	}
+		setForm(prev => ({ ...prev, remark: value }));
+	};
 
 	const handleSubmit = async () => {
-		// try {
-		// 	const token = localStorage.getItem("token")
-		// 	console.log("[ REQUEST ] HOUSE HOLD DATAS EDIT =>", form);
-		// 	const config = {
-		// 		method: 'post',
-		// 		maxBodyLength: Infinity,
-		// 		url: `http://43.229.149.138:8080/smart_village/api/households/edit`,
-		// 		headers: {
-		// 			"Authorization": `Bearer ${token}`,
-		// 			"Content-Type": "application/json",
-		// 		},
-		// 		data: JSON.stringify(form),
-		// 	}
-		// 	const response = await axios.request(config)
-		// 	console.log("อัปเดตสำเร็จ:", response.data)
-		// } catch (err) {
-		// 	console.error("อัปเดตล้มเหลว:", err)
-		// }
-
 		try {
-            const token = localStorage.getItem("token")
-            console.log("[ REQUEST ] HOUSE HOLD DATAS EDIT =>", form);
-            
-            // Mapping Payload
-            const householdPayload = {
-                householdId: form.household_id ? Number(form.household_id) : null,
-                villageId: form.village_id ? Number(form.village_id) : 1, // ดึงจากฟอร์ม ถ้าไม่มีให้ Fallback เป็น 1 ตามกฎ validation
-                houseNo: form.house_no,
-                houseRegistrationStatus: form.house_registration_status,
-                houseRegistrationType: form.house_registration_type,
-                gpsLat: form.gps_lat,
-                gpsLng: form.gps_lng,
-                houseCondition: form.house_condition,
-                waterSystem: form.water_system,
-                internetAccess: form.internet_access,
-                electricityAccess: form.electricity_access,
-                remark: form.remark
-            }
+			setLoading(true);
+			const token = localStorage.getItem("token");
 
-            const config = {
-                method: 'post',
-                maxBodyLength: Infinity,
-                url: `http://43.229.149.138:8080/smart_village/api/households/edit`,
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                data: JSON.stringify(householdPayload), // Data Mapping
-            }
+			const householdPayload = {
+				householdId: form.household_id ? Number(form.household_id) : null,
+				villageId: form.village_id ? Number(form.village_id) : 1,
+				houseNo: form.house_no,
+				houseRegistrationStatus: form.house_registration_status,
+				houseRegistrationType: form.house_registration_type,
+				gpsLat: form.gps_lat,
+				gpsLng: form.gps_lng,
+				houseCondition: form.house_condition,
+				waterSystem: form.water_system,
+				internetAccess: form.internet_access,
+				electricityAccess: form.electricity_access,
+				remark: form.remark,
+			};
 
-            const response = await axios.request(config)
-            console.log("อัปเดตสำเร็จ:", response.data)
-            alert("อัปเดตข้อมูลครัวเรือนเรียบร้อยแล้ว!")
-            
-        } catch (err) {
-            console.error("อัปเดตล้มเหลว:", err)
-            alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูล")
-        }
-	}
+			await axios.post(`${API_BASE}/households/edit`, householdPayload, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			});
+
+			await Swal.fire({
+				icon: "success",
+				title: "อัปเดตสำเร็จ",
+				text: "แก้ไขข้อมูลครัวเรือนเรียบร้อยแล้ว",
+				timer: 1800,
+				showConfirmButton: false,
+			});
+			router.push("/household");
+		} catch (err) {
+			console.error("อัปเดตล้มเหลว:", err);
+			Swal.fire({
+				icon: "error",
+				title: "อัปเดตไม่สำเร็จ",
+				text: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล กรุณาตรวจสอบสิทธิ์หรือลองใหม่อีกครั้ง",
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	return (
 		<>
@@ -159,7 +138,6 @@ export default function HouseHoldEdit() {
 							disabled
 						/>
 					</div>
-
 					<div>
 						<Label>เลขที่บ้าน</Label>
 						<Input
@@ -200,7 +178,7 @@ export default function HouseHoldEdit() {
 								name="house_registration_status"
 								value="true"
 								checked={form.house_registration_status === true}
-								onChange={handleRadioChange}
+								onChange={(value) => setForm(prev => ({ ...prev, house_registration_status: value === "true" }))}
 								label="มี ( Yes )"
 							/>
 							<Radio
@@ -208,7 +186,7 @@ export default function HouseHoldEdit() {
 								name="house_registration_status"
 								value="false"
 								checked={form.house_registration_status === false}
-								onChange={handleRadioChange}
+								onChange={(value) => setForm(prev => ({ ...prev, house_registration_status: value === "true" }))}
 								label="ไม่มี ( No )"
 							/>
 						</div>
@@ -247,7 +225,7 @@ export default function HouseHoldEdit() {
 								name="internet_access"
 								value="true"
 								checked={form.internet_access === true}
-								onChange={handleRadioInternetChange}
+								onChange={(value) => setForm(prev => ({ ...prev, internet_access: value === "true" }))}
 								label="มี ( Yes )"
 							/>
 							<Radio
@@ -255,7 +233,7 @@ export default function HouseHoldEdit() {
 								name="internet_access"
 								value="false"
 								checked={form.internet_access === false}
-								onChange={handleRadioInternetChange}
+								onChange={(value) => setForm(prev => ({ ...prev, internet_access: value === "true" }))}
 								label="ไม่มี ( No )"
 							/>
 						</div>
@@ -268,7 +246,7 @@ export default function HouseHoldEdit() {
 								name="electricity_access"
 								value="true"
 								checked={form.electricity_access === true}
-								onChange={handleRadioElectricityChange}
+								onChange={(value) => setForm(prev => ({ ...prev, electricity_access: value === "true" }))}
 								label="มี ( Yes )"
 							/>
 							<Radio
@@ -276,7 +254,7 @@ export default function HouseHoldEdit() {
 								name="electricity_access"
 								value="false"
 								checked={form.electricity_access === false}
-								onChange={handleRadioElectricityChange}
+								onChange={(value) => setForm(prev => ({ ...prev, electricity_access: value === "true" }))}
 								label="ไม่มี ( No )"
 							/>
 						</div>
@@ -303,13 +281,23 @@ export default function HouseHoldEdit() {
 					</div>
 				</div>
 
-				<button
-					onClick={handleSubmit}
-					className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-				>
-					บันทึก
-				</button>
+				<div className="flex gap-3 mt-4">
+					<button
+						onClick={handleSubmit}
+						disabled={loading}
+						className="px-6 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{loading ? "กำลังบันทึก..." : "บันทึก"}
+					</button>
+					<button
+						onClick={() => router.push("/household")}
+						disabled={loading}
+						className="px-6 py-2 border border-gray-400 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						ยกเลิก
+					</button>
+				</div>
 			</ComponentCard>
 		</>
-	)
+	);
 }
