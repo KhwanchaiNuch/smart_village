@@ -6,10 +6,8 @@ import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-
-const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 export default function HouseHoldAdd() {
 	const router = useRouter();
@@ -44,7 +42,6 @@ export default function HouseHoldAdd() {
 	const handleSubmit = async () => {
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
 
 			const householdPayload = {
 				householdId: null,
@@ -61,12 +58,7 @@ export default function HouseHoldAdd() {
 				remark: form.remark,
 			};
 
-			await axios.post(`${API_BASE}/households/add`, householdPayload, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-			});
+			await axios.post(`/households/add`, householdPayload);
 
 			await Swal.fire({
 				icon: "success",

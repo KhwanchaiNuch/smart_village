@@ -38,9 +38,18 @@ public class JwtUtil {
     }
 
     public Claims parse(String token) {
-        // ✅ API แนวใหม่: parser() -> verifyWith(key) -> build() -> parseSignedClaims()
         return Jwts.parser()
                 .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    // parse token ที่หมดอายุแล้วได้ (ใช้เฉพาะตอน refresh)
+    public Claims parseIgnoreExpiry(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .clockSkewSeconds(Long.MAX_VALUE / 1000)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

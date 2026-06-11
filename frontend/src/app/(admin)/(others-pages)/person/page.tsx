@@ -4,10 +4,8 @@ import Badge from '@/components/ui/badge/Badge';
 import Checkbox from '@/components/form/input/Checkbox';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-
-const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 interface Person {
 	firstName: string;
@@ -26,10 +24,7 @@ export default function Person() {
 
 	const fetchData = useCallback(async () => {
 		try {
-			const token = localStorage.getItem("token");
-			const res = await axios.get<Person[]>(`${API_BASE}/persons`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await axios.get<Person[]>(`/persons`);
 			setData(res.data);
 			setSelectedIds([]);
 		} catch (error) {
@@ -84,14 +79,9 @@ export default function Person() {
 
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
 
 			const responses = await Promise.allSettled(
-				selectedIds.map((id) =>
-					axios.delete(`${API_BASE}/persons/${id}`, {
-						headers: { Authorization: `Bearer ${token}` },
-					})
-				)
+				selectedIds.map((id) => axios.delete(`/persons/${id}`))
 			);
 
 			const failed = responses.filter((r) => r.status === "rejected").length;

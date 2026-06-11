@@ -4,11 +4,8 @@ import Badge from '@/components/ui/badge/Badge';
 import Checkbox from '@/components/form/input/Checkbox';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-
-// ===== ปรับ URL กลางไว้ที่เดียว (ในงานจริงควรย้ายไป .env: NEXT_PUBLIC_API_URL) =====
-const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 interface HouseHold {
 	houseCondition: string;
@@ -29,10 +26,7 @@ export default function HouseHold() {
 	// แยกฟังก์ชันโหลดข้อมูลออกมา เพื่อให้เรียกซ้ำหลังลบได้
 	const fetchData = useCallback(async () => {
 		try {
-			const token = localStorage.getItem("token");
-			const res = await axios.get<HouseHold[]>(`${API_BASE}/households`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const res = await axios.get<HouseHold[]>(`/households`);
 			setData(res.data);
 			setSelectedIds([]); // ล้างการเลือกทุกครั้งที่โหลดใหม่
 		} catch (error) {
@@ -91,15 +85,10 @@ export default function HouseHold() {
 
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
 
 			// backend มีแค่ลบทีละ id -> ยิงพร้อมกันด้วย Promise.allSettled
 			const responses = await Promise.allSettled(
-				selectedIds.map((id) =>
-					axios.delete(`${API_BASE}/households/${id}`, {
-						headers: { Authorization: `Bearer ${token}` },
-					})
-				)
+				selectedIds.map((id) => axios.delete(`/households/${id}`))
 			);
 
 			const failed = responses.filter((r) => r.status === "rejected").length;

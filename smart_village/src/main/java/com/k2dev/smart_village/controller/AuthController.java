@@ -5,7 +5,10 @@ import com.k2dev.smart_village.entity.LoginRequest;
 import com.k2dev.smart_village.repository.AppUserRepository;
 import com.k2dev.smart_village.security.JwtUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.exception.AuthException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +47,42 @@ public class AuthController {
                 "role", user.getRoleLevel(),
                 "scopeId", user.getScopeId()
         );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(HttpServletRequest request) {
+        String auth = request.getHeader("Authorization");
+
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Missing token");
+        }
+
+        try {
+            String oldToken = auth.substring(7);
+            Claims claims = jwt.parseIgnoreExpiry(oldToken);
+            String username = claims.getSubject();
+
+            AppUser user = repo.findByUsername(username)
+                    .orElseThrow(() -> new AuthException("User not found", null));
+
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
+                return ResponseEntity.status(401).body("User inactive");
+            }
+
+            String newToken = jwt.generateToken(
+                    user.getUsername(),
+                    user.getRoleLevel(),
+                    user.getScopeId()
+            );
+
+            return ResponseEntity.ok(java.util.Map.of(
+                    "token", newToken,
+                    "role", user.getRoleLevel(),
+                    "scopeId", user.getScopeId()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid token");
+        }
     }
 
 }

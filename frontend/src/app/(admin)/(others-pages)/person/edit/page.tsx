@@ -7,10 +7,8 @@ import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-
-const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 export default function PersonEdit() {
 	const router = useRouter();
@@ -52,10 +50,7 @@ export default function PersonEdit() {
 		if (!id) return;
 		async function fetchData() {
 			try {
-				const token = localStorage.getItem("token");
-				const response = await axios.get(`${API_BASE}/persons/${id}`, {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const response = await axios.get(`/persons/${id}`);
 				const data = response.data;
 				setForm({
 					person_id: data.personId?.toString() || "",
@@ -109,7 +104,6 @@ export default function PersonEdit() {
 	const handleSubmit = async () => {
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
 
 			// Map snake_case form → camelCase payload ที่ backend รอรับ
 			const personPayload = {
@@ -141,12 +135,7 @@ export default function PersonEdit() {
 				status: form.status,
 			};
 
-			await axios.post(`${API_BASE}/persons/edit`, personPayload, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-			});
+			await axios.post(`/persons/edit`, personPayload);
 
 			await Swal.fire({
 				icon: "success",

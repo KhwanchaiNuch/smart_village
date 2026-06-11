@@ -7,10 +7,8 @@ import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-
-const API_BASE = "http://43.229.149.138:8080/smart_village/api";
 
 export default function PersonAdd() {
 	const router = useRouter();
@@ -60,7 +58,6 @@ export default function PersonAdd() {
 	const handleSubmit = async () => {
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
 
 			const personPayload = {
 				householdId: form.household_id ? Number(form.household_id) : null,
@@ -90,12 +87,7 @@ export default function PersonAdd() {
 				status: form.status,
 			};
 
-			await axios.post(`${API_BASE}/persons/add`, personPayload, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-			});
+			await axios.post(`/persons/add`, personPayload);
 
 			await Swal.fire({
 				icon: "success",
