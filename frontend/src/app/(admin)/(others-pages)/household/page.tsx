@@ -19,16 +19,16 @@ interface HouseHold {
 
 export default function HouseHold() {
 	const [tableData, setData] = useState<HouseHold[]>([]);
-	// เก็บ id ของแถวที่ถูกเลือกไว้ลบ
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [search, setSearch] = useState("");
 
-	// แยกฟังก์ชันโหลดข้อมูลออกมา เพื่อให้เรียกซ้ำหลังลบได้
 	const fetchData = useCallback(async () => {
 		try {
 			const res = await axios.get<HouseHold[]>(`/households`);
-			setData(res.data);
-			setSelectedIds([]); // ล้างการเลือกทุกครั้งที่โหลดใหม่
+			const sorted = [...res.data].sort((a, b) => a.householdId - b.householdId);
+			setData(sorted);
+			setSelectedIds([]);
 		} catch (error) {
 			console.error(error);
 			Swal.fire({
@@ -44,12 +44,22 @@ export default function HouseHold() {
 		fetchData();
 	}, [fetchData]);
 
-	// ===== จัดการการเลือก checkbox =====
+	const filtered = tableData.filter((h) => {
+		const q = search.toLowerCase();
+		return (
+			String(h.householdId).includes(q) ||
+			(h.houseNo || "").toLowerCase().includes(q) ||
+			(h.houseCondition || "").toLowerCase().includes(q) ||
+			(h.waterSystem || "").toLowerCase().includes(q) ||
+			(h.remark || "").toLowerCase().includes(q)
+		);
+	});
+
 	const isAllSelected =
-		tableData.length > 0 && selectedIds.length === tableData.length;
+		filtered.length > 0 && filtered.every((h) => selectedIds.includes(h.householdId));
 
 	const toggleSelectAll = (checked: boolean) => {
-		setSelectedIds(checked ? tableData.map((h) => h.householdId) : []);
+		setSelectedIds(checked ? filtered.map((h) => h.householdId) : []);
 	};
 
 	const toggleSelectOne = (id: number, checked: boolean) => {
@@ -132,6 +142,13 @@ export default function HouseHold() {
 					</h3>
 
 					<div className="flex items-center gap-2">
+						<input
+							type="text"
+							placeholder="ค้นหา..."
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+							className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+						/>
 						{/* ปุ่มลบที่เลือก - แสดงจำนวนที่เลือกไว้ */}
 						<button
 							onClick={handleDeleteSelected}
@@ -207,7 +224,7 @@ export default function HouseHold() {
 								</TableHeader>
 
 								<TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-									{tableData.map((order) => {
+									{filtered.map((order) => {
 										const isSelected = selectedIds.includes(order.householdId);
 										return (
 											<TableRow
@@ -274,7 +291,7 @@ export default function HouseHold() {
 										);
 									})}
 
-									{tableData.length === 0 && (
+									{filtered.length === 0 && (
 										<TableRow>
 											<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
 												ไม่มีข้อมูลครัวเรือน

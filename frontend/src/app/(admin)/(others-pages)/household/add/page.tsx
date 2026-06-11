@@ -18,6 +18,7 @@ export default function HouseHoldAdd() {
 
 	const [form, setForm] = useState({
 		house_no: "",
+		moo: "",
 		house_registration_status: true,
 		house_registration_type: "",
 		gps_lat: "",
@@ -47,6 +48,7 @@ export default function HouseHoldAdd() {
 				householdId: null,
 				villageId: 1,
 				houseNo: form.house_no,
+				moo: form.moo,
 				houseRegistrationStatus: form.house_registration_status,
 				houseRegistrationType: form.house_registration_type,
 				gpsLat: form.gps_lat,
@@ -95,6 +97,18 @@ export default function HouseHoldAdd() {
 						/>
 					</div>
 					<div>
+						<Label>หมู่ที่</Label>
+						<Input
+							name="moo"
+							value={form.moo}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
 						<Label>สภาพบ้าน (ดี/ปานกลาง/ทรุดโทรม)</Label>
 						<Input
 							name="house_condition"
@@ -103,9 +117,6 @@ export default function HouseHoldAdd() {
 							type="text"
 						/>
 					</div>
-				</div>
-
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<Label>ประเภททะเบียนบ้าน/ลักษณะการอยู่อาศัย (ท.ร.14/หอพัก/เช่า ฯลฯ)</Label>
 						<Input

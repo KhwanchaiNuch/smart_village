@@ -18,6 +18,7 @@ export default function HouseHoldEdit() {
 		household_id: "",
 		village_id: "",
 		house_no: "",
+		moo: "",
 		house_registration_status: true,
 		house_registration_type: "",
 		gps_lat: "",
@@ -41,6 +42,7 @@ export default function HouseHoldEdit() {
 					household_id: data.householdId?.toString() || "",
 					village_id: data.villageId?.toString() || "",
 					house_no: data.houseNo || "",
+					moo: data.moo || "",
 					house_registration_status: data.houseRegistrationStatus ?? true,
 					house_registration_type: data.houseRegistrationType || "",
 					gps_lat: data.gpsLat || "",
@@ -80,6 +82,7 @@ export default function HouseHoldEdit() {
 				householdId: form.household_id ? Number(form.household_id) : null,
 				villageId: form.village_id ? Number(form.village_id) : 1,
 				houseNo: form.house_no,
+				moo: form.moo,
 				houseRegistrationStatus: form.house_registration_status,
 				houseRegistrationType: form.house_registration_type,
 				gpsLat: form.gps_lat,
@@ -139,6 +142,15 @@ export default function HouseHoldEdit() {
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
+						<Label>หมู่ที่</Label>
+						<Input
+							name="moo"
+							value={form.moo}
+							onChange={handleChange}
+							type="text"
+						/>
+					</div>
 					<div>
 						<Label>ประเภททะเบียนบ้าน/ลักษณะการอยู่อาศัย (ท.ร.14/หอพัก/เช่า ฯลฯ)</Label>
 						<Input

@@ -21,11 +21,13 @@ export default function Person() {
 	const [tableData, setData] = useState<Person[]>([]);
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [search, setSearch] = useState("");
 
 	const fetchData = useCallback(async () => {
 		try {
 			const res = await axios.get<Person[]>(`/persons`);
-			setData(res.data);
+			const sorted = [...res.data].sort((a, b) => a.personId - b.personId);
+			setData(sorted);
 			setSelectedIds([]);
 		} catch (error) {
 			console.error(error);
@@ -42,10 +44,20 @@ export default function Person() {
 		fetchData();
 	}, [fetchData]);
 
-	const isAllSelected = tableData.length > 0 && selectedIds.length === tableData.length;
+	const filtered = tableData.filter((p) => {
+		const q = search.toLowerCase();
+		return (
+			String(p.personId).includes(q) ||
+			(p.firstName || "").toLowerCase().includes(q) ||
+			(p.lastName || "").toLowerCase().includes(q) ||
+			(p.occupation || "").toLowerCase().includes(q)
+		);
+	});
+
+	const isAllSelected = filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.personId));
 
 	const toggleSelectAll = (checked: boolean) => {
-		setSelectedIds(checked ? tableData.map((p) => p.personId) : []);
+		setSelectedIds(checked ? filtered.map((p) => p.personId) : []);
 	};
 
 	const toggleSelectOne = (id: number, checked: boolean) => {
@@ -125,6 +137,13 @@ export default function Person() {
 					</h3>
 
 					<div className="flex items-center gap-2">
+						<input
+							type="text"
+							placeholder="ค้นหา..."
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+							className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+						/>
 						<button
 							onClick={handleDeleteSelected}
 							disabled={selectedIds.length === 0 || loading}
@@ -170,7 +189,7 @@ export default function Person() {
 								</TableHeader>
 
 								<TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-									{tableData.map((person) => {
+									{filtered.map((person) => {
 										const isSelected = selectedIds.includes(person.personId);
 										return (
 											<TableRow key={person.personId} className={isSelected ? "bg-red-50 dark:bg-red-500/10" : ""}>
@@ -220,7 +239,7 @@ export default function Person() {
 										);
 									})}
 
-									{tableData.length === 0 && (
+									{filtered.length === 0 && (
 										<TableRow>
 											<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
 												ไม่มีข้อมูลบุคคล

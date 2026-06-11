@@ -10,11 +10,28 @@ import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
+// โครงสร้างข้อมูลครัวเรือนที่ใช้แสดงใน dropdown
+interface HouseholdOption {
+	householdId: number;
+	houseNo: string;
+	moo: string;
+}
+
 export default function PersonAdd() {
 	const router = useRouter();
 
+	// --- dropdown ครัวเรือน ---
+	// เก็บรายการครัวเรือนทั้งหมดที่โหลดมาจาก API เพื่อแสดงใน <select>
+	const [households, setHouseholds] = useState<HouseholdOption[]>([]);
+
 	useEffect(() => {
 		document.title = "Smart Village | Person Add";
+
+		// โหลดรายการครัวเรือนทั้งหมดเพื่อสร้าง dropdown
+		// ใช้ GET /households ซึ่งคืนค่า householdId, houseNo, moo
+		axios.get<HouseholdOption[]>("/households")
+			.then(res => setHouseholds(res.data))
+			.catch(() => {});
 	}, []);
 
 	const [form, setForm] = useState({
@@ -115,13 +132,25 @@ export default function PersonAdd() {
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<div>
-						<Label>รหัสครัวเรือน (FK)</Label>
-						<Input
-							name="household_id"
+						<Label>ครัวเรือน</Label>
+						{/*
+						 * dropdown เลือกครัวเรือน
+						 * - value คือ householdId ที่จะส่งไป backend
+						 * - label แสดง "บ้านเลขที่ X หมู่ Y" เพื่อให้ user เข้าใจง่าย
+						 * - ถ้า moo ว่างเปล่าจะแสดงแค่เลขที่บ้าน
+						 */}
+						<select
 							value={form.household_id}
-							onChange={handleChange}
-							type="text"
-						/>
+							onChange={(e) => setForm(prev => ({ ...prev, household_id: e.target.value }))}
+							className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+						>
+							<option value="">-- เลือกครัวเรือน --</option>
+							{households.map(h => (
+								<option key={h.householdId} value={h.householdId}>
+									บ้านเลขที่ {h.houseNo}{h.moo ? ` หมู่ ${h.moo}` : ""}
+								</option>
+							))}
+						</select>
 					</div>
 					<div>
 						<Label>เลขบัตรประชาชน</Label>
