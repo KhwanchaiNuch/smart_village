@@ -58,4 +58,43 @@ public class CommunityIssue {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getHouseholdId() { return householdId; }
+    public void setHouseholdId(Long householdId) { this.householdId = householdId; }
+
+    public String getArea() { return area; }
+    public void setArea(String area) { this.area = area; }
+
+    public String getIssueType() { return issueType; }
+    public void setIssueType(String issueType) { this.issueType = issueType; }
+
+    public Integer getSeverity() { return severity; }
+    public void setSeverity(Integer severity) { this.severity = severity; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getOwner() { return owner; }
+    public void setOwner(String owner) { this.owner = owner; }
+
+    public Integer getImpactPeople() { return impactPeople; }
+    public void setImpactPeople(Integer impactPeople) { this.impactPeople = impactPeople; }
+
+    public BigDecimal getBudgetEstimate() { return budgetEstimate; }
+    public void setBudgetEstimate(BigDecimal budgetEstimate) { this.budgetEstimate = budgetEstimate; }
+
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -35,4 +35,25 @@ public class TrainingParticipant {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getTrainingId() { return trainingId; }
+    public void setTrainingId(Long trainingId) { this.trainingId = trainingId; }
+
+    public Long getPersonId() { return personId; }
+    public void setPersonId(Long personId) { this.personId = personId; }
+
+    public String getAttendStatus() { return attendStatus; }
+    public void setAttendStatus(String attendStatus) { this.attendStatus = attendStatus; }
+
+    public String getAfterStatus() { return afterStatus; }
+    public void setAfterStatus(String afterStatus) { this.afterStatus = afterStatus; }
+
+    public String getAfterProblem() { return afterProblem; }
+    public void setAfterProblem(String afterProblem) { this.afterProblem = afterProblem; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

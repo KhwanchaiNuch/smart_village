@@ -39,4 +39,28 @@ public class HouseholdEconomic {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getHouseholdId() { return householdId; }
+    public void setHouseholdId(Long householdId) { this.householdId = householdId; }
+
+    public BigDecimal getIncomeTotalPerMonth() { return incomeTotalPerMonth; }
+    public void setIncomeTotalPerMonth(BigDecimal incomeTotalPerMonth) { this.incomeTotalPerMonth = incomeTotalPerMonth; }
+
+    public BigDecimal getDebtTotal() { return debtTotal; }
+    public void setDebtTotal(BigDecimal debtTotal) { this.debtTotal = debtTotal; }
+
+    public String getDebtType() { return debtType; }
+    public void setDebtType(String debtType) { this.debtType = debtType; }
+
+    public Boolean getPoorFlag() { return poorFlag; }
+    public void setPoorFlag(Boolean poorFlag) { this.poorFlag = poorFlag; }
+
+    public LocalDate getRecordDate() { return recordDate; }
+    public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
