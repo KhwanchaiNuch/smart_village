@@ -23,6 +23,16 @@ public class Household {
 	private Boolean internetAccess;
 	private String remark;
 
+	// ===== Soft delete: เก็บประวัติแทนการลบจริง =====
+	// deletedAt = null  -> ยังใช้งานอยู่
+	// deletedAt != null -> ถูกลบแล้ว (ซ่อนจาก API แต่ข้อมูลยังอยู่ในฐานข้อมูล)
+	@Column(name = "deleted_at")
+	private java.time.LocalDateTime deletedAt;
+
+	// บันทึกว่าใครเป็นคนลบ (ดึงจาก username ใน JWT) เพื่อทำ audit trail
+	@Column(name = "deleted_by")
+	private String deletedBy;
+
 	public Integer getHouseholdId() {
 		return householdId;
 	}
@@ -77,5 +87,21 @@ public class Household {
 
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+
+	public java.time.LocalDateTime getDeletedAt() {
+		return deletedAt;
+	}
+
+	public void setDeletedAt(java.time.LocalDateTime deletedAt) {
+		this.deletedAt = deletedAt;
+	}
+
+	public String getDeletedBy() {
+		return deletedBy;
+	}
+
+	public void setDeletedBy(String deletedBy) {
+		this.deletedBy = deletedBy;
 	}
 }
