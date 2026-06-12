@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "visit_log")
@@ -34,7 +35,6 @@ public class VisitLog {
 
     @Column(columnDefinition = "TEXT")
     private String nextAction;
-<<<<<<< Updated upstream
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -70,6 +70,4 @@ public class VisitLog {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-=======
->>>>>>> Stashed changes
 }

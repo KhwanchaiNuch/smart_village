@@ -5,70 +5,76 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 
-<<<<<<< Updated upstream
-=======
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
->>>>>>> Stashed changes
 @Entity
 @Table(name = "health_record")
 @Data
 public class HealthRecord {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-<<<<<<< Updated upstream
-	private Integer id;
-	private Integer personId;
-	private Boolean needHomeVisit;
 
-	public Integer getId() {
-		return id;
-	}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    private Long personId;
 
-	public Integer getPersonId() {
-		return personId;
-	}
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate checkDate;
 
-	public void setPersonId(Integer personId) {
-		this.personId = personId;
-	}
+    @Column(length = 20)
+    private String bp;
 
-	public Boolean getNeedHomeVisit() {
-		return needHomeVisit;
-	}
+    @Column(precision = 6, scale = 2)
+    private BigDecimal sugar;
 
-	public void setNeedHomeVisit(Boolean needHomeVisit) {
-		this.needHomeVisit = needHomeVisit;
-	}
-=======
-	private Long id;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal bmi;
 
-	private Long personId;
+    @Column(columnDefinition = "TEXT")
+    private String riskGroup;
 
-	@JsonFormat(pattern = "yyyy-MM-dd")
-	private LocalDate checkDate;
+    private Boolean needHomeVisit;
 
-	@Column(length = 20)
-	private String bp;
+    @Column(columnDefinition = "TEXT")
+    private String remark;
 
-	@Column(precision = 6, scale = 2)
-	private BigDecimal sugar;
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
-	@Column(precision = 5, scale = 2)
-	private BigDecimal bmi;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
-	@Column(columnDefinition = "TEXT")
-	private String riskGroup;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-	private Boolean needHomeVisit;
+    public Long getPersonId() { return personId; }
+    public void setPersonId(Long personId) { this.personId = personId; }
 
-	@Column(columnDefinition = "TEXT")
-	private String remark;
+    public LocalDate getCheckDate() { return checkDate; }
+    public void setCheckDate(LocalDate checkDate) { this.checkDate = checkDate; }
 
->>>>>>> Stashed changes
+    public String getBp() { return bp; }
+    public void setBp(String bp) { this.bp = bp; }
+
+    public BigDecimal getSugar() { return sugar; }
+    public void setSugar(BigDecimal sugar) { this.sugar = sugar; }
+
+    public BigDecimal getBmi() { return bmi; }
+    public void setBmi(BigDecimal bmi) { this.bmi = bmi; }
+
+    public String getRiskGroup() { return riskGroup; }
+    public void setRiskGroup(String riskGroup) { this.riskGroup = riskGroup; }
+
+    public Boolean getNeedHomeVisit() { return needHomeVisit; }
+    public void setNeedHomeVisit(Boolean needHomeVisit) { this.needHomeVisit = needHomeVisit; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
