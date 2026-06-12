@@ -1,11 +1,11 @@
 
 package com.k2dev.smart_village.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "visit_log")
@@ -20,6 +20,7 @@ public class VisitLog {
 
     private Long householdId;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate visitDate;
 
     @Column(length = 150)
@@ -33,6 +34,7 @@ public class VisitLog {
 
     @Column(columnDefinition = "TEXT")
     private String nextAction;
+<<<<<<< Updated upstream
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -68,4 +70,6 @@ public class VisitLog {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+=======
+>>>>>>> Stashed changes
 }

@@ -26,7 +26,7 @@ public class HealthRecordController {
 	}
 	
 	@GetMapping("/{id}")
-    public HealthRecord get(@PathVariable Integer id) {
+    public HealthRecord get(@PathVariable Long id) {
         return repo.findById(id).orElseThrow();
     }
 
@@ -41,7 +41,7 @@ public class HealthRecordController {
 	}
 
 	@DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
+    public void delete(@PathVariable Long id) {
         repo.deleteById(id);
     }
 }

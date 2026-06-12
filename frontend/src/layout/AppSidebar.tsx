@@ -17,6 +17,8 @@ import {
 	PlugInIcon,
 	TableIcon,
 	UserCircleIcon,
+	HeartIcon,
+	TimeIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -39,9 +41,14 @@ const navItems: NavItem[] = [
 		path: "/person",
 	},
 	{
-		icon: <InfoIcon/>,
-		name: "สุขภาพเชิงตัวเลข",
+		icon: <HeartIcon/>,
+		name: "บันทึกสุขภาพ",
 		path: "/healthrecord",
+	},
+	{
+		icon: <TimeIcon/>,
+		name: "เยื่ยมบ้าน",
+		path: "/visitlog",
 	},
 	{
 		icon: <GridIcon />,
