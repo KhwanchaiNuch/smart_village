@@ -28,7 +28,7 @@ export default function HouseHold() {
 				let config = {
 					method: 'get',
 					maxBodyLength: Infinity,
-					url: 'http://43.229.149.138:8080/smart_village/api/households',
+					url: 'http://localhost:8080/smart_village/api/households',
 					headers: {
 						"Authorization": `Bearer ${token}`,
 

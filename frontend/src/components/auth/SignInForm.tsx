@@ -23,7 +23,7 @@ export default function SignInForm() {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://43.229.149.138:8080/smart_village/api/auth/login",
+        "http://localhost:8080/smart_village/api/auth/login",
         { username: identifier, password }
       );
       localStorage.setItem("token", res.data.token);
