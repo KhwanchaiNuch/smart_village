@@ -14,7 +14,7 @@ export default function Home() {
         async function fetchData() {
             try {
                 const res = await fetch(
-                    "http://43.229.149.138:8080/smart_village/api/auth/login",
+                    "http://localhost:8080/smart_village/api/auth/login",
                     {
                         method: "POST",
                         headers: {

@@ -105,7 +105,6 @@ export default function PersonEdit() {
 		try {
 			setLoading(true);
 
-			// Map snake_case form → camelCase payload ที่ backend รอรับ
 			const personPayload = {
 				personId: form.person_id ? Number(form.person_id) : null,
 				householdId: form.household_id ? Number(form.household_id) : null,
