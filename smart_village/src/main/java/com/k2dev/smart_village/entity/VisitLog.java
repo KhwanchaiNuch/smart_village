@@ -35,8 +35,6 @@ public class VisitLog {
 
     @Column(columnDefinition = "TEXT")
     private String nextAction;
-<<<<<<< HEAD
-=======
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -72,5 +70,4 @@ public class VisitLog {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
->>>>>>> 835415e5285edcaf9ca4cc9291b03da0437af819
 }

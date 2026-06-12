@@ -39,8 +39,6 @@ public class HealthRecord {
 
     @Column(columnDefinition = "TEXT")
     private String remark;
-<<<<<<< HEAD
-=======
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -79,5 +77,4 @@ public class HealthRecord {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
->>>>>>> 835415e5285edcaf9ca4cc9291b03da0437af819
 }
