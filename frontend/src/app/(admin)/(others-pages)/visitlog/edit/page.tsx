@@ -4,9 +4,10 @@ import Input from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import DatePicker from '@/components/form/date-picker';
-import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-const axios = require('axios');
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
 
 interface Person {
 	personId: number;
@@ -21,13 +22,14 @@ interface Household {
 
 type FormErrors = Partial<Record<string, string>>;
 
-export default function VisitLogEdit() {
-	const searchParams = useSearchParams()
-	const id = searchParams.get("id")
+function VisitLogEditContent() {
+	const searchParams = useSearchParams();
+	const id = searchParams.get("id");
 
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [households, setHouseholds] = useState<Household[]>([]);
 	const [errors, setErrors] = useState<FormErrors>({});
+	const [saving, setSaving] = useState(false);
 
 	const [form, setForm] = useState({
 		id: "",
@@ -38,24 +40,21 @@ export default function VisitLogEdit() {
 		visitReason: "",
 		summary: "",
 		nextAction: "",
-	})
+	});
 
 	useEffect(() => {
-		document.title = "Smart Village | Visit Log Edit"
+		document.title = "Smart Village | Visit Log Edit";
+		if (!id) return;
 		async function fetchData() {
 			try {
-				const token = localStorage.getItem("token")
-				const headers = { "Authorization": `Bearer ${token}` }
-
 				const [visitRes, personsRes, householdsRes] = await Promise.all([
-					axios.request({ method: 'get', maxBodyLength: Infinity, url: `http://43.229.149.138:8080/smart_village/api/visit-logs/${id}`, headers }),
-					axios.request({ method: 'get', maxBodyLength: Infinity, url: 'http://43.229.149.138:8080/smart_village/api/persons', headers }),
-					axios.request({ method: 'get', maxBodyLength: Infinity, url: 'http://43.229.149.138:8080/smart_village/api/households', headers }),
-				])
-
-				const data = visitRes.data
-				setPersons(personsRes.data)
-				setHouseholds(householdsRes.data)
+					axios.get(`/visit-logs/${id}`),
+					axios.get<Person[]>("/persons"),
+					axios.get<Household[]>("/households"),
+				]);
+				const data = visitRes.data;
+				setPersons(personsRes.data);
+				setHouseholds(householdsRes.data);
 				setForm({
 					id: data.id?.toString() || "",
 					personId: data.personId?.toString() || "",
@@ -65,44 +64,48 @@ export default function VisitLogEdit() {
 					visitReason: data.visitReason || "",
 					summary: data.summary || "",
 					nextAction: data.nextAction || "",
-				})
-			} catch (err) {
-				console.error(err)
+				});
+			} catch (err: any) {
+				console.error(err);
+				Swal.fire({
+					icon: "error",
+					title: "โหลดข้อมูลไม่สำเร็จ",
+					text: err?.response?.data?.message || "ไม่สามารถดึงข้อมูลได้",
+				});
 			}
 		}
-		if (id) fetchData()
-	}, [id])
+		fetchData();
+	}, [id]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({ ...prev, [name]: value }))
-		if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
-	}
+		const { name, value } = e.target;
+		setForm((prev) => ({ ...prev, [name]: value }));
+		if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+	};
 
 	const handleSummaryChange = (value: string) => {
-		setForm(prev => ({ ...prev, summary: value }))
-	}
+		setForm((prev) => ({ ...prev, summary: value }));
+	};
 
 	const handleNextActionChange = (value: string) => {
-		setForm(prev => ({ ...prev, nextAction: value }))
-	}
+		setForm((prev) => ({ ...prev, nextAction: value }));
+	};
 
 	const validate = (): boolean => {
-		const newErrors: FormErrors = {}
-		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล"
-		if (!form.householdId) newErrors.householdId = "กรุณาเลือกครัวเรือน"
-		if (!form.visitDate) newErrors.visitDate = "กรุณาระบุวันที่เยี่ยม"
-		if (!form.visitor.trim()) newErrors.visitor = "กรุณาระบุชื่อผู้เยี่ยม"
-		if (!form.visitReason.trim()) newErrors.visitReason = "กรุณาระบุวัตถุประสงค์การเยี่ยม"
-		setErrors(newErrors)
-		return Object.keys(newErrors).length === 0
-	}
+		const newErrors: FormErrors = {};
+		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล";
+		if (!form.householdId) newErrors.householdId = "กรุณาเลือกครัวเรือน";
+		if (!form.visitDate) newErrors.visitDate = "กรุณาระบุวันที่เยี่ยม";
+		if (!form.visitor.trim()) newErrors.visitor = "กรุณาระบุชื่อผู้เยี่ยม";
+		if (!form.visitReason.trim()) newErrors.visitReason = "กรุณาระบุวัตถุประสงค์การเยี่ยม";
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
 	const handleSubmit = async () => {
-		if (!validate()) return
+		if (!validate()) return;
+		setSaving(true);
 		try {
-			const token = localStorage.getItem("token")
-			console.log("[ REQUEST ] VISIT LOG EDIT =>", form);
 			const payload = {
 				id: parseInt(form.id),
 				personId: parseInt(form.personId),
@@ -112,41 +115,42 @@ export default function VisitLogEdit() {
 				visitReason: form.visitReason,
 				summary: form.summary || null,
 				nextAction: form.nextAction || null,
-			}
-			const config = {
-				method: 'post',
-				maxBodyLength: Infinity,
-				url: 'http://43.229.149.138:8080/smart_village/api/visit-logs/edit',
-				headers: {
-					"Authorization": `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-				data: JSON.stringify(payload),
-			}
-			const response = await axios.request(config)
-			console.log("อัปเดตสำเร็จ:", response.data)
-			window.location.href = "/visitlog"
-		} catch (err) {
-			console.error("อัปเดตล้มเหลว:", err)
+			};
+			await axios.post("/visit-logs/edit", payload);
+			await Swal.fire({
+				icon: "success",
+				title: "อัปเดตสำเร็จ",
+				text: "บันทึกการเยี่ยมบ้านเรียบร้อยแล้ว",
+				timer: 1800,
+				showConfirmButton: false,
+			});
+			window.location.href = "/visitlog";
+		} catch (err: any) {
+			console.error("อัปเดตล้มเหลว:", err);
+			Swal.fire({
+				icon: "error",
+				title: "อัปเดตไม่สำเร็จ",
+				text: err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+			});
+		} finally {
+			setSaving(false);
 		}
-	}
+	};
 
 	const selectClass = (field: string) =>
 		`mt-1 w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 dark:text-gray-300 ${
 			errors[field]
 				? "border-red-400 focus:border-red-400 focus:ring-red-400 text-red-700"
 				: "border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-700 dark:border-gray-600"
-		}`
+		}`;
 
 	return (
 		<>
 			<ComponentCard title="แก้ไขบันทึกการเยี่ยมบ้าน (Edit Visit Log)">
 
-				{/* Visit Log ID — เก็บอัตโนมัติ */}
 				<input type="hidden" name="id" value={form.id} />
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{/* Dropdown เลือกบุคคล */}
 					<div>
 						<Label>บุคคลที่เยี่ยม <span className="text-red-500">*</span></Label>
 						<select
@@ -156,7 +160,7 @@ export default function VisitLogEdit() {
 							className={selectClass("personId")}
 						>
 							<option value="">-- เลือกบุคคล --</option>
-							{persons.map(p => (
+							{persons.map((p) => (
 								<option key={p.personId} value={p.personId}>
 									{p.firstName} {p.lastName}
 								</option>
@@ -165,7 +169,6 @@ export default function VisitLogEdit() {
 						{errors.personId && <p className="mt-1 text-xs text-red-500">{errors.personId}</p>}
 					</div>
 
-					{/* Dropdown เลือกครัวเรือน */}
 					<div>
 						<Label>ครัวเรือนที่เยี่ยม <span className="text-red-500">*</span></Label>
 						<select
@@ -175,7 +178,7 @@ export default function VisitLogEdit() {
 							className={selectClass("householdId")}
 						>
 							<option value="">-- เลือกครัวเรือน --</option>
-							{households.map(h => (
+							{households.map((h) => (
 								<option key={h.householdId} value={h.householdId}>
 									บ้านเลขที่ {h.houseNo}
 								</option>
@@ -193,8 +196,8 @@ export default function VisitLogEdit() {
 							placeholder="เลือกวันที่เยี่ยม"
 							defaultDate={form.visitDate || undefined}
 							onChange={(_, dateStr) => {
-								setForm(prev => ({ ...prev, visitDate: dateStr }))
-								if (errors.visitDate) setErrors(prev => ({ ...prev, visitDate: "" }))
+								setForm((prev) => ({ ...prev, visitDate: dateStr }));
+								if (errors.visitDate) setErrors((prev) => ({ ...prev, visitDate: "" }));
 							}}
 						/>
 						{errors.visitDate && <p className="mt-1 text-xs text-red-500">{errors.visitDate}</p>}
@@ -248,9 +251,10 @@ export default function VisitLogEdit() {
 				<div className="flex gap-3 mt-4">
 					<button
 						onClick={handleSubmit}
-						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+						disabled={saving}
+						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						บันทึก
+						{saving ? "กำลังบันทึก..." : "บันทึก"}
 					</button>
 					<a
 						href="/visitlog"
@@ -261,6 +265,13 @@ export default function VisitLogEdit() {
 				</div>
 			</ComponentCard>
 		</>
-	)
+	);
 }
 
+export default function VisitLogEdit() {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<VisitLogEditContent />
+		</Suspense>
+	);
+}

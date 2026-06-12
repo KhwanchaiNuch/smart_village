@@ -1,77 +1,76 @@
-
 package com.k2dev.smart_village.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "person")
 @Data
 public class Person {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "person_id")
-	private Integer personId;
-	private Integer householdId;
-	private String firstName;
-	private String lastName;
-	private String occupation;
-	private Boolean isSick;
-	private Boolean isBedridden;
 
-	public Integer getPersonId() {
-		return personId;
-	}
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "person_id")
+    private Integer personId;
 
-	public void setPersonId(Integer personId) {
-		this.personId = personId;
-	}
+    private Integer householdId;
 
-	public Integer getHouseholdId() {
-		return householdId;
-	}
+    @Column(length = 13)
+    private String cid;
 
-	public void setHouseholdId(Integer householdId) {
-		this.householdId = householdId;
-	}
+    @Column(length = 50)
+    private String title;
 
-	public String getFirstName() {
-		return firstName;
-	}
+    private String firstName;
+    private String lastName;
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+    @Column(length = 10)
+    private String gender;
 
-	public String getLastName() {
-		return lastName;
-	}
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthDate;
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    private Integer age;
 
-	public String getOccupation() {
-		return occupation;
-	}
+    @Column(length = 50)
+    private String maritalStatus;
 
-	public void setOccupation(String occupation) {
-		this.occupation = occupation;
-	}
+    @Column(length = 100)
+    private String educationLevel;
 
-	public Boolean getIsSick() {
-		return isSick;
-	}
+    private Boolean isRegisteredInVillage;
+    private Boolean isLivingInVillage;
 
-	public void setIsSick(Boolean isSick) {
-		this.isSick = isSick;
-	}
+    @Column(length = 100)
+    private String occupation;
 
-	public Boolean getIsBedridden() {
-		return isBedridden;
-	}
+    @Column(length = 100)
+    private String secondaryOccupation;
 
-	public void setIsBedridden(Boolean isBedridden) {
-		this.isBedridden = isBedridden;
-	}
+    private Integer incomePerMonth;
+
+    private Boolean isSick;
+
+    @Column(columnDefinition = "TEXT")
+    private String diseaseList;
+
+    private Boolean isBedridden;
+    private Boolean isDisabled;
+
+    @Column(length = 100)
+    private String disabilityType;
+
+    private Boolean isElderly;
+    private Boolean livingAlone;
+
+    @Column(length = 100)
+    private String welfareCard;
+
+    @Column(columnDefinition = "TEXT")
+    private String otherWelfare;
+
+    @Column(length = 50)
+    private String status;
 }

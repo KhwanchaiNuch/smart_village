@@ -5,9 +5,10 @@ import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import DatePicker from '@/components/form/date-picker';
-import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-const axios = require('axios');
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
 
 interface Person {
 	personId: number;
@@ -18,12 +19,13 @@ interface Person {
 
 type FormErrors = Partial<Record<string, string>>;
 
-export default function HealthRecordEdit() {
-	const searchParams = useSearchParams()
-	const id = searchParams.get("id")
+function HealthRecordEditContent() {
+	const searchParams = useSearchParams();
+	const id = searchParams.get("id");
 
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [errors, setErrors] = useState<FormErrors>({});
+	const [saving, setSaving] = useState(false);
 
 	const [form, setForm] = useState({
 		id: "",
@@ -35,23 +37,19 @@ export default function HealthRecordEdit() {
 		riskGroup: "",
 		needHomeVisit: true,
 		remark: "",
-	})
+	});
 
 	useEffect(() => {
-		document.title = "Smart Village | Health Record Edit"
+		document.title = "Smart Village | Health Record Edit";
+		if (!id) return;
 		async function fetchData() {
 			try {
-				const token = localStorage.getItem("token")
-				const headers = { "Authorization": `Bearer ${token}` }
-
-				// ดึงข้อมูลพร้อมกัน
 				const [recordRes, personsRes] = await Promise.all([
-					axios.request({ method: 'get', maxBodyLength: Infinity, url: `http://43.229.149.138:8080/smart_village/api/health-records/${id}`, headers }),
-					axios.request({ method: 'get', maxBodyLength: Infinity, url: 'http://43.229.149.138:8080/smart_village/api/persons', headers }),
-				])
-
-				const data = recordRes.data
-				setPersons(personsRes.data)
+					axios.get(`/health-records/${id}`),
+					axios.get<Person[]>("/persons"),
+				]);
+				const data = recordRes.data;
+				setPersons(personsRes.data);
 				setForm({
 					id: data.id?.toString() || "",
 					personId: data.personId?.toString() || "",
@@ -62,44 +60,48 @@ export default function HealthRecordEdit() {
 					riskGroup: data.riskGroup || "",
 					needHomeVisit: data.needHomeVisit ?? true,
 					remark: data.remark || "",
-				})
-			} catch (err) {
-				console.error(err)
+				});
+			} catch (err: any) {
+				console.error(err);
+				Swal.fire({
+					icon: "error",
+					title: "โหลดข้อมูลไม่สำเร็จ",
+					text: err?.response?.data?.message || "ไม่สามารถดึงข้อมูลได้",
+				});
 			}
 		}
-		if (id) fetchData()
-	}, [id])
+		fetchData();
+	}, [id]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({ ...prev, [name]: value }))
-		if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
-	}
+		const { name, value } = e.target;
+		setForm((prev) => ({ ...prev, [name]: value }));
+		if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+	};
 
 	const handleRadioNeedHomeVisitChange = (value: string) => {
-		setForm(prev => ({ ...prev, needHomeVisit: value === "true" }))
-	}
+		setForm((prev) => ({ ...prev, needHomeVisit: value === "true" }));
+	};
 
 	const handleTextAreaChange = (value: string) => {
-		setForm(prev => ({ ...prev, remark: value }))
-	}
+		setForm((prev) => ({ ...prev, remark: value }));
+	};
 
 	const validate = (): boolean => {
-		const newErrors: FormErrors = {}
-		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล"
-		if (!form.checkDate) newErrors.checkDate = "กรุณาระบุวันที่ตรวจ"
-		if (!form.bp.trim()) newErrors.bp = "กรุณาระบุค่าความดันโลหิต"
-		if (!form.sugar.toString().trim()) newErrors.sugar = "กรุณาระบุค่าน้ำตาลในเลือด"
-		if (!form.bmi.toString().trim()) newErrors.bmi = "กรุณาระบุค่า BMI"
-		setErrors(newErrors)
-		return Object.keys(newErrors).length === 0
-	}
+		const newErrors: FormErrors = {};
+		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล";
+		if (!form.checkDate) newErrors.checkDate = "กรุณาระบุวันที่ตรวจ";
+		if (!form.bp.trim()) newErrors.bp = "กรุณาระบุค่าความดันโลหิต";
+		if (!form.sugar.toString().trim()) newErrors.sugar = "กรุณาระบุค่าน้ำตาลในเลือด";
+		if (!form.bmi.toString().trim()) newErrors.bmi = "กรุณาระบุค่า BMI";
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
 	const handleSubmit = async () => {
-		if (!validate()) return
+		if (!validate()) return;
+		setSaving(true);
 		try {
-			const token = localStorage.getItem("token")
-			console.log("[ REQUEST ] HEALTH RECORD EDIT =>", form);
 			const payload = {
 				id: parseInt(form.id),
 				personId: parseInt(form.personId),
@@ -110,41 +112,42 @@ export default function HealthRecordEdit() {
 				riskGroup: form.riskGroup || null,
 				needHomeVisit: form.needHomeVisit,
 				remark: form.remark || null,
-			}
-			const config = {
-				method: 'post',
-				maxBodyLength: Infinity,
-				url: 'http://43.229.149.138:8080/smart_village/api/health-records/edit',
-				headers: {
-					"Authorization": `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-				data: JSON.stringify(payload),
-			}
-			const response = await axios.request(config)
-			console.log("อัปเดตสำเร็จ:", response.data)
-			window.location.href = "/healthrecord"
-		} catch (err) {
-			console.error("อัปเดตล้มเหลว:", err)
+			};
+			await axios.post("/health-records/edit", payload);
+			await Swal.fire({
+				icon: "success",
+				title: "อัปเดตสำเร็จ",
+				text: "บันทึกข้อมูลสุขภาพเรียบร้อยแล้ว",
+				timer: 1800,
+				showConfirmButton: false,
+			});
+			window.location.href = "/healthrecord";
+		} catch (err: any) {
+			console.error("อัปเดตล้มเหลว:", err);
+			Swal.fire({
+				icon: "error",
+				title: "อัปเดตไม่สำเร็จ",
+				text: err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+			});
+		} finally {
+			setSaving(false);
 		}
-	}
+	};
 
 	const selectClass = (field: string) =>
 		`mt-1 w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 dark:text-gray-300 ${
 			errors[field]
 				? "border-red-400 focus:border-red-400 focus:ring-red-400 text-red-700"
 				: "border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-700 dark:border-gray-600"
-		}`
+		}`;
 
 	return (
 		<>
 			<ComponentCard title="แก้ไขข้อมูลสุขภาพเชิงตัวเลข (Edit Health Record)">
 
-				{/* Health Record ID — เก็บอัตโนมัติ */}
 				<input type="hidden" name="id" value={form.id} />
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					{/* Dropdown เลือกบุคคล */}
 					<div>
 						<Label>บุคคล <span className="text-red-500">*</span></Label>
 						<select
@@ -154,7 +157,7 @@ export default function HealthRecordEdit() {
 							className={selectClass("personId")}
 						>
 							<option value="">-- เลือกบุคคล --</option>
-							{persons.map(p => (
+							{persons.map((p) => (
 								<option key={p.personId} value={p.personId}>
 									{p.firstName} {p.lastName}{p.occupation ? ` (${p.occupation})` : ""}
 								</option>
@@ -170,8 +173,8 @@ export default function HealthRecordEdit() {
 							placeholder="เลือกวันที่ตรวจ"
 							defaultDate={form.checkDate || undefined}
 							onChange={(_, dateStr) => {
-								setForm(prev => ({ ...prev, checkDate: dateStr }))
-								if (errors.checkDate) setErrors(prev => ({ ...prev, checkDate: "" }))
+								setForm((prev) => ({ ...prev, checkDate: dateStr }));
+								if (errors.checkDate) setErrors((prev) => ({ ...prev, checkDate: "" }));
 							}}
 						/>
 						{errors.checkDate && <p className="mt-1 text-xs text-red-500">{errors.checkDate}</p>}
@@ -265,9 +268,10 @@ export default function HealthRecordEdit() {
 				<div className="flex gap-3 mt-4">
 					<button
 						onClick={handleSubmit}
-						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+						disabled={saving}
+						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						บันทึก
+						{saving ? "กำลังบันทึก..." : "บันทึก"}
 					</button>
 					<a
 						href="/healthrecord"
@@ -278,6 +282,13 @@ export default function HealthRecordEdit() {
 				</div>
 			</ComponentCard>
 		</>
-	)
+	);
 }
 
+export default function HealthRecordEdit() {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<HealthRecordEditContent />
+		</Suspense>
+	);
+}

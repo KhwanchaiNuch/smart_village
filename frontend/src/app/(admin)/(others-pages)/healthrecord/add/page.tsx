@@ -5,8 +5,9 @@ import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import DatePicker from '@/components/form/date-picker';
-import { useEffect, useState } from "react"
-const axios = require('axios');
+import { useEffect, useState } from "react";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
 
 interface Person {
 	personId: number;
@@ -18,9 +19,9 @@ interface Person {
 type FormErrors = Partial<Record<string, string>>;
 
 export default function HealthRecordAdd() {
-
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [errors, setErrors] = useState<FormErrors>({});
+	const [saving, setSaving] = useState(false);
 
 	const [form, setForm] = useState({
 		personId: "",
@@ -31,58 +32,44 @@ export default function HealthRecordAdd() {
 		riskGroup: "",
 		needHomeVisit: true,
 		remark: "",
-	})
+	});
 
 	useEffect(() => {
-		document.title = "Smart Village | Health Record Add"
-		async function fetchPersons() {
-			try {
-				const token = localStorage.getItem("token")
-				const config = {
-					method: 'get',
-					maxBodyLength: Infinity,
-					url: 'http://43.229.149.138:8080/smart_village/api/persons',
-					headers: { "Authorization": `Bearer ${token}` }
-				}
-				const response = await axios.request(config)
-				setPersons(response.data)
-			} catch (err) {
-				console.error(err)
-			}
-		}
-		fetchPersons()
+		document.title = "Smart Village | Health Record Add";
+		axios.get<Person[]>("/persons")
+			.then((res) => setPersons(res.data))
+			.catch((err) => console.error(err));
 	}, []);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value } = e.target
-		setForm(prev => ({ ...prev, [name]: value }))
-		if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }))
-	}
+		const { name, value } = e.target;
+		setForm((prev) => ({ ...prev, [name]: value }));
+		if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+	};
 
 	const handleRadioNeedHomeVisitChange = (value: string) => {
-		setForm(prev => ({ ...prev, needHomeVisit: value === "true" }))
-	}
+		setForm((prev) => ({ ...prev, needHomeVisit: value === "true" }));
+	};
 
 	const handleTextAreaChange = (value: string) => {
-		setForm(prev => ({ ...prev, remark: value }))
-	}
+		setForm((prev) => ({ ...prev, remark: value }));
+	};
 
 	const validate = (): boolean => {
-		const newErrors: FormErrors = {}
-		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล"
-		if (!form.checkDate) newErrors.checkDate = "กรุณาระบุวันที่ตรวจ"
-		if (!form.bp.trim()) newErrors.bp = "กรุณาระบุค่าความดันโลหิต"
-		if (!form.sugar.toString().trim()) newErrors.sugar = "กรุณาระบุค่าน้ำตาลในเลือด"
-		if (!form.bmi.toString().trim()) newErrors.bmi = "กรุณาระบุค่า BMI"
-		setErrors(newErrors)
-		return Object.keys(newErrors).length === 0
-	}
+		const newErrors: FormErrors = {};
+		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล";
+		if (!form.checkDate) newErrors.checkDate = "กรุณาระบุวันที่ตรวจ";
+		if (!form.bp.trim()) newErrors.bp = "กรุณาระบุค่าความดันโลหิต";
+		if (!form.sugar.toString().trim()) newErrors.sugar = "กรุณาระบุค่าน้ำตาลในเลือด";
+		if (!form.bmi.toString().trim()) newErrors.bmi = "กรุณาระบุค่า BMI";
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
 	const handleSubmit = async () => {
-		if (!validate()) return
+		if (!validate()) return;
+		setSaving(true);
 		try {
-			const token = localStorage.getItem("token")
-			console.log("[ REQUEST ] HEALTH RECORD ADD =>", form);
 			const payload = {
 				personId: parseInt(form.personId),
 				checkDate: form.checkDate,
@@ -92,31 +79,34 @@ export default function HealthRecordAdd() {
 				riskGroup: form.riskGroup || null,
 				needHomeVisit: form.needHomeVisit,
 				remark: form.remark || null,
-			}
-			const config = {
-				method: 'post',
-				maxBodyLength: Infinity,
-				url: 'http://43.229.149.138:8080/smart_village/api/health-records/add',
-				headers: {
-					"Authorization": `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
-				data: JSON.stringify(payload),
-			}
-			const response = await axios.request(config)
-			console.log("บันทึกสำเร็จ:", response.data)
-			window.location.href = "/healthrecord"
-		} catch (err) {
-			console.error("บันทึกล้มเหลว:", err)
+			};
+			await axios.post("/health-records/add", payload);
+			await Swal.fire({
+				icon: "success",
+				title: "บันทึกสำเร็จ",
+				text: "เพิ่มข้อมูลสุขภาพเรียบร้อยแล้ว",
+				timer: 1800,
+				showConfirmButton: false,
+			});
+			window.location.href = "/healthrecord";
+		} catch (err: any) {
+			console.error("บันทึกล้มเหลว:", err);
+			Swal.fire({
+				icon: "error",
+				title: "บันทึกไม่สำเร็จ",
+				text: err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+			});
+		} finally {
+			setSaving(false);
 		}
-	}
+	};
 
 	const selectClass = (field: string) =>
 		`mt-1 w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 dark:text-gray-300 ${
 			errors[field]
 				? "border-red-400 focus:border-red-400 focus:ring-red-400 text-red-700"
 				: "border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-700 dark:border-gray-600"
-		}`
+		}`;
 
 	return (
 		<>
@@ -132,7 +122,7 @@ export default function HealthRecordAdd() {
 							className={selectClass("personId")}
 						>
 							<option value="">-- เลือกบุคคล --</option>
-							{persons.map(p => (
+							{persons.map((p) => (
 								<option key={p.personId} value={p.personId}>
 									{p.firstName} {p.lastName}{p.occupation ? ` (${p.occupation})` : ""}
 								</option>
@@ -147,8 +137,8 @@ export default function HealthRecordAdd() {
 							id="checkDate"
 							placeholder="เลือกวันที่ตรวจ"
 							onChange={(_, dateStr) => {
-								setForm(prev => ({ ...prev, checkDate: dateStr }))
-								if (errors.checkDate) setErrors(prev => ({ ...prev, checkDate: "" }))
+								setForm((prev) => ({ ...prev, checkDate: dateStr }));
+								if (errors.checkDate) setErrors((prev) => ({ ...prev, checkDate: "" }));
 							}}
 						/>
 						{errors.checkDate && <p className="mt-1 text-xs text-red-500">{errors.checkDate}</p>}
@@ -242,9 +232,10 @@ export default function HealthRecordAdd() {
 				<div className="flex gap-3 mt-4">
 					<button
 						onClick={handleSubmit}
-						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+						disabled={saving}
+						className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						บันทึก
+						{saving ? "กำลังบันทึก..." : "บันทึก"}
 					</button>
 					<a
 						href="/healthrecord"
@@ -255,6 +246,5 @@ export default function HealthRecordAdd() {
 				</div>
 			</ComponentCard>
 		</>
-	)
+	);
 }
-

@@ -19,6 +19,8 @@ import {
 	UserCircleIcon,
 	HeartIcon,
 	TimeIcon,
+	TrainingIcon,
+	CommunityIssueIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -49,6 +51,16 @@ const navItems: NavItem[] = [
 		icon: <TimeIcon/>,
 		name: "เยื่ยมบ้าน",
 		path: "/visitlog",
+	},
+	{
+		icon: <TrainingIcon/>,
+		name: "อบรมพัฒนา",
+		path: "/training",
+	},
+	{
+		icon: <CommunityIssueIcon/>,
+		name: "ปัญหาชุมชน",
+		path: "/communityissue",
 	},
 	{
 		icon: <GridIcon />,

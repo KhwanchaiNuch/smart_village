@@ -4,12 +4,12 @@ import Input from '@/components/form/input/InputField';
 import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
-export default function HouseHoldEdit() {
+function HouseHoldEditContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const id = searchParams.get("id");
@@ -301,4 +301,12 @@ export default function HouseHoldEdit() {
 			</ComponentCard>
 		</>
 	);
+}
+
+export default function HouseHoldEdit() {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<HouseHoldEditContent />
+		</Suspense>
+	)
 }

@@ -1,100 +1,51 @@
-
 package com.k2dev.smart_village.entity;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
 @Entity
 @Table(name = "household")
+@Data
 public class Household {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "household_id")
-	private Integer householdId;
-	@Column(name = "village_id")
-	@JsonProperty("villageId") //แมปกับ JSON หน้าบ้าน
-	private Integer villageId;
 
-	@Column(name = "house_no")
-	private String houseNo;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "household_id")
+    private Integer householdId;
 
-	// หมู่ที่ของบ้าน ใช้แสดงใน dropdown ตอนเพิ่มข้อมูลบุคคล
-	@Column(name = "moo")
-	private String moo;
+    @Column(name = "village_id")
+    private Integer villageId;
 
-	@Column(name = "house_condition")
-	private String houseCondition;
+    @Column(name = "house_no")
+    private String houseNo;
 
-	@Column(name = "water_system")
-	private String waterSystem;
+    @Column(name = "moo")
+    private String moo;
 
-	@Column(name = "internet_access")
-	private Boolean internetAccess;
+    @Column(name = "house_registration_status")
+    private Boolean houseRegistrationStatus;
 
-	@Column(name = "remark")
-	private String remark;
+    @Column(name = "house_registration_type", length = 100)
+    private String houseRegistrationType;
 
-	public Integer getHouseholdId() {
-		return householdId;
-	}
+    @Column(name = "gps_lat", length = 50)
+    private String gpsLat;
 
-	public void setHouseholdId(Integer householdId) {
-		this.householdId = householdId;
-	}
+    @Column(name = "gps_lng", length = 50)
+    private String gpsLng;
 
-	public Integer getVillageId() {
-		return villageId;
-	}
+    @Column(name = "house_condition")
+    private String houseCondition;
 
-	public void setVillageId(Integer villageId) {
-		this.villageId = villageId;
-	}
+    @Column(name = "water_system")
+    private String waterSystem;
 
-	public String getHouseNo() {
-		return houseNo;
-	}
+    @Column(name = "internet_access")
+    private Boolean internetAccess;
 
-	public void setHouseNo(String houseNo) {
-		this.houseNo = houseNo;
-	}
+    @Column(name = "electricity_access")
+    private Boolean electricityAccess;
 
-	public String getMoo() {
-		return moo;
-	}
-
-	public void setMoo(String moo) {
-		this.moo = moo;
-	}
-
-	public String getHouseCondition() {
-		return houseCondition;
-	}
-
-	public void setHouseCondition(String houseCondition) {
-		this.houseCondition = houseCondition;
-	}
-
-	public String getWaterSystem() {
-		return waterSystem;
-	}
-
-	public void setWaterSystem(String waterSystem) {
-		this.waterSystem = waterSystem;
-	}
-
-	public Boolean getInternetAccess() {
-		return internetAccess;
-	}
-
-	public void setInternetAccess(Boolean internetAccess) {
-		this.internetAccess = internetAccess;
-	}
-
-	public String getRemark() {
-		return remark;
-	}
-
-	public void setRemark(String remark) {
-		this.remark = remark;
-	}
+    @Column(name = "remark")
+    private String remark;
 }
