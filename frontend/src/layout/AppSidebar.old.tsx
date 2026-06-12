@@ -17,10 +17,6 @@ import {
 	PlugInIcon,
 	TableIcon,
 	UserCircleIcon,
-	HeartIcon,
-	TimeIcon,
-	TrainingIcon,
-	CommunityIssueIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -31,7 +27,7 @@ type NavItem = {
 	subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const adminNavItems: NavItem[] = [
+const navItems: NavItem[] = [
 	{
 		icon: <CalenderIcon/>,
 		name: "รหัสครัวเรือน",
@@ -43,24 +39,9 @@ const adminNavItems: NavItem[] = [
 		path: "/person",
 	},
 	{
-		icon: <HeartIcon/>,
-		name: "บันทึกสุขภาพ",
+		icon: <InfoIcon/>,
+		name: "สุขภาพเชิงตัวเลข",
 		path: "/healthrecord",
-	},
-	{
-		icon: <TimeIcon/>,
-		name: "เยื่ยมบ้าน",
-		path: "/visitlog",
-	},
-	{
-		icon: <TrainingIcon/>,
-		name: "อบรมพัฒนา",
-		path: "/training",
-	},
-	{
-		icon: <CommunityIssueIcon/>,
-		name: "ปัญหาชุมชน",
-		path: "/communityissue",
 	},
 	{
 		icon: <GridIcon />,
@@ -72,11 +53,13 @@ const adminNavItems: NavItem[] = [
 		name: "Calendar",
 		path: "/calendar",
 	},
+	
 	{
 		icon: <UserCircleIcon />,
 		name: "User Profile",
 		path: "/profile",
 	},
+
 	{
 		name: "Forms",
 		icon: <ListIcon />,
@@ -96,20 +79,6 @@ const adminNavItems: NavItem[] = [
 		],
 	},
 ];
-
-const villagerNavItems: NavItem[] = [
-	{
-		icon: <GridIcon />,
-		name: "หน้าแรก",
-		path: "/villager",
-	},
-	{
-		icon: <UserCircleIcon />,
-		name: "ข้อมูลของฉัน",
-		path: "/villager",
-	},
-];
-
 
 const othersItems: NavItem[] = [
 	{
@@ -145,13 +114,6 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
 	const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
 	const pathname = usePathname();
-
-	const [role, setRole] = useState<string | null>(null);
-	useEffect(() => {
-		setRole(localStorage.getItem("role"));
-	}, []);
-
-	const activeNavItems = role === "VILLAGE" ? villagerNavItems : adminNavItems;
 
 	const renderMenuItems = (
 		navItems: NavItem[],
@@ -289,7 +251,7 @@ const AppSidebar: React.FC = () => {
 		// Check if the current path matches any submenu item
 		let submenuMatched = false;
 		["main", "others"].forEach((menuType) => {
-			const items = menuType === "main" ? activeNavItems : othersItems;
+			const items = menuType === "main" ? navItems : othersItems;
 			items.forEach((nav, index) => {
 				if (nav.subItems) {
 					nav.subItems.forEach((subItem) => {
@@ -355,7 +317,7 @@ const AppSidebar: React.FC = () => {
 				className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
 					}`}
 			>
-				<Link href={role === "VILLAGE" ? "/villager" : "/"}>
+				<Link href="/">
 					{isExpanded || isHovered || isMobileOpen ? (
 						<>
 							<Image
@@ -399,7 +361,7 @@ const AppSidebar: React.FC = () => {
 									<HorizontaLDots />
 								)}
 							</h2>
-							{renderMenuItems(activeNavItems, "main")}
+							{renderMenuItems(navItems, "main")}
 						</div>
 
 						{/* <div className="">

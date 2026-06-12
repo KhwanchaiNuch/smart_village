@@ -4,11 +4,8 @@ package com.k2dev.smart_village.controller;
 import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -17,30 +14,54 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HouseholdController {
 
-	@Autowired
-	private HouseholdRepository repo;
+    @Autowired
+    private HouseholdRepository repo;
 
-	@GetMapping
-	public List<Household> list() {
-		return repo.findAll();
-	}
+    /**
+     * ดึงครัวเรือนทั้งหมดในระบบ (สำหรับ Admin)
+     */
+    @GetMapping
+    public List<Household> list() {
+        return repo.findAll();
+    }
 
-	@GetMapping("/{id}")
-	public Household get(@PathVariable Integer id) {
-		return repo.findById(id).orElseThrow();
-	}
+    /**
+     * ดึงครัวเรือนตาม villageId (สำหรับผู้ใช้ระดับหมู่บ้าน role = VILLAGE)
+     * ตัวอย่าง: GET /api/households/by-village/3
+     */
+    @GetMapping("/by-village/{villageId}")
+    public List<Household> listByVillage(@PathVariable Integer villageId) {
+        return repo.findByVillageId(villageId);
+    }
 
-	@PostMapping("/add")
-	public Household add(@RequestBody Household h) {
-		return repo.save(h);
-	}
+    /**
+     * ดึงครัวเรือนตาม id
+     */
+    @GetMapping("/{id}")
+    public Household get(@PathVariable Integer id) {
+        return repo.findById(id).orElseThrow();
+    }
 
-	@PostMapping("/edit")
-	public Household edit(@RequestBody Household h) {
-		return repo.save(h);
-	}
+    /**
+     * เพิ่มครัวเรือนใหม่
+     */
+    @PostMapping("/add")
+    public Household add(@RequestBody Household h) {
+        return repo.save(h);
+    }
 
-	@DeleteMapping("/{id}")
+    /**
+     * แก้ไขข้อมูลครัวเรือน (ส่ง householdId มาใน body)
+     */
+    @PostMapping("/edit")
+    public Household edit(@RequestBody Household h) {
+        return repo.save(h);
+    }
+
+    /**
+     * ลบครัวเรือนตาม id
+     */
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         repo.deleteById(id);
     }

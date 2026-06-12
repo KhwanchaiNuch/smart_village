@@ -4,8 +4,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 
 export default function AdminLayout({
   children,
@@ -13,22 +12,6 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  const router = useRouter();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    if (!token) {
-      router.replace("/signin");
-      return;
-    }
-    if (role === "VILLAGE") {
-      // ลูกบ้านที่เข้า URL admin อื่น ๆ โดยตรง → redirect ไปหน้าลูกบ้าน
-      if (!window.location.pathname.startsWith("/villager")) {
-        router.replace("/villager");
-      }
-    }
-  }, [router]);
 
   // Dynamic class for main content margin based on sidebar state
   const mainContentMargin = isMobileOpen
