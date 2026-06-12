@@ -146,11 +146,11 @@ export default function CommunityIssuePage() {
 
       {/* ── Main Table ── */}
       <ComponentCard title="">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-            🚨 ปัญหาในชุมชน (Community Issues)
+            ปัญหาในชุมชน
           </h3>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
               placeholder="ค้นหา..."
@@ -203,15 +203,15 @@ export default function CommunityIssuePage() {
                     <TableCell isHeader className="px-5 py-3 text-center">
                       <Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
                     </TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">ระดับ</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-theme-xs">ประเภทปัญหา</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-theme-xs">พื้นที่</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">สถานะ</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">ผู้รับผิดชอบ</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">ผลกระทบ (คน)</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">งบประมาณ</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">กำหนดเสร็จ</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">Action</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ระดับ</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ประเภทปัญหา</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">พื้นที่</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">สถานะ</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ผู้รับผิดชอบ</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ผลกระทบ (คน)</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">งบประมาณ</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">กำหนดเสร็จ</TableCell>
+                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -230,31 +230,30 @@ export default function CommunityIssuePage() {
                             {issue.severity}
                           </span>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-800 dark:text-white font-medium text-theme-sm">
+                        <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                           {issue.issueType || "-"}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-theme-sm max-w-[150px] truncate">
+                        <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400 max-w-[150px] truncate">
                           {issue.area || "-"}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-center">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${stCfg.bg} ${stCfg.text}`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${stCfg.bg} ${stCfg.text}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${stCfg.dot}`} />
                             {issue.status || "-"}
                           </span>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm">{issue.owner || "-"}</TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{issue.owner || "-"}</TableCell>
                         <TableCell className="px-4 py-3 text-center">
                           {issue.impactPeople != null ? (
-                            <span className="font-semibold text-gray-700 dark:text-gray-200">{issue.impactPeople.toLocaleString()}</span>
-                          ) : "-"}
+                            <span className="text-gray-500 text-theme-sm dark:text-gray-400">{issue.impactPeople.toLocaleString()}</span>
+                          ) : <span className="text-gray-500 text-theme-sm dark:text-gray-400">-</span>}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-center text-gray-500 text-theme-sm">
+                        <TableCell className="px-4 py-3 text-center text-gray-500 text-theme-sm dark:text-gray-400">
                           {formatBudget(issue.budgetEstimate)}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-center">
                           {issue.dueDate ? (
                             <span className={`text-xs font-medium ${overdue ? "text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full" : "text-gray-500"}`}>
-                              {overdue && "⚠️ "}
                               {issue.dueDate}
                             </span>
                           ) : "-"}

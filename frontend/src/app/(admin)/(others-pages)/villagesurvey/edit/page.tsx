@@ -1,0 +1,187 @@
+"use client"
+import ComponentCard from "@/components/common/ComponentCard";
+import TextArea from "@/components/form/input/TextArea";
+import Label from "@/components/form/Label";
+import DatePicker from "@/components/form/date-picker";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
+
+type FormErrors = Partial<Record<string, string>>;
+interface Person { personId: number; firstName: string; lastName: string; }
+interface Household { householdId: number; houseNo: string; moo: string | null; }
+
+const NEED_TYPES = ["สาธารณูปโภค", "สาธารณสุข", "การศึกษา", "อาชีพ/รายได้", "ที่อยู่อาศัย", "สวัสดิการ", "ความปลอดภัย", "อื่น ๆ"];
+
+function VillageSurveyEditContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [saving, setSaving] = useState(false);
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [form, setForm] = useState({
+    surveyId: "", householdId: "", personId: "",
+    needType: "", priorityLevel: "3", detail: "", surveyDate: "",
+  });
+
+  const fetchRefs = useCallback(async () => {
+    try {
+      const [pRes, hRes] = await Promise.all([
+        axios.get<Person[]>("/persons"),
+        axios.get<Household[]>("/households"),
+      ]);
+      setPersons(pRes.data);
+      setHouseholds(hRes.data);
+    } catch { /* non-critical */ }
+  }, []);
+
+  useEffect(() => {
+    document.title = "Smart Village | แก้ไขความต้องการชุมชน";
+    fetchRefs();
+    if (!id) return;
+    axios.get(`/village-need-surveys/${id}`)
+      .then((res) => {
+        const d = res.data;
+        setForm({
+          surveyId: d.surveyId?.toString() || "",
+          householdId: d.householdId?.toString() || "",
+          personId: d.personId?.toString() || "",
+          needType: d.needType || "",
+          priorityLevel: d.priorityLevel?.toString() || "3",
+          detail: d.detail || "",
+          surveyDate: d.surveyDate || "",
+        });
+      })
+      .catch((err: any) => Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message }));
+  }, [id, fetchRefs]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
+    if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+  };
+
+  const validate = (): boolean => {
+    const e: FormErrors = {};
+    if (!form.needType) e.needType = "กรุณาเลือกประเภทความต้องการ";
+    if (!form.surveyDate) e.surveyDate = "กรุณาระบุวันที่สำรวจ";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      await axios.post("/village-need-surveys/edit", {
+        surveyId: parseInt(form.surveyId),
+        householdId: form.householdId ? parseInt(form.householdId) : null,
+        personId: form.personId ? parseInt(form.personId) : null,
+        needType: form.needType,
+        priorityLevel: form.priorityLevel ? parseInt(form.priorityLevel) : null,
+        detail: form.detail || null,
+        surveyDate: form.surveyDate,
+      });
+      await Swal.fire({ icon: "success", title: "อัปเดตสำเร็จ", timer: 1800, showConfirmButton: false });
+      window.location.href = "/villagesurvey";
+    } catch (err: any) {
+      Swal.fire({ icon: "error", title: "อัปเดตไม่สำเร็จ", text: err?.response?.data?.message || err?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const selectClass = (field: string) =>
+    `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 dark:text-gray-300 ${
+      errors[field]
+        ? "border-red-400 focus:border-red-400 focus:ring-red-400 text-red-700"
+        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-700 dark:border-gray-600"
+    }`;
+
+  return (
+    <ComponentCard title="แก้ไขความต้องการของชุมชน">
+      <input type="hidden" value={form.surveyId} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label>ประเภทความต้องการ <span className="text-red-500">*</span></Label>
+          <select name="needType" value={form.needType} onChange={handleChange} className={selectClass("needType")}>
+            <option value="">-- เลือกประเภท --</option>
+            {NEED_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          {errors.needType && <p className="mt-1 text-xs text-red-500">{errors.needType}</p>}
+        </div>
+        <div>
+          <Label>ระดับความสำคัญ (1=ต่ำ, 5=เร่งด่วน)</Label>
+          <select name="priorityLevel" value={form.priorityLevel} onChange={handleChange} className={selectClass("priorityLevel")}>
+            {[1,2,3,4,5].map((n) => (
+              <option key={n} value={n}>
+                {n} – {["ต่ำมาก","ต่ำ","ปานกลาง","สูง","เร่งด่วน"][n-1]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label>ครัวเรือนที่เกี่ยวข้อง</Label>
+          <select name="householdId" value={form.householdId} onChange={handleChange} className={selectClass("householdId")}>
+            <option value="">-- ไม่ระบุ --</option>
+            {households.map((h, i) => (
+              <option key={h.householdId ?? i} value={h.householdId}>
+                บ้านเลขที่ {h.houseNo || "-"}{h.moo ? ` หมู่ ${h.moo}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label>บุคคลที่เกี่ยวข้อง</Label>
+          <select name="personId" value={form.personId} onChange={handleChange} className={selectClass("personId")}>
+            <option value="">-- ไม่ระบุ --</option>
+            {persons.map((p, i) => (
+              <option key={p.personId ?? i} value={p.personId}>{p.firstName} {p.lastName}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <Label>รายละเอียดความต้องการ</Label>
+        <TextArea value={form.detail} onChange={(v) => setForm((p) => ({ ...p, detail: v }))}
+          rows={3} placeholder="อธิบายความต้องการหรือปัญหาเพิ่มเติม..." />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label>วันที่สำรวจ <span className="text-red-500">*</span></Label>
+          <DatePicker id="surveyDate" placeholder="เลือกวันที่สำรวจ" defaultDate={form.surveyDate || undefined}
+            onChange={(_, d) => {
+              setForm((p) => ({ ...p, surveyDate: d }));
+              if (errors.surveyDate) setErrors((p) => ({ ...p, surveyDate: "" }));
+            }} />
+          {errors.surveyDate && <p className="mt-1 text-xs text-red-500">{errors.surveyDate}</p>}
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-4">
+        <button onClick={handleSubmit} disabled={saving}
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium">
+          {saving ? "กำลังบันทึก..." : "บันทึก"}
+        </button>
+        <a href="/villagesurvey" className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 font-medium">
+          ยกเลิก
+        </a>
+      </div>
+    </ComponentCard>
+  );
+}
+
+export default function VillageSurveyEdit() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VillageSurveyEditContent />
+    </Suspense>
+  );
+}

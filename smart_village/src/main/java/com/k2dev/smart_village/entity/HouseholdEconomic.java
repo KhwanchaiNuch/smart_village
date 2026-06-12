@@ -15,6 +15,7 @@ public class HouseholdEconomic {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "economic_id")
     private Long id;
 
     private Long householdId;

@@ -21,6 +21,10 @@ import {
 	TimeIcon,
 	TrainingIcon,
 	CommunityIssueIcon,
+	HouseholdEconomicIcon,
+	PersonSkillIcon,
+	VillageSurveyIcon,
+	VillageResourceIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -61,6 +65,26 @@ const adminNavItems: NavItem[] = [
 		icon: <CommunityIssueIcon/>,
 		name: "ปัญหาชุมชน",
 		path: "/communityissue",
+	},
+	{
+		icon: <HouseholdEconomicIcon/>,
+		name: "เศรษฐกิจครัวเรือน",
+		path: "/householdeconomic",
+	},
+	{
+		icon: <PersonSkillIcon/>,
+		name: "ทักษะบุคคล",
+		path: "/personskill",
+	},
+	{
+		icon: <VillageSurveyIcon/>,
+		name: "ความต้องการชุมชน",
+		path: "/villagesurvey",
+	},
+	{
+		icon: <VillageResourceIcon/>,
+		name: "ทรัพยากรชุมชน",
+		path: "/villageresource",
 	},
 	{
 		icon: <GridIcon />,

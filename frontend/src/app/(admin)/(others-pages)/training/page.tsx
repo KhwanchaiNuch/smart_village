@@ -149,13 +149,13 @@ export default function TrainingPage() {
                   <TableCell isHeader className="px-5 py-3 text-center">
                     <Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
                   </TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-theme-xs">ชื่อโครงการ</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">หมวด</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">หน่วยจัด</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">วันที่จัด</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">สถานที่</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">ผู้เข้าร่วม</TableCell>
-                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs">Action</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ชื่อโครงการ</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">หมวด</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">หน่วยจัด</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">วันที่จัด</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">สถานที่</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ผู้เข้าร่วม</TableCell>
+                  <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -167,22 +167,22 @@ export default function TrainingPage() {
                       <TableCell className="px-4 py-3 text-center">
                         <Checkbox checked={isSelected} onChange={(c) => toggleSelectOne(ev.id, c)} />
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-800 dark:text-white font-medium text-theme-sm">
+                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                         {ev.trainingName || "-"}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${typeColor(ev.trainingType)}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${typeColor(ev.trainingType)}`}>
                           {ev.trainingType || "-"}
                         </span>
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm">{ev.organizer || "-"}</TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm">
+                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{ev.organizer || "-"}</TableCell>
+                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                         {ev.startDate || "-"}{ev.endDate && ev.endDate !== ev.startDate ? ` – ${ev.endDate}` : ""}
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm">{ev.location || "-"}</TableCell>
+                      <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{ev.location || "-"}</TableCell>
                       <TableCell className="px-4 py-3 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
-                          👥 {count} คน
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                          {count} คน
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-center">

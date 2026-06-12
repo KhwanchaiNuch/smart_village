@@ -1,7 +1,7 @@
 -- Migration: training_event, training_participant, community_issue
 -- Safe to run repeatedly (CREATE TABLE IF NOT EXISTS + ALTER TABLE ADD COLUMN IF NOT EXISTS)
 -- Run against smartvillage DB:
---   psql "postgresql://smartvillageadmin:9aY5Ep%jRlrIf.D0U@43.229.149.138:5432/smartvillage" -f schema-training-community.sql
+--   psql "postgresql://smartvillageadmin:9aY5Ep%jRlrIf.D0U@localhost:5432/smartvillage" -f schema-training-community.sql
 --
 -- NOTE: No FK constraints — person PK is "person_id" and household PK is "household_id"
 --       (not "id"), so we skip FK to avoid constraint errors.

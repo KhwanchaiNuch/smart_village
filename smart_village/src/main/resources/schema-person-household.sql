@@ -1,6 +1,6 @@
 -- Safe to run repeatedly: adds any missing columns to person and household tables.
 -- Run against smartvillage DB:
---   psql "postgresql://smartvillageadmin:PASSWORD@43.229.149.138:5432/smartvillage" -f schema-person-household.sql
+--   psql "postgresql://smartvillageadmin:PASSWORD@localhost:5432/smartvillage" -f schema-person-household.sql
 
 -- ---------- person ----------
 ALTER TABLE person ADD COLUMN IF NOT EXISTS cid                       VARCHAR(13);

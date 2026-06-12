@@ -3,7 +3,7 @@
 -- (Hibernate maps camelCase fields -> snake_case columns).
 -- Safe to run repeatedly: creates tables if missing and adds any missing columns.
 -- Run against the smartvillage (public) database, e.g.:
---   psql "postgresql://smartvillageadmin@43.229.149.138:5432/smartvillage" -f schema-healthrecord-visitlog.sql
+--   psql "postgresql://smartvillageadmin@localhost:5432/smartvillage" -f schema-healthrecord-visitlog.sql
 
 -- ---------- health_record ----------
 CREATE TABLE IF NOT EXISTS health_record (
