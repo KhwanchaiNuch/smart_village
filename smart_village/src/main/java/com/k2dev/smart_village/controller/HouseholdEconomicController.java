@@ -1,8 +1,9 @@
-
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.HouseholdEconomic;
 import com.k2dev.smart_village.repository.HouseholdEconomicRepository;
+import com.k2dev.smart_village.repository.HouseholdRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +16,17 @@ public class HouseholdEconomicController {
     @Autowired
     private HouseholdEconomicRepository repo;
 
+    @Autowired
+    private HouseholdRepository householdRepo;
+
     @GetMapping
     public List<HouseholdEconomic> list() {
-        return repo.findAll();
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        Integer vid = ScopeUtil.getScopeId();
+        if (vid == null) return List.of();
+        List<Long> hhIds = householdRepo.findByVillageId(vid).stream()
+                .map(h -> h.getHouseholdId().longValue()).toList();
+        return repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/{id}")

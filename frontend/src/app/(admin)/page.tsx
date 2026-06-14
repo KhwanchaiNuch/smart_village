@@ -52,15 +52,29 @@ interface Alert {
   message: string;
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN:    "ผู้ดูแลระบบ",
+  PROVINCE: "ผู้ใช้ระดับจังหวัด",
+  AMPHUR:   "ผู้ใช้ระดับอำเภอ",
+  TAMBON:   "ผู้ใช้ระดับตำบล",
+  VILLAGE:  "ผู้ใช้ระดับหมู่บ้าน",
+};
+
 export default function Dashboard() {
   const [households, setHouseholds] = useState<HouseholdData[]>([]);
   const [persons, setPersons] = useState<PersonData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showKpiModal, setShowKpiModal] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [scopeId, setScopeId] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Smart Village | Dashboard";
+    setUserRole(localStorage.getItem("role"));
+    setUserName(localStorage.getItem("fullName") || localStorage.getItem("username"));
+    setScopeId(localStorage.getItem("scopeId"));
     Promise.all([
       axios.get<HouseholdData[]>("/households"),
       axios.get<PersonData[]>("/persons"),
@@ -137,6 +151,32 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
+
+      {/* ===== SCOPE BANNER ===== */}
+      <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-lg">
+            {userRole === "ADMIN" ? "🛡️" : userRole === "VILLAGE" ? "🏘️" : "📍"}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-800 dark:text-white">
+              {userName ? `สวัสดี, ${userName}` : "สวัสดี"}
+            </p>
+            <p className="text-xs text-gray-400">
+              {ROLE_LABEL[userRole || ""] || userRole}
+              {userRole !== "ADMIN" && scopeId ? ` · หมู่บ้าน ID: ${scopeId}` : ""}
+              {userRole === "ADMIN" ? " · เห็นข้อมูลทั้งหมด" : " · เห็นข้อมูลเฉพาะขอบเขตของคุณ"}
+            </p>
+          </div>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-medium ${
+          userRole === "ADMIN" ? "bg-purple-100 text-purple-700" :
+          userRole === "VILLAGE" ? "bg-green-100 text-green-700" :
+          "bg-blue-100 text-blue-700"
+        }`}>
+          {ROLE_LABEL[userRole || ""] || userRole || "—"}
+        </span>
+      </div>
 
       {/* ===== AI SUMMARY — หุบได้ ===== */}
       <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">

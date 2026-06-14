@@ -7,4 +7,5 @@ import java.util.List;
 public interface VillageResourceRepository extends JpaRepository<VillageResource, Integer> {
     List<VillageResource> findByVillageCode(String villageCode);
     List<VillageResource> findByResourceType(String resourceType);
+    List<VillageResource> findByVillageId(Integer villageId);
 }

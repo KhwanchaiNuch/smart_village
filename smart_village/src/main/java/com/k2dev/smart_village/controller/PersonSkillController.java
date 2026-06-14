@@ -1,7 +1,10 @@
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.PersonSkill;
+import com.k2dev.smart_village.repository.HouseholdRepository;
+import com.k2dev.smart_village.repository.PersonRepository;
 import com.k2dev.smart_village.repository.PersonSkillRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +17,22 @@ public class PersonSkillController {
     @Autowired
     private PersonSkillRepository repo;
 
+    @Autowired
+    private HouseholdRepository householdRepo;
+
+    @Autowired
+    private PersonRepository personRepo;
+
     @GetMapping
     public List<PersonSkill> list() {
-        return repo.findAll();
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        Integer vid = ScopeUtil.getScopeId();
+        if (vid == null) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
+                .map(h -> h.getHouseholdId()).toList();
+        List<Integer> personIds = personRepo.findByHouseholdIdIn(hhIds).stream()
+                .map(p -> p.getPersonId()).toList();
+        return repo.findByPersonIdIn(personIds);
     }
 
     @GetMapping("/{id}")

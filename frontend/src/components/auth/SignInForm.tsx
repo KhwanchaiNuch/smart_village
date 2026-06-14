@@ -26,9 +26,11 @@ export default function SignInForm() {
         "http://localhost:8080/smart_village/api/auth/login",
         { username: identifier, password }
       );
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.role);
-      localStorage.setItem("scopeId", String(res.data.scopeId));
+      localStorage.setItem("token",    res.data.token);
+      localStorage.setItem("role",     res.data.role);
+      localStorage.setItem("scopeId",  String(res.data.scopeId ?? ""));
+      localStorage.setItem("username", res.data.username ?? "");
+      localStorage.setItem("fullName", res.data.fullName ?? "");
       router.push("/");
     } catch {
       Swal.fire({

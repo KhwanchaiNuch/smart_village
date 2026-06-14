@@ -22,12 +22,7 @@ export default function AdminLayout({
       router.replace("/signin");
       return;
     }
-    if (role === "VILLAGE") {
-      // ลูกบ้านที่เข้า URL admin อื่น ๆ โดยตรง → redirect ไปหน้าลูกบ้าน
-      if (!window.location.pathname.startsWith("/villager")) {
-        router.replace("/villager");
-      }
-    }
+    // ทุก role ใช้ layout เดียวกัน ไม่ redirect ตาม role
   }, [router]);
 
   // Dynamic class for main content margin based on sidebar state

@@ -57,7 +57,7 @@ export default function PersonAdd() {
 		disability_type: "",
 		is_elderly: "",
 		living_alone: "",
-		welfare_card: "",
+		welfare_card: false,
 		other_welfare: "",
 		status: "",
 	});
@@ -316,8 +316,17 @@ export default function PersonAdd() {
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<Label>บัตรสวัสดิการ</Label>
-						<Input name="welfare_card" value={form.welfare_card} onChange={handleChange} type="text" />
+						<Label>บัตรสวัสดิการแห่งรัฐ</Label>
+						<div className="flex gap-6 mt-2">
+							<Radio id="welfare-yes" name="welfare_card" value="true"
+								checked={form.welfare_card === true}
+								onChange={(value) => setForm(prev => ({ ...prev, welfare_card: value === "true" }))}
+								label="มี ( Yes )" />
+							<Radio id="welfare-no" name="welfare_card" value="false"
+								checked={form.welfare_card === false}
+								onChange={(value) => setForm(prev => ({ ...prev, welfare_card: value === "true" }))}
+								label="ไม่มี ( No )" />
+						</div>
 					</div>
 					<div>
 						<Label>สวัสดิการอื่น ๆ</Label>

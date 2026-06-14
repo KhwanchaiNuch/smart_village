@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-	
+
     private final AppUserRepository repo;
     private final JwtUtil jwt;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AppUserRepository repo, JwtUtil jwt, PasswordEncoder passwordEncoder ) {
+    public AuthController(AppUserRepository repo, JwtUtil jwt, PasswordEncoder passwordEncoder) {
         this.repo = repo;
         this.jwt = jwt;
         this.passwordEncoder = passwordEncoder;
@@ -42,11 +42,13 @@ public class AuthController {
                 user.getScopeId()
         );
 
-        return java.util.Map.of(
-                "token", token,
-                "role", user.getRoleLevel(),
-                "scopeId", user.getScopeId()
-        );
+        java.util.Map<String, Object> resp = new java.util.LinkedHashMap<>();
+        resp.put("token",    token);
+        resp.put("role",     user.getRoleLevel());
+        resp.put("scopeId",  user.getScopeId());
+        resp.put("username", user.getUsername());
+        resp.put("fullName", user.getFullName());
+        return resp;
     }
 
     @PostMapping("/refresh")
@@ -75,14 +77,16 @@ public class AuthController {
                     user.getScopeId()
             );
 
-            return ResponseEntity.ok(java.util.Map.of(
-                    "token", newToken,
-                    "role", user.getRoleLevel(),
-                    "scopeId", user.getScopeId()
-            ));
+            java.util.Map<String, Object> resp = new java.util.LinkedHashMap<>();
+            resp.put("token",    newToken);
+            resp.put("role",     user.getRoleLevel());
+            resp.put("scopeId",  user.getScopeId());
+            resp.put("username", user.getUsername());
+            resp.put("fullName", user.getFullName());
+            return ResponseEntity.ok(resp);
+
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid token");
+            return ResponseEntity.status(401).body("Invalid or expired token");
         }
     }
-
 }

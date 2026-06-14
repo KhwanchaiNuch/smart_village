@@ -12,6 +12,7 @@ ALTER TABLE person ADD COLUMN IF NOT EXISTS marital_status            VARCHAR(50
 ALTER TABLE person ADD COLUMN IF NOT EXISTS education_level           VARCHAR(100);
 ALTER TABLE person ADD COLUMN IF NOT EXISTS is_registered_in_village  BOOLEAN;
 ALTER TABLE person ADD COLUMN IF NOT EXISTS is_living_in_village      BOOLEAN;
+ALTER TABLE person ADD COLUMN IF NOT EXISTS occupation                    VARCHAR(100);
 ALTER TABLE person ADD COLUMN IF NOT EXISTS secondary_occupation      VARCHAR(100);
 ALTER TABLE person ADD COLUMN IF NOT EXISTS income_per_month          INTEGER;
 ALTER TABLE person ADD COLUMN IF NOT EXISTS disease_list              TEXT;
@@ -29,3 +30,7 @@ ALTER TABLE household ADD COLUMN IF NOT EXISTS house_registration_type    VARCHA
 ALTER TABLE household ADD COLUMN IF NOT EXISTS gps_lat                    VARCHAR(50);
 ALTER TABLE household ADD COLUMN IF NOT EXISTS gps_lng                    VARCHAR(50);
 ALTER TABLE household ADD COLUMN IF NOT EXISTS electricity_access         BOOLEAN;
+
+-- เพิ่มคอลัมน์ที่ขาดสำหรับ Person
+ALTER TABLE person ADD COLUMN IF NOT EXISTS is_sick       BOOLEAN;
+ALTER TABLE person ADD COLUMN IF NOT EXISTS is_bedridden  BOOLEAN;

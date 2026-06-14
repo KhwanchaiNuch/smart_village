@@ -1,12 +1,10 @@
 package com.k2dev.smart_village.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "person_skill")
-@Data
 public class PersonSkill {
 
     @Id
@@ -31,4 +29,22 @@ public class PersonSkill {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public Integer getSkillId() { return skillId; }
+    public void setSkillId(Integer skillId) { this.skillId = skillId; }
+
+    public Integer getPersonId() { return personId; }
+    public void setPersonId(Integer personId) { this.personId = personId; }
+
+    public String getSkillName() { return skillName; }
+    public void setSkillName(String skillName) { this.skillName = skillName; }
+
+    public String getSkillLevel() { return skillLevel; }
+    public void setSkillLevel(String skillLevel) { this.skillLevel = skillLevel; }
+
+    public Boolean getCertificateFlag() { return certificateFlag; }
+    public void setCertificateFlag(Boolean certificateFlag) { this.certificateFlag = certificateFlag; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

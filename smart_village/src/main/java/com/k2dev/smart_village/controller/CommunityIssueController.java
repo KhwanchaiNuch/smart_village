@@ -1,8 +1,10 @@
-
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.CommunityIssue;
+import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.repository.CommunityIssueRepository;
+import com.k2dev.smart_village.repository.HouseholdRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +14,17 @@ import java.util.List;
 @RequestMapping("/api/community-issues")
 public class CommunityIssueController {
 
-    @Autowired
-    private CommunityIssueRepository repo;
+    @Autowired private CommunityIssueRepository repo;
+    @Autowired private HouseholdRepository householdRepo;
 
     @GetMapping
     public List<CommunityIssue> list() {
-        return repo.findAll();
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        Integer vid = ScopeUtil.getScopeId();
+        if (vid == null) return List.of();
+        List<Long> hhIds = householdRepo.findByVillageId(vid).stream()
+                .map(h -> h.getHouseholdId().longValue()).toList();
+        return repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/{id}")

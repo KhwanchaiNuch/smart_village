@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 @Table(name = "app_user")
 public class AppUser {
 
+    public static final java.util.Set<String> VALID_ROLES =
+        java.util.Set.of("ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE");
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -30,8 +33,14 @@ public class AppUser {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (isActive == null) isActive = true;
+    }
 
     /* ===== getter / setter ===== */
 
@@ -83,19 +92,20 @@ public class AppUser {
         this.scopeId = scopeId;
     }
 
+   
     public Boolean getIsActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean active) {
-        isActive = active;
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public java.time.LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

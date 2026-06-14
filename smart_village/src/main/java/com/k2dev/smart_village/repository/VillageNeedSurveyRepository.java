@@ -8,4 +8,5 @@ public interface VillageNeedSurveyRepository extends JpaRepository<VillageNeedSu
     List<VillageNeedSurvey> findByHouseholdId(Integer householdId);
     List<VillageNeedSurvey> findByPersonId(Integer personId);
     List<VillageNeedSurvey> findByNeedType(String needType);
+    List<VillageNeedSurvey> findByHouseholdIdIn(List<Integer> householdIds);
 }

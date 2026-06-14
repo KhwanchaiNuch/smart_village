@@ -1,8 +1,8 @@
-
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.TrainingEvent;
 import com.k2dev.smart_village.repository.TrainingEventRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +12,14 @@ import java.util.List;
 @RequestMapping("/api/training-events")
 public class TrainingEventController {
 
-    @Autowired
-    private TrainingEventRepository repo;
+    @Autowired private TrainingEventRepository repo;
 
     @GetMapping
     public List<TrainingEvent> list() {
-        return repo.findAll();
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        Integer vid = ScopeUtil.getScopeId();
+        if (vid == null) return List.of();
+        return repo.findByVillageId(vid);
     }
 
     @GetMapping("/{id}")
@@ -32,6 +34,10 @@ public class TrainingEventController {
 
     @PostMapping("/add")
     public TrainingEvent add(@RequestBody TrainingEvent t) {
+        // auto-set villageId จาก scope ของ user
+        if (t.getVillageId() == null && !ScopeUtil.isAdmin()) {
+            t.setVillageId(ScopeUtil.getScopeId());
+        }
         return repo.save(t);
     }
 

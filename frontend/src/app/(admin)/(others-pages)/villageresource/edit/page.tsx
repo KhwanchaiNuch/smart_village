@@ -15,24 +15,34 @@ const RESOURCE_TYPES = [
   "โรงเรียน", "สถานพยาบาล", "ตลาด/ร้านค้า", "สิ่งก่อสร้าง", "อื่น ๆ",
 ];
 
+interface Village { villageId: number; villageName: string; moo: string | null; }
+
 function VillageResourceEditContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+  const [villages, setVillages] = useState<Village[]>([]);
   const [form, setForm] = useState({
-    resourceId: "", villageCode: "", resourceType: "",
+    resourceId: "", villageId: "", villageCode: "", resourceType: "",
     resourceName: "", description: "", gpsLat: "", gpsLng: "",
   });
 
   useEffect(() => {
     document.title = "Smart Village | แก้ไขทรัพยากรชุมชน";
+    const r = localStorage.getItem("role");
+    setRole(r);
+    if (r === "ADMIN") {
+      axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
+    }
     if (!id) return;
     axios.get(`/village-resources/${id}`)
       .then((res) => {
         const d = res.data;
         setForm({
           resourceId: d.resourceId?.toString() || "",
+          villageId: d.villageId != null ? String(d.villageId) : "",
           villageCode: d.villageCode || "",
           resourceType: d.resourceType || "",
           resourceName: d.resourceName || "",
@@ -66,6 +76,7 @@ function VillageResourceEditContent() {
     try {
       await axios.post("/village-resources/edit", {
         resourceId: parseInt(form.resourceId),
+        villageId: form.villageId ? Number(form.villageId) : null,
         villageCode: form.villageCode || null,
         resourceType: form.resourceType,
         resourceName: form.resourceName,
@@ -92,6 +103,25 @@ function VillageResourceEditContent() {
   return (
     <ComponentCard title="แก้ไขทรัพยากรชุมชน">
       <input type="hidden" value={form.resourceId} />
+
+      {/* Admin: แสดง/เปลี่ยน village */}
+      {role === "ADMIN" && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+          <Label>หมู่บ้านที่ทรัพยากรนี้อยู่</Label>
+          <select
+            value={form.villageId}
+            onChange={e => setForm(p => ({ ...p, villageId: e.target.value }))}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">-- ไม่ระบุหมู่บ้าน --</option>
+            {villages.map(v => (
+              <option key={v.villageId} value={v.villageId}>
+                {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label>ชื่อทรัพยากร <span className="text-red-500">*</span></Label>
@@ -140,28 +170,34 @@ function VillageResourceEditContent() {
               type="text" placeholder="เช่น 100.992541"
               className={errors.gpsLng ? "border-red-400" : ""} />
             {errors.gpsLng && <p className="mt-1 text-xs text-red-500">{errors.gpsLng}</p>}
-          </div>
         </div>
         {form.gpsLat && form.gpsLng && !errors.gpsLat && !errors.gpsLng && (
-          <a href={`https://maps.google.com/?q=${form.gpsLat},${form.gpsLng}`} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mt-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            ตรวจสอบพิกัดบน Google Maps
+          <a
+            href={`https://www.google.com/maps?q=${form.gpsLat},${form.gpsLng}`}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 hover:underline"
+          >
+            ดูบน Google Maps
           </a>
         )}
       </div>
 
-      <div className="flex gap-3 mt-4">
-        <button onClick={handleSubmit} disabled={saving}
-          className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium">
-          {saving ? "กำลังบันทึก..." : "บันทึก"}
-        </button>
-        <a href="/villageresource" className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 font-medium">
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
           ยกเลิก
-        </a>
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={saving}
+          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          {saving ? "กำลังอัปเดต..." : "บันทึกการแก้ไข"}
+        </button>
       </div>
     </ComponentCard>
   );
@@ -169,7 +205,7 @@ function VillageResourceEditContent() {
 
 export default function VillageResourceEdit() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
       <VillageResourceEditContent />
     </Suspense>
   );

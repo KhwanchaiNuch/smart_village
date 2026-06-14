@@ -63,5 +63,6 @@ public class HouseholdEconomic {
     public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) {        this.createdAt = createdAt;
+    }
 }

@@ -1,4 +1,3 @@
-
 package com.k2dev.smart_village.entity;
 
 import jakarta.persistence.*;
@@ -16,6 +15,9 @@ public class TrainingEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "village_id")
+    private Integer villageId;
+
     @Column(length = 200)
     private String trainingName;
 
@@ -26,7 +28,6 @@ public class TrainingEvent {
     private String organizer;
 
     private LocalDate startDate;
-
     private LocalDate endDate;
 
     @Column(length = 200)
@@ -45,28 +46,22 @@ public class TrainingEvent {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
+    public Integer getVillageId() { return villageId; }
+    public void setVillageId(Integer villageId) { this.villageId = villageId; }
     public String getTrainingName() { return trainingName; }
     public void setTrainingName(String trainingName) { this.trainingName = trainingName; }
-
     public String getTrainingType() { return trainingType; }
     public void setTrainingType(String trainingType) { this.trainingType = trainingType; }
-
     public String getOrganizer() { return organizer; }
     public void setOrganizer(String organizer) { this.organizer = organizer; }
-
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
-
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
-
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

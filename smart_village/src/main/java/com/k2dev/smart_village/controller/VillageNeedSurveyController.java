@@ -1,7 +1,9 @@
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.VillageNeedSurvey;
+import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.VillageNeedSurveyRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +16,17 @@ public class VillageNeedSurveyController {
     @Autowired
     private VillageNeedSurveyRepository repo;
 
+    @Autowired
+    private HouseholdRepository householdRepo;
+
     @GetMapping
     public List<VillageNeedSurvey> list() {
-        return repo.findAll();
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        Integer vid = ScopeUtil.getScopeId();
+        if (vid == null) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
+                .map(h -> h.getHouseholdId()).toList();
+        return repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/{id}")

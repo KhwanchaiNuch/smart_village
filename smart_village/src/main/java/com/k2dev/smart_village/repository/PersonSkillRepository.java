@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface PersonSkillRepository extends JpaRepository<PersonSkill, Integer> {
     List<PersonSkill> findByPersonId(Integer personId);
+    List<PersonSkill> findByPersonIdIn(List<Integer> personIds);
 }

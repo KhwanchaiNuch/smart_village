@@ -11,9 +11,9 @@ import Swal from "sweetalert2";
 type FormErrors = Partial<Record<string, string>>;
 
 interface Household {
-  id: number;
-  householdNo: string;
-  address: string;
+  householdId: number;
+  houseNo: string;
+  moo: string | null;
 }
 
 const ISSUE_TYPES = [
@@ -160,7 +160,7 @@ export default function CommunityIssueAdd() {
           <select name="householdId" value={form.householdId} onChange={handleChange} className={selectClass("householdId")}>
             <option value="">-- ไม่ระบุ --</option>
             {households.map((h) => (
-              <option key={h.id} value={h.id}>{h.householdNo} – {h.address}</option>
+              <option key={h.householdId} value={h.householdId}>บ้านเลขที่ {h.houseNo}{h.moo ? ` หมู่ ${h.moo}` : ""}</option>
             ))}
           </select>
         </div>

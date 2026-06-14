@@ -9,6 +9,8 @@ import Swal from "sweetalert2";
 
 type FormErrors = Partial<Record<string, string>>;
 
+interface Village { villageId: number; villageName: string; moo: string | null; }
+
 const RESOURCE_TYPES = [
   "แหล่งน้ำ", "ป่าไม้", "ที่ดิน", "วัด/ศาสนสถาน",
   "โรงเรียน", "สถานพยาบาล", "ตลาด/ร้านค้า", "สิ่งก่อสร้าง", "อื่น ๆ",
@@ -17,12 +19,22 @@ const RESOURCE_TYPES = [
 export default function VillageResourceAdd() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [adminVillageId, setAdminVillageId] = useState<string>("");
   const [form, setForm] = useState({
     villageCode: "", resourceType: "", resourceName: "",
     description: "", gpsLat: "", gpsLng: "",
   });
 
-  useEffect(() => { document.title = "Smart Village | เพิ่มทรัพยากรชุมชน"; }, []);
+  useEffect(() => {
+    document.title = "Smart Village | เพิ่มทรัพยากรชุมชน";
+    const r = localStorage.getItem("role");
+    setRole(r);
+    if (r === "ADMIN") {
+      axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -45,6 +57,7 @@ export default function VillageResourceAdd() {
     setSaving(true);
     try {
       await axios.post("/village-resources/add", {
+        villageId: role === "ADMIN" && adminVillageId ? Number(adminVillageId) : null,
         villageCode: form.villageCode || null,
         resourceType: form.resourceType,
         resourceName: form.resourceName,
@@ -70,6 +83,26 @@ export default function VillageResourceAdd() {
 
   return (
     <ComponentCard title="เพิ่มทรัพยากรชุมชน">
+
+      {/* Admin: เลือกหมู่บ้าน */}
+      {role === "ADMIN" && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+          <Label>หมู่บ้านที่ทรัพยากรนี้อยู่ (ถ้าไม่ระบุจะเป็นข้อมูลระดับ Admin)</Label>
+          <select
+            value={adminVillageId}
+            onChange={e => setAdminVillageId(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">-- ไม่ระบุหมู่บ้าน --</option>
+            {villages.map(v => (
+              <option key={v.villageId} value={v.villageId}>
+                {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label>ชื่อทรัพยากร <span className="text-red-500">*</span></Label>
@@ -113,6 +146,7 @@ export default function VillageResourceAdd() {
             {errors.gpsLat && <p className="mt-1 text-xs text-red-500">{errors.gpsLat}</p>}
           </div>
           <div>
+          <div>
             <p className="text-xs text-gray-500 mb-1">Longitude (ลองจิจูด)</p>
             <Input name="gpsLng" value={form.gpsLng} onChange={handleChange}
               type="text" placeholder="เช่น 100.992541"
@@ -121,25 +155,32 @@ export default function VillageResourceAdd() {
           </div>
         </div>
         {form.gpsLat && form.gpsLng && !errors.gpsLat && !errors.gpsLng && (
-          <a href={`https://maps.google.com/?q=${form.gpsLat},${form.gpsLng}`} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mt-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            ตรวจสอบพิกัดบน Google Maps
+          <a
+            href={`https://www.google.com/maps?q=${form.gpsLat},${form.gpsLng}`}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 hover:underline"
+          >
+            ดูบน Google Maps
           </a>
         )}
       </div>
 
-      <div className="flex gap-3 mt-4">
-        <button onClick={handleSubmit} disabled={saving}
-          className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium">
+      <div className="flex justify-end gap-3 mt-4">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          ยกเลิก
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={saving}
+          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
-        <a href="/villageresource" className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 font-medium">
-          ยกเลิก
-        </a>
       </div>
     </ComponentCard>
   );
