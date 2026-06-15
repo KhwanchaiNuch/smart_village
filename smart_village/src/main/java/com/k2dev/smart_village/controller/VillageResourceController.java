@@ -4,15 +4,22 @@ import com.k2dev.smart_village.entity.VillageResource;
 import com.k2dev.smart_village.repository.VillageResourceRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/village-resources")
 public class VillageResourceController {
 
     @Autowired private VillageResourceRepository repo;
+
+    private boolean villageOwned(Integer villageId) {
+        Integer vid = ScopeUtil.getScopeId();
+        return vid != null && vid.equals(villageId);
+    }
 
     @GetMapping
     public List<VillageResource> list() {
@@ -23,8 +30,12 @@ public class VillageResourceController {
     }
 
     @GetMapping("/{id}")
-    public VillageResource get(@PathVariable Integer id) {
-        return repo.findById(id).orElseThrow();
+    public ResponseEntity<?> get(@PathVariable Integer id) {
+        VillageResource r = repo.findById(id).orElse(null);
+        if (r == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
+        if (!ScopeUtil.isAdmin() && !villageOwned(r.getVillageId()))
+            return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
+        return ResponseEntity.ok(r);
     }
 
     @GetMapping("/by-village/{villageCode}")
@@ -38,22 +49,45 @@ public class VillageResourceController {
     }
 
     @PostMapping("/add")
-    public VillageResource add(@RequestBody VillageResource e) {
-        e.setResourceId(null);
-        // auto-set villageId จาก scope ของ user
-        if (e.getVillageId() == null && !ScopeUtil.isAdmin()) {
-            e.setVillageId(ScopeUtil.getScopeId());
+    public ResponseEntity<?> add(@RequestBody VillageResource e) {
+        try {
+            if (!ScopeUtil.isAdmin()) {
+                e.setVillageId(ScopeUtil.getScopeId());
+            }
+            e.setResourceId(null);
+            return ResponseEntity.ok(repo.save(e));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "เกิดข้อผิดพลาด"));
         }
-        return repo.save(e);
     }
 
     @PostMapping("/edit")
-    public VillageResource edit(@RequestBody VillageResource e) {
-        return repo.save(e);
+    public ResponseEntity<?> edit(@RequestBody VillageResource e) {
+        try {
+            if (!ScopeUtil.isAdmin()) {
+                VillageResource existing = repo.findById(e.getResourceId()).orElse(null);
+                if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
+                if (!villageOwned(existing.getVillageId()))
+                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
+                e.setVillageId(ScopeUtil.getScopeId());
+            }
+            return ResponseEntity.ok(repo.save(e));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "เกิดข้อผิดพลาด"));
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
-        repo.deleteById(id);
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
+        try {
+            VillageResource existing = repo.findById(id).orElse(null);
+            if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
+            if (!ScopeUtil.isAdmin() && !villageOwned(existing.getVillageId()))
+                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
+            repo.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "เกิดข้อผิดพลาด"));
+        }
     }
 }
