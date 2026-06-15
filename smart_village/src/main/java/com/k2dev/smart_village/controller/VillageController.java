@@ -4,6 +4,7 @@ import com.k2dev.smart_village.entity.Village;
 import com.k2dev.smart_village.repository.VillageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public class VillageController {
 
     @Autowired
     private VillageRepository repo;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @GetMapping
     public List<Village> list(@RequestParam(required = false) Integer tambonId) {
@@ -30,6 +34,47 @@ public class VillageController {
     @GetMapping("/{id}")
     public Village get(@PathVariable Integer id) {
         return repo.findById(id).orElseThrow();
+    }
+
+    /**
+     * GET /api/villages/ensure/{id}
+     * ใช้สำหรับ VillageContext auto-init ของ non-ADMIN user
+     * ถ้า village ยังไม่มีใน DB → สร้าง placeholder อัตโนมัติ
+     * ใช้ JdbcTemplate + fallback OVERRIDING SYSTEM VALUE รองรับทุก column type
+     */
+    @GetMapping("/ensure/{id}")
+    public ResponseEntity<?> ensureAndGet(@PathVariable Integer id) {
+        // ลอง fetch ก่อน
+        Village existing = repo.findById(id).orElse(null);
+        if (existing != null) return ResponseEntity.ok(existing);
+
+        // ยังไม่มี → INSERT placeholder ด้วย JdbcTemplate
+        String name = "หมู่บ้านหมู่ " + id;
+        boolean created = false;
+        try {
+            jdbc.update(
+                "INSERT INTO village (village_id, village_name) VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING",
+                id, name);
+            created = true;
+        } catch (Exception e1) {
+            try {
+                // fallback: OVERRIDING SYSTEM VALUE สำหรับ GENERATED ALWAYS AS IDENTITY
+                jdbc.update(
+                    "INSERT INTO village (village_id, village_name) OVERRIDING SYSTEM VALUE VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING",
+                    id, name);
+                created = true;
+            } catch (Exception e2) {
+                System.err.println("[VillageController] Cannot create village " + id + ": " + e2.getMessage());
+            }
+        }
+
+        if (!created) {
+            return ResponseEntity.status(500).body(Map.of("message", "ไม่สามารถสร้างข้อมูลหมู่บ้านได้"));
+        }
+
+        return repo.findById(id)
+            .<ResponseEntity<?>>map(ResponseEntity::ok)
+            .orElse(ResponseEntity.status(500).body(Map.of("message", "สร้างหมู่บ้านแล้วแต่ดึงข้อมูลไม่ได้")));
     }
 
     @PostMapping("/add")

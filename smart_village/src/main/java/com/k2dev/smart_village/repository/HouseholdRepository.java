@@ -12,4 +12,5 @@ public interface HouseholdRepository extends JpaRepository<Household, Integer> {
      * ใช้สำหรับกรองข้อมูลตามสิทธิ์ของผู้ใช้ระดับหมู่บ้าน (role = VILLAGE)
      */
     List<Household> findByVillageId(Integer villageId);
+    List<Household> findByVillageIdIn(List<Integer> villageIds);
 }

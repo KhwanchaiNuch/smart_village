@@ -30,6 +30,16 @@ public class AppUser {
     @Column(name = "scope_id")
     private Integer scopeId;
 
+    /** Geographic hierarchy — ใช้ pre-populate cascade dropdown ตอน edit user */
+    @Column(name = "province_id")
+    private Integer provinceId;
+
+    @Column(name = "amphur_id")
+    private Integer amphurId;
+
+    @Column(name = "tambon_id")
+    private Integer tambonId;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -92,7 +102,15 @@ public class AppUser {
         this.scopeId = scopeId;
     }
 
-   
+    public Integer getProvinceId() { return provinceId; }
+    public void setProvinceId(Integer provinceId) { this.provinceId = provinceId; }
+
+    public Integer getAmphurId() { return amphurId; }
+    public void setAmphurId(Integer amphurId) { this.amphurId = amphurId; }
+
+    public Integer getTambonId() { return tambonId; }
+    public void setTambonId(Integer tambonId) { this.tambonId = tambonId; }
+
     public Boolean getIsActive() {
         return isActive;
     }

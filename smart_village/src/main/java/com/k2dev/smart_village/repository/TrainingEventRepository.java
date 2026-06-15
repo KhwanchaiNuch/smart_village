@@ -7,4 +7,5 @@ import java.util.List;
 public interface TrainingEventRepository extends JpaRepository<TrainingEvent, Long> {
     List<TrainingEvent> findByTrainingType(String trainingType);
     List<TrainingEvent> findByVillageId(Integer villageId);
+    List<TrainingEvent> findByVillageIdIn(List<Integer> villageIds);
 }

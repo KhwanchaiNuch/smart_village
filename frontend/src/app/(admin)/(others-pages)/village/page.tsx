@@ -10,7 +10,7 @@ import { useVillage } from "@/context/VillageContext";
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur { amphurId: number; provinceId: number; nameTh: string; }
 interface Tambon { tambonId: number; amphurId: number; nameTh: string; }
-interface Village { villageId: number; tambonId: number; villageName: string; moo: string | null; }
+interface Village { villageId: number; tambonId: number | null; villageName: string; moo: string | null; }
 
 export default function VillagePage() {
   const { village: activeVillage, setVillage } = useVillage();
@@ -24,6 +24,8 @@ export default function VillagePage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [placeholders, setPlaceholders] = useState<Village[]>([]);
+  const [showPlaceholders, setShowPlaceholders] = useState(false);
 
   const err = (e: any) => Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: e?.response?.data?.message || "กรุณาลองใหม่" });
   const ok = () => Swal.fire({ icon: "success", title: "สำเร็จ", timer: 1200, showConfirmButton: false });
@@ -31,6 +33,10 @@ export default function VillagePage() {
   useEffect(() => {
     document.title = "Smart Village | หมู่บ้าน";
     axios.get<Province[]>("/provinces").then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId))).catch(err);
+    // โหลด placeholder villages (tambonId=null) สำหรับ admin เลือก
+    axios.get<Village[]>("/villages/all")
+      .then((r) => setPlaceholders(r.data.filter((v) => !v.tambonId)))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -194,6 +200,56 @@ export default function VillagePage() {
             </div>
           </div>
         </div>
+      {/* Placeholder villages — tambonId=null (สร้างอัตโนมัติจาก scope_id) */}
+      {placeholders.length > 0 && (
+        <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20">
+          <button
+            onClick={() => setShowPlaceholders((p) => !p)}
+            className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-yellow-800 dark:text-yellow-300">
+            <span>⚠️ หมู่บ้านที่ไม่มีข้อมูลพื้นที่ (Placeholder) — {placeholders.length} รายการ</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"
+              className={`size-4 transition-transform ${showPlaceholders ? "rotate-180" : ""}`}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          {showPlaceholders && (
+            <div className="border-t border-yellow-200 px-4 pb-4 dark:border-yellow-800">
+              <p className="mb-3 mt-3 text-xs text-yellow-700 dark:text-yellow-400">
+                หมู่บ้านเหล่านี้ถูกสร้างอัตโนมัติจาก scope_id ของ user ที่ไม่ได้ผูกกับจังหวัด/อำเภอ/ตำบล
+                กดปุ่ม <strong>ใช้งาน</strong> เพื่อเลือกหมู่บ้านนั้นๆ หรือแก้ไข user เพื่อผูกกับพื้นที่จริง
+              </p>
+              <div className="overflow-hidden rounded-lg border border-yellow-200 dark:border-yellow-700">
+                <table className="w-full text-sm">
+                  <thead className="bg-yellow-100 dark:bg-yellow-900/40">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-medium text-yellow-800 dark:text-yellow-300">Village ID</th>
+                      <th className="px-4 py-2 text-left font-medium text-yellow-800 dark:text-yellow-300">ชื่อหมู่บ้าน</th>
+                      <th className="px-4 py-2 text-center font-medium text-yellow-800 dark:text-yellow-300">เลือกใช้งาน</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-yellow-100 dark:divide-yellow-800">
+                    {placeholders.map((v) => {
+                      const isActive = activeVillage?.villageId === v.villageId;
+                      return (
+                        <tr key={v.villageId} className={isActive ? "bg-emerald-50 dark:bg-emerald-500/10" : ""}>
+                          <td className="px-4 py-2 text-gray-500">{v.villageId}</td>
+                          <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{v.villageName}</td>
+                          <td className="px-4 py-2 text-center">
+                            <button onClick={() => useThisVillage(v)} disabled={isActive}
+                              className="rounded-full border border-emerald-600 bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                              {isActive ? "ใช้งานอยู่" : "ใช้งาน"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       </ComponentCard>
     </div>
   );

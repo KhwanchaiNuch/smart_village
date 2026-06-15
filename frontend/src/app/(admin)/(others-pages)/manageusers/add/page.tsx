@@ -1,7 +1,7 @@
 "use client"
 import ComponentCard from "@/components/common/ComponentCard";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
@@ -13,22 +13,82 @@ const ROLES = [
   { value: "VILLAGE",  label: "ผู้ใช้ระดับหมู่บ้าน"  },
 ];
 
+interface Province { provinceId: number; nameTh: string; }
+interface Amphur   { amphurId: number;   nameTh: string; }
+interface Tambon   { tambonId: number;   nameTh: string; }
+interface Village  { villageId: number;  villageName: string; moo: string | null; }
+
 export default function AddUserPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    confirmPassword: "",
-    fullName: "",
-    roleLevel: "VILLAGE",
-    scopeId: "",
-    isActive: true,
+  const [loading, setLoading]   = useState(false);
+  const [form, setForm]         = useState({
+    username: "", password: "", confirmPassword: "",
+    fullName: "", roleLevel: "VILLAGE", isActive: true,
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors]     = useState<Record<string, string>>({});
+
+  // ── Geo cascade state ──────────────────────────────────────────────────────
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [amphurs,   setAmphurs]   = useState<Amphur[]>([]);
+  const [tambons,   setTambons]   = useState<Tambon[]>([]);
+  const [villages,  setVillages]  = useState<Village[]>([]);
+
+  const [selProvince, setSelProvince] = useState<number | "">("");
+  const [selAmphur,   setSelAmphur]   = useState<number | "">("");
+  const [selTambon,   setSelTambon]   = useState<number | "">("");
+  const [selVillage,  setSelVillage]  = useState<number | "">("");
+
+  // scopeId ที่จะส่งไป backend — ขึ้นกับ role
+  const resolvedScopeId = (): number | null => {
+    if (form.roleLevel === "ADMIN")    return null;
+    if (form.roleLevel === "PROVINCE") return selProvince !== "" ? selProvince : null;
+    if (form.roleLevel === "AMPHUR")   return selAmphur   !== "" ? selAmphur   : null;
+    if (form.roleLevel === "TAMBON")   return selTambon   !== "" ? selTambon   : null;
+    if (form.roleLevel === "VILLAGE")  return selVillage  !== "" ? selVillage  : null;
+    return null;
+  };
 
   const set = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // โหลด province ตอน mount
+  useEffect(() => {
+    axios.get<Province[]>("/provinces")
+      .then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId)))
+      .catch(() => {});
+  }, []);
+
+  // เมื่อเปลี่ยน province → load amphurs
+  useEffect(() => {
+    setSelAmphur(""); setAmphurs([]); setSelTambon(""); setTambons([]); setSelVillage(""); setVillages([]);
+    if (selProvince !== "")
+      axios.get<Amphur[]>("/amphurs", { params: { provinceId: selProvince } })
+        .then((r) => setAmphurs([...r.data].sort((a, b) => a.amphurId - b.amphurId)))
+        .catch(() => {});
+  }, [selProvince]);
+
+  // เมื่อเปลี่ยน amphur → load tambons
+  useEffect(() => {
+    setSelTambon(""); setTambons([]); setSelVillage(""); setVillages([]);
+    if (selAmphur !== "")
+      axios.get<Tambon[]>("/tambons", { params: { amphurId: selAmphur } })
+        .then((r) => setTambons([...r.data].sort((a, b) => a.tambonId - b.tambonId)))
+        .catch(() => {});
+  }, [selAmphur]);
+
+  // เมื่อเปลี่ยน tambon → load villages
+  useEffect(() => {
+    setSelVillage(""); setVillages([]);
+    if (selTambon !== "")
+      axios.get<Village[]>("/villages", { params: { tambonId: selTambon } })
+        .then((r) => setVillages(r.data))
+        .catch(() => {});
+  }, [selTambon]);
+
+  // เมื่อเปลี่ยน role → reset cascade (ยกเว้น province ที่ยังเลือกอยู่)
+  useEffect(() => {
+    setSelAmphur(""); setSelTambon(""); setSelVillage("");
+  }, [form.roleLevel]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -38,7 +98,13 @@ export default function AddUserPage() {
     else if (form.password.length < 6) e.password = "password ต้องมีอย่างน้อย 6 ตัวอักษร";
     if (form.password !== form.confirmPassword) e.confirmPassword = "password ไม่ตรงกัน";
     if (!form.roleLevel) e.roleLevel = "กรุณาเลือกระดับสิทธิ์";
-    if (form.scopeId && isNaN(Number(form.scopeId))) e.scopeId = "Scope ID ต้องเป็นตัวเลข";
+    // validate scope selection
+    if (form.roleLevel !== "ADMIN") {
+      if (selProvince === "") e.geo = "กรุณาเลือกจังหวัด";
+      else if (["AMPHUR","TAMBON","VILLAGE"].includes(form.roleLevel) && selAmphur === "")   e.geo = "กรุณาเลือกอำเภอ";
+      else if (["TAMBON","VILLAGE"].includes(form.roleLevel) && selTambon === "")            e.geo = "กรุณาเลือกตำบล";
+      else if (form.roleLevel === "VILLAGE" && selVillage === "")                            e.geo = "กรุณาเลือกหมู่บ้าน";
+    }
     return e;
   };
 
@@ -50,18 +116,20 @@ export default function AddUserPage() {
     setLoading(true);
     try {
       await axios.post("/admin/users", {
-        username: form.username.trim(),
-        password: form.password,
-        fullName: form.fullName.trim() || null,
-        roleLevel: form.roleLevel,
-        scopeId: form.scopeId ? Number(form.scopeId) : null,
-        isActive: form.isActive,
+        username:   form.username.trim(),
+        password:   form.password,
+        fullName:   form.fullName.trim() || null,
+        roleLevel:  form.roleLevel,
+        scopeId:    resolvedScopeId(),
+        provinceId: selProvince !== "" ? selProvince : null,
+        amphurId:   selAmphur   !== "" ? selAmphur   : null,
+        tambonId:   selTambon   !== "" ? selTambon   : null,
+        isActive:   form.isActive,
       });
       await Swal.fire({ icon: "success", title: "เพิ่มผู้ใช้สำเร็จ", timer: 1400, showConfirmButton: false });
       router.push("/manageusers");
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "เกิดข้อผิดพลาด";
-      Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: msg });
+      Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: err?.response?.data?.message || "เกิดข้อผิดพลาด" });
     } finally {
       setLoading(false);
     }
@@ -73,6 +141,15 @@ export default function AddUserPage() {
         ? "border-red-400 focus:ring-red-400 dark:border-red-500"
         : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700"
     }`;
+
+  const selCls = (err?: boolean) =>
+    `h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-800 focus:outline-none focus:ring-1 dark:bg-gray-900 dark:text-white disabled:opacity-40 disabled:cursor-not-allowed ${
+      err ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700"
+    }`;
+
+  const needAmphur  = ["AMPHUR","TAMBON","VILLAGE"].includes(form.roleLevel);
+  const needTambon  = ["TAMBON","VILLAGE"].includes(form.roleLevel);
+  const needVillage = form.roleLevel === "VILLAGE";
 
   return (
     <div className="space-y-5">
@@ -89,6 +166,7 @@ export default function AddUserPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
+
           {/* Username */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -131,21 +209,92 @@ export default function AddUserPage() {
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               ระดับสิทธิ์ <span className="text-red-500">*</span>
             </label>
-            <select value={form.roleLevel} onChange={(e) => set("roleLevel", e.target.value)}
-              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+            <select value={form.roleLevel} onChange={(e) => set("roleLevel", e.target.value)} className={selCls()}>
               {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
-            {errors.roleLevel && <p className="mt-1 text-xs text-red-500">{errors.roleLevel}</p>}
           </div>
 
-          {/* Scope ID */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Scope ID (Village ID)</label>
-            <input type="number" min={1} value={form.scopeId} onChange={(e) => set("scopeId", e.target.value)}
-              placeholder="รหัสหมู่บ้าน (สำหรับระดับหมู่บ้าน)" className={inputCls("scopeId")} />
-            {errors.scopeId && <p className="mt-1 text-xs text-red-500">{errors.scopeId}</p>}
-            <p className="mt-1 text-xs text-gray-400">ผู้ใช้ระดับหมู่บ้านจะเห็นเฉพาะข้อมูลของ Village ID นี้</p>
-          </div>
+          {/* Geographic Cascade — ซ่อนเฉพาะ ADMIN */}
+          {form.roleLevel !== "ADMIN" && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 space-y-3 dark:border-blue-900 dark:bg-blue-950/30">
+              <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                📍 พื้นที่รับผิดชอบ
+                {form.roleLevel === "PROVINCE" && " (ระดับจังหวัด)"}
+                {form.roleLevel === "AMPHUR"   && " (ระดับอำเภอ)"}
+                {form.roleLevel === "TAMBON"   && " (ระดับตำบล)"}
+                {form.roleLevel === "VILLAGE"  && " (ระดับหมู่บ้าน)"}
+              </p>
+
+              {/* Province */}
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  จังหวัด <span className="text-red-500">*</span>
+                </label>
+                <select value={selProvince} onChange={(e) => setSelProvince(e.target.value ? Number(e.target.value) : "")}
+                  className={selCls(!!errors.geo && selProvince === "")}>
+                  <option value="">-- เลือกจังหวัด --</option>
+                  {provinces.map((p) => <option key={p.provinceId} value={p.provinceId}>{p.nameTh}</option>)}
+                </select>
+              </div>
+
+              {/* Amphur */}
+              {needAmphur && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    อำเภอ <span className="text-red-500">*</span>
+                  </label>
+                  <select value={selAmphur} disabled={selProvince === ""}
+                    onChange={(e) => setSelAmphur(e.target.value ? Number(e.target.value) : "")}
+                    className={selCls(!!errors.geo && selAmphur === "" && selProvince !== "")}>
+                    <option value="">-- เลือกอำเภอ --</option>
+                    {amphurs.map((a) => <option key={a.amphurId} value={a.amphurId}>{a.nameTh}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Tambon */}
+              {needTambon && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    ตำบล <span className="text-red-500">*</span>
+                  </label>
+                  <select value={selTambon} disabled={selAmphur === ""}
+                    onChange={(e) => setSelTambon(e.target.value ? Number(e.target.value) : "")}
+                    className={selCls(!!errors.geo && selTambon === "" && selAmphur !== "")}>
+                    <option value="">-- เลือกตำบล --</option>
+                    {tambons.map((t) => <option key={t.tambonId} value={t.tambonId}>{t.nameTh}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Village */}
+              {needVillage && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    หมู่บ้าน <span className="text-red-500">*</span>
+                  </label>
+                  <select value={selVillage} disabled={selTambon === ""}
+                    onChange={(e) => setSelVillage(e.target.value ? Number(e.target.value) : "")}
+                    className={selCls(!!errors.geo && selVillage === "" && selTambon !== "")}>
+                    <option value="">-- เลือกหมู่บ้าน --</option>
+                    {villages.map((v) => (
+                      <option key={v.villageId} value={v.villageId}>
+                        {v.moo ? `หมู่ ${v.moo} — ` : ""}{v.villageName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Scope preview */}
+              {resolvedScopeId() !== null && (
+                <p className="text-xs text-green-600 dark:text-green-400">
+                  ✓ Scope ID = <strong>{resolvedScopeId()}</strong> (จะถูกตั้งอัตโนมัติ)
+                </p>
+              )}
+              {errors.geo && <p className="text-xs text-red-500">{errors.geo}</p>}
+            </div>
+          )}
 
           {/* isActive */}
           <div className="flex items-center gap-3">

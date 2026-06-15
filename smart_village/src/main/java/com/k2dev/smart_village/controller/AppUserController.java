@@ -3,6 +3,7 @@ package com.k2dev.smart_village.controller;
 import com.k2dev.smart_village.entity.AppUser;
 import com.k2dev.smart_village.entity.AppUserRequest;
 import com.k2dev.smart_village.repository.AppUserRepository;
+import com.k2dev.smart_village.repository.VillageRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -28,23 +29,35 @@ public class AppUserController {
 
     private final AppUserRepository repo;
     private final PasswordEncoder encoder;
+    private final VillageRepository villageRepo;
 
-    public AppUserController(AppUserRepository repo, PasswordEncoder encoder) {
+    public AppUserController(AppUserRepository repo, PasswordEncoder encoder, VillageRepository villageRepo) {
         this.repo = repo;
         this.encoder = encoder;
+        this.villageRepo = villageRepo;
+    }
+
+    /** ถ้า VILLAGE role มี scopeId → สร้าง village placeholder ถ้ายังไม่มี */
+    private void ensureVillageExists(String roleLevel, Integer scopeId) {
+        if ("VILLAGE".equals(roleLevel) && scopeId != null) {
+            try { villageRepo.ensureVillage(scopeId, "หมู่บ้านหมู่ " + scopeId); } catch (Exception ignored) {}
+        }
     }
 
     // ─── helper: แปลง entity → response map (ไม่คืน passwordHash) ────────────
 
     private Map<String, Object> toResponse(AppUser u) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("userId",    u.getUserId());
-        m.put("username",  u.getUsername());
-        m.put("fullName",  u.getFullName());
-        m.put("roleLevel", u.getRoleLevel());
-        m.put("scopeId",   u.getScopeId());
-        m.put("isActive",  u.getIsActive());
-        m.put("createdAt", u.getCreatedAt());
+        m.put("userId",     u.getUserId());
+        m.put("username",   u.getUsername());
+        m.put("fullName",   u.getFullName());
+        m.put("roleLevel",  u.getRoleLevel());
+        m.put("scopeId",    u.getScopeId());
+        m.put("provinceId", u.getProvinceId());
+        m.put("amphurId",   u.getAmphurId());
+        m.put("tambonId",   u.getTambonId());
+        m.put("isActive",   u.getIsActive());
+        m.put("createdAt",  u.getCreatedAt());
         return m;
     }
 
@@ -88,9 +101,13 @@ public class AppUserController {
         user.setFullName(req.getFullName());
         user.setRoleLevel(req.getRoleLevel());
         user.setScopeId(req.getScopeId());
+        user.setProvinceId(req.getProvinceId());
+        user.setAmphurId(req.getAmphurId());
+        user.setTambonId(req.getTambonId());
         user.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
 
         AppUser saved = repo.save(user);
+        ensureVillageExists(saved.getRoleLevel(), saved.getScopeId());
         return ResponseEntity.ok(toResponse(saved));
     }
 
@@ -131,11 +148,18 @@ public class AppUserController {
 
         if (req.getScopeId() != null)
             user.setScopeId(req.getScopeId());
+        // geo fields — allow explicit null (เพื่อ clear ได้) โดยใช้ containsKey จาก JSON
+        // ถ้า client ส่งมา (ไม่ว่าจะเป็น null หรือมีค่า) ให้ update
+        user.setProvinceId(req.getProvinceId());
+        user.setAmphurId(req.getAmphurId());
+        user.setTambonId(req.getTambonId());
 
         if (req.getIsActive() != null)
             user.setIsActive(req.getIsActive());
 
-        return ResponseEntity.ok(toResponse(repo.save(user)));
+        AppUser updated = repo.save(user);
+        ensureVillageExists(updated.getRoleLevel(), updated.getScopeId());
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     // ─── DELETE /api/admin/users/{id} ─────────────────────────────────────────

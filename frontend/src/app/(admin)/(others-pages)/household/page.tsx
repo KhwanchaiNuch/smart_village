@@ -8,6 +8,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
 import { usePermission } from "@/context/PermissionContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface HouseHold {
 	houseCondition: string;
@@ -140,6 +141,7 @@ export default function HouseHold() {
 	};
 
 	return (
+		<PermissionGuard menuUrl="/household">
 		<>
 			<ComponentCard title=''>
 				<div className="flex items-center justify-between mb-4">
@@ -317,5 +319,6 @@ export default function HouseHold() {
 				</div>
 			</ComponentCard>
 		</>
+		</PermissionGuard>
 	);
 }

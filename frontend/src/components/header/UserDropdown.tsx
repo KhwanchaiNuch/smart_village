@@ -24,6 +24,9 @@ export default function UserDropdown() {
 		localStorage.removeItem("role");
 		localStorage.removeItem("scopeId");
 		localStorage.removeItem("permissions");
+		localStorage.removeItem("activeVillage");
+		localStorage.removeItem("username");
+		localStorage.removeItem("fullName");
 		router.push("/signin");
 	}
 	return (

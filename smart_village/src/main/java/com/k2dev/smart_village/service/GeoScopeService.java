@@ -1,0 +1,87 @@
+package com.k2dev.smart_village.service;
+
+import com.k2dev.smart_village.entity.Amphur;
+import com.k2dev.smart_village.entity.Tambon;
+import com.k2dev.smart_village.entity.Village;
+import com.k2dev.smart_village.repository.AmphurRepository;
+import com.k2dev.smart_village.repository.TambonRepository;
+import com.k2dev.smart_village.repository.VillageRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.security.UserPrincipal;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Stream;
+
+/**
+ * แปล role + scopeId ของ current user → List<villageId> ที่มีสิทธิ์เข้าถึง
+ *
+ * VILLAGE  : scopeId = villageId  → [scopeId]
+ * TAMBON   : scopeId = tambonId   → villages ใน tambon นั้น
+ * AMPHUR   : scopeId = amphurId   → tambons ใน amphur → villages ทั้งหมด
+ * PROVINCE : scopeId = provinceId → amphurs → tambons → villages ทั้งหมด
+ * ADMIN    : คืน null = ไม่จำกัด (caller ต้อง handle null เอง)
+ */
+@Service
+public class GeoScopeService {
+
+    @Autowired private VillageRepository villageRepo;
+    @Autowired private TambonRepository  tambonRepo;
+    @Autowired private AmphurRepository  amphurRepo;
+
+    /**
+     * คืน List ของ villageId ที่ current user เข้าถึงได้
+     * null = ADMIN (ไม่จำกัด)
+     * empty list = ไม่มีสิทธิ์เลย
+     */
+    public List<Integer> getVillageIds() {
+        if (ScopeUtil.isAdmin()) return null; // no filter
+
+        UserPrincipal u = ScopeUtil.currentUser();
+        if (u == null) return List.of();
+
+        String  role    = u.getRole();
+        Integer scopeId = u.getScopeId();
+        if (role == null || scopeId == null) return List.of();
+
+        return switch (role) {
+            case "VILLAGE" -> List.of(scopeId);
+
+            case "TAMBON" -> villageRepo.findByTambonId(scopeId)
+                    .stream().map(Village::getVillageId).distinct().toList();
+
+            case "AMPHUR" -> {
+                List<Integer> tambonIds = tambonRepo.findByAmphurId(scopeId)
+                        .stream().map(Tambon::getTambonId).toList();
+                yield tambonIds.stream()
+                        .flatMap(tid -> villageRepo.findByTambonId(tid).stream())
+                        .map(Village::getVillageId)
+                        .distinct().toList();
+            }
+
+            case "PROVINCE" -> {
+                List<Integer> amphurIds = amphurRepo.findByProvinceId(scopeId)
+                        .stream().map(Amphur::getAmphurId).toList();
+                List<Integer> tambonIds = amphurIds.stream()
+                        .flatMap(aid -> tambonRepo.findByAmphurId(aid).stream())
+                        .map(Tambon::getTambonId).toList();
+                yield tambonIds.stream()
+                        .flatMap(tid -> villageRepo.findByTambonId(tid).stream())
+                        .map(Village::getVillageId)
+                        .distinct().toList();
+            }
+
+            default -> List.of();
+        };
+    }
+
+    /**
+     * ดึง householdId ทั้งหมดที่อยู่ใน scope ของ user
+     * (helper ให้ controllers ที่ filter ผ่าน householdId)
+     */
+    public <T> boolean inScope(List<Integer> villageIds, Integer villageId) {
+        if (villageIds == null) return true; // ADMIN: all
+        return villageIds.contains(villageId);
+    }
+}
