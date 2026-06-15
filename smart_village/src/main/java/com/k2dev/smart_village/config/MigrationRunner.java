@@ -122,6 +122,45 @@ public class MigrationRunner implements ApplicationRunner {
         try {
             jdbc.execute("ALTER TABLE village_resource ADD COLUMN IF NOT EXISTS village_id INTEGER REFERENCES village(village_id)");
         } catch (Exception ignored) {}
+
+        // ── สร้าง village placeholder สำหรับ scope_id ที่ยังไม่มีใน village ──
+        ensureVillagesForUsers();
+    }
+
+    /**
+     * ตรวจสอบทุก scope_id ใน app_user (role_level='VILLAGE')
+     * ถ้า scope_id นั้นยังไม่มีใน village → สร้าง placeholder
+     * ป้องกัน FK violation ตอน INSERT household/training_event/village_resource
+     */
+    private void ensureVillagesForUsers() {
+        try {
+            java.util.List<Integer> missing = jdbc.queryForList(
+                "SELECT DISTINCT u.scope_id FROM app_user u " +
+                "WHERE u.scope_id IS NOT NULL " +
+                "  AND NOT EXISTS (SELECT 1 FROM village v WHERE v.village_id = u.scope_id)",
+                Integer.class
+            );
+            for (Integer sid : missing) {
+                try {
+                    jdbc.update(
+                        "INSERT INTO village (village_id, village_name) VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING",
+                        sid, "หมู่บ้านหมู่ " + sid
+                    );
+                    System.out.println("[MigrationRunner] Created placeholder village village_id=" + sid);
+                } catch (Exception e2) {
+                    System.err.println("[MigrationRunner] village " + sid + " skipped: " + e2.getMessage());
+                }
+            }
+            // รีเซ็ต sequence ให้ต่อจาก max village_id ปัจจุบัน
+            try {
+                jdbc.execute(
+                    "SELECT setval(pg_get_serial_sequence('village','village_id'), " +
+                    "GREATEST((SELECT COALESCE(MAX(village_id),0) FROM village), 1))"
+                );
+            } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("[MigrationRunner] ensureVillagesForUsers: " + e.getMessage());
+        }
     }
 
     /** welfare_card: ถ้า DB มีเป็น VARCHAR → แปลงเป็น BOOLEAN */

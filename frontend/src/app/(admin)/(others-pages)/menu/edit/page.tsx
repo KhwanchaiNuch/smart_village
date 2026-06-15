@@ -1,0 +1,100 @@
+"use client"
+import ComponentCard from "@/components/common/ComponentCard";
+import Input from "@/components/form/input/InputField";
+import Label from "@/components/form/Label";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
+
+type FormErrors = Partial<Record<string, string>>;
+
+function MenuEditContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const [form, setForm] = useState({ name: "", url: "", status: true });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    axios.get(`/menus/${id}`)
+      .then(res => setForm({ name: res.data.name, url: res.data.url || "", status: res.data.status }))
+      .catch(() => Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ" }));
+  }, [id]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm(p => ({ ...p, [name]: value }));
+    if (errors[name]) setErrors(p => ({ ...p, [name]: "" }));
+  };
+
+  const handleSubmit = async () => {
+    const e: FormErrors = {};
+    if (!form.name.trim()) e.name = "กรุณาระบุชื่อ Menu";
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
+
+    setSaving(true);
+    try {
+      await axios.post("/menus/edit", { id: Number(id), name: form.name.trim(), url: form.url || null, status: form.status });
+      await Swal.fire({ icon: "success", title: "อัปเดตสำเร็จ", timer: 1500, showConfirmButton: false });
+      window.location.href = "/menu";
+    } catch (err: any) {
+      Swal.fire({ icon: "error", title: "อัปเดตไม่สำเร็จ", text: err?.response?.data?.message });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <ComponentCard title="แก้ไข Menu">
+      <div className="max-w-md space-y-5">
+        <div>
+          <Label>ชื่อ Menu <span className="text-red-500">*</span></Label>
+          <Input name="name" type="text" value={form.name} onChange={handleChange}
+            placeholder="เช่น จัดการครัวเรือน"
+            className={errors.name ? "border-red-400" : ""} />
+          {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+        </div>
+
+        <div>
+          <Label>URL</Label>
+          <Input name="url" type="text" value={form.url} onChange={handleChange}
+            placeholder="เช่น /household" />
+        </div>
+
+        <div>
+          <Label>สถานะ</Label>
+          <div className="flex gap-6 mt-2">
+            {[{ label: "เปิดใช้งาน", val: true }, { label: "ปิดใช้งาน", val: false }].map(opt => (
+              <label key={String(opt.val)} className="flex items-center gap-2 cursor-pointer text-sm">
+                <input type="radio" checked={form.status === opt.val}
+                  onChange={() => setForm(p => ({ ...p, status: opt.val }))}
+                  className="accent-blue-600" />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={() => window.history.back()}
+            className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">
+            ยกเลิก
+          </button>
+          <button type="button" onClick={handleSubmit} disabled={saving}
+            className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+            {saving ? "กำลังอัปเดต..." : "บันทึกการแก้ไข"}
+          </button>
+        </div>
+      </div>
+    </ComponentCard>
+  );
+}
+
+export default function MenuEdit() {
+  return (
+    <Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
+      <MenuEditContent />
+    </Suspense>
+  );
+}
