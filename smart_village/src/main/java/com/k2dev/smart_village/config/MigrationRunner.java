@@ -130,6 +130,9 @@ public class MigrationRunner implements ApplicationRunner {
 
         // ── seed ข้อมูลจังหวัด/อำเภอ/ตำบล จากไฟล์สำเร็จรูป (รันครั้งเดียวตอนตารางว่าง) ──
         seedGeo();
+
+        // ── สร้าง village placeholder สำหรับ scope_id ที่ยังไม่มีใน village ──
+        ensureVillagesForUsers();
     }
 
     /** import province/amphur/tambon จาก seed-geo.sql ถ้าตาราง tambon ยังว่าง */
@@ -137,7 +140,7 @@ public class MigrationRunner implements ApplicationRunner {
         try {
             Integer cnt = jdbc.queryForObject("SELECT COUNT(*) FROM tambon", Integer.class);
             if (cnt != null && cnt >= 7000) {
-                return; // import ครบแล้ว ไม่ seed ซ้ำ (ON CONFLICT กันซ้ำอยู่แล้ว แต่ข้ามเพื่อความเร็ว)
+                return; // import ครบแล้ว ไม่ seed ซ้ำ
             }
             org.springframework.core.io.ClassPathResource res =
                 new org.springframework.core.io.ClassPathResource("seed-geo.sql");
@@ -163,6 +166,42 @@ public class MigrationRunner implements ApplicationRunner {
             System.out.println("[MigrationRunner] ✅ Seeded geo data (province/amphur/tambon)");
         } catch (Exception e) {
             System.err.println("[MigrationRunner] geo seed skipped: " + e.getMessage());
+        }
+    }
+
+    /**
+     * ตรวจสอบทุก scope_id ใน app_user (role_level='VILLAGE')
+     * ถ้า scope_id นั้นยังไม่มีใน village → สร้าง placeholder
+     * ป้องกัน FK violation ตอน INSERT household/training_event/village_resource
+     */
+    private void ensureVillagesForUsers() {
+        try {
+            java.util.List<Integer> missing = jdbc.queryForList(
+                "SELECT DISTINCT u.scope_id FROM app_user u " +
+                "WHERE u.scope_id IS NOT NULL " +
+                "  AND NOT EXISTS (SELECT 1 FROM village v WHERE v.village_id = u.scope_id)",
+                Integer.class
+            );
+            for (Integer sid : missing) {
+                try {
+                    jdbc.update(
+                        "INSERT INTO village (village_id, village_name) VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING",
+                        sid, "หมู่บ้านหมู่ " + sid
+                    );
+                    System.out.println("[MigrationRunner] Created placeholder village village_id=" + sid);
+                } catch (Exception e2) {
+                    System.err.println("[MigrationRunner] village " + sid + " skipped: " + e2.getMessage());
+                }
+            }
+            // รีเซ็ต sequence ให้ต่อจาก max village_id ปัจจุบัน
+            try {
+                jdbc.execute(
+                    "SELECT setval(pg_get_serial_sequence('village','village_id'), " +
+                    "GREATEST((SELECT COALESCE(MAX(village_id),0) FROM village), 1))"
+                );
+            } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("[MigrationRunner] ensureVillagesForUsers: " + e.getMessage());
         }
     }
 

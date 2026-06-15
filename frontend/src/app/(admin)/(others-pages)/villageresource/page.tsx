@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { usePermission } from "@/context/PermissionContext";
 
 interface VillageResource {
   resourceId: number;
@@ -31,6 +32,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 const DEFAULT_COLOR = { bg: "bg-indigo-100", text: "text-indigo-700" };
 
 export default function VillageResourcePage() {
+  const { canAdd, canEdit, canDelete } = usePermission();
   const [resources, setResources] = useState<VillageResource[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,6 +106,7 @@ export default function VillageResourcePage() {
               <option value="">ทุกประเภท</option>
               {allTypes.map((t) => <option key={t!} value={t!}>{t}</option>)}
             </select>
+            {canDelete("/villageresource") && (
             <button onClick={handleDeleteSelected} disabled={selectedIds.length === 0 || loading}
               className="flex items-center gap-2 rounded-full border border-red-600 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
@@ -111,6 +114,8 @@ export default function VillageResourcePage() {
               </svg>
               ลบที่เลือก{selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
             </button>
+            )}
+            {canAdd("/villageresource") && (
             <a href="/villageresource/add"
               className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
@@ -118,6 +123,7 @@ export default function VillageResourcePage() {
               </svg>
               เพิ่มทรัพยากร
             </a>
+            )}
           </div>
         </div>
 
@@ -169,12 +175,14 @@ export default function VillageResourcePage() {
                           ) : <span className="text-gray-400">-</span>}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-center">
+                          {canEdit("/villageresource") && (
                           <a href={`/villageresource/edit?id=${r.resourceId}`}
                             className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600 mx-auto">
                             <svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                               <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" />
                             </svg>
                           </a>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

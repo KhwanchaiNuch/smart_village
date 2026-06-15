@@ -31,6 +31,16 @@ export default function SignInForm() {
       localStorage.setItem("scopeId",  String(res.data.scopeId ?? ""));
       localStorage.setItem("username", res.data.username ?? "");
       localStorage.setItem("fullName", res.data.fullName ?? "");
+      // fetch permissions ทันที แล้วเก็บ cache ก่อน redirect
+      try {
+        const permRes = await axios.get(
+          "http://localhost:8080/smart_village/api/role-menus/my-permissions",
+          { headers: { Authorization: `Bearer ${res.data.token}` } }
+        );
+        localStorage.setItem("permissions", JSON.stringify(permRes.data));
+      } catch {
+        localStorage.removeItem("permissions");
+      }
       router.push("/");
     } catch {
       Swal.fire({

@@ -1,5 +1,6 @@
 package com.k2dev.smart_village.controller;
 
+import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.entity.Person;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.PersonRepository;
@@ -18,20 +19,28 @@ public class PersonController {
     @Autowired private PersonRepository repo;
     @Autowired private HouseholdRepository householdRepo;
 
+    // ─── helper: ตรวจว่า household ของ person นี้อยู่ใน village ของ user ────
+    private boolean householdOwned(Integer householdId) {
+        if (householdId == null) return false;
+        Integer vid = ScopeUtil.getScopeId();
+        Household hh = householdRepo.findById(householdId).orElse(null);
+        return hh != null && vid != null && vid.equals(hh.getVillageId());
+    }
+
     @GetMapping
     public List<Person> list() {
         if (ScopeUtil.isAdmin()) return repo.findAll();
         Integer vid = ScopeUtil.getScopeId();
         if (vid == null) return List.of();
         List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
-                .map(h -> h.getHouseholdId()).toList();
+                .map(Household::getHouseholdId).toList();
         return repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/by-village/{villageId}")
     public List<Person> listByVillage(@PathVariable Integer villageId) {
         List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
-                .map(h -> h.getHouseholdId()).toList();
+                .map(Household::getHouseholdId).toList();
         return repo.findByHouseholdIdIn(hhIds);
     }
 
@@ -51,10 +60,11 @@ public class PersonController {
     public ResponseEntity<?> add(@RequestBody Person p) {
         try {
             p.setPersonId(null);
+            if (!ScopeUtil.isAdmin() && !householdOwned(p.getHouseholdId()))
+                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(p));
         } catch (Exception e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการบันทึก";
-            return ResponseEntity.status(500).body(Map.of("message", msg));
+            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการบันทึก"));
         }
     }
 
@@ -63,23 +73,29 @@ public class PersonController {
         try {
             if (p.getPersonId() == null)
                 return ResponseEntity.badRequest().body(Map.of("message", "ต้องระบุ personId"));
+            if (!ScopeUtil.isAdmin()) {
+                Person existing = repo.findById(p.getPersonId()).orElse(null);
+                if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบบุคคลนี้"));
+                if (!householdOwned(existing.getHouseholdId()))
+                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
+            }
             return ResponseEntity.ok(repo.save(p));
         } catch (Exception e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการแก้ไข";
-            return ResponseEntity.status(500).body(Map.of("message", msg));
+            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการแก้ไข"));
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
         try {
-            if (!repo.existsById(id))
-                return ResponseEntity.notFound().build();
+            Person existing = repo.findById(id).orElse(null);
+            if (existing == null) return ResponseEntity.notFound().build();
+            if (!ScopeUtil.isAdmin() && !householdOwned(existing.getHouseholdId()))
+                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
         } catch (Exception e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "ลบไม่สำเร็จ อาจมีข้อมูลที่เชื่อมกับบุคคลนี้อยู่";
-            return ResponseEntity.status(500).body(Map.of("message", msg));
+            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "ลบไม่สำเร็จ อาจมีข้อมูลที่เชื่อมกับบุคคลนี้อยู่"));
         }
     }
 }

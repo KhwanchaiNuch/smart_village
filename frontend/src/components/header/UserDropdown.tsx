@@ -23,6 +23,7 @@ export default function UserDropdown() {
 		localStorage.removeItem("token");
 		localStorage.removeItem("role");
 		localStorage.removeItem("scopeId");
+		localStorage.removeItem("permissions");
 		router.push("/signin");
 	}
 	return (
