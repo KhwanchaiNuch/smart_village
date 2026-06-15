@@ -35,10 +35,12 @@ public class VillageController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody Village v) {
         try {
-            return ResponseEntity.ok(repo.save(v));
+            return ResponseEntity.ok(repo.saveAndFlush(v));
         } catch (Exception e) {
+            Throwable root = e;
+            while (root.getCause() != null) root = root.getCause();
             return ResponseEntity.status(500)
-                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
+                .body(Map.of("message", root.getMessage() != null ? root.getMessage() : "เกิดข้อผิดพลาด"));
         }
     }
 
@@ -51,10 +53,12 @@ public class VillageController {
             if (!repo.existsById(v.getVillageId())) {
                 return ResponseEntity.status(404).body(Map.of("message", "ไม่พบหมู่บ้านนี้"));
             }
-            return ResponseEntity.ok(repo.save(v));
+            return ResponseEntity.ok(repo.saveAndFlush(v));
         } catch (Exception e) {
+            Throwable root = e;
+            while (root.getCause() != null) root = root.getCause();
             return ResponseEntity.status(500)
-                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
+                .body(Map.of("message", root.getMessage() != null ? root.getMessage() : "เกิดข้อผิดพลาด"));
         }
     }
 

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 interface HouseHold {
 	houseCondition: string;
@@ -18,6 +19,7 @@ interface HouseHold {
 }
 
 export default function HouseHold() {
+	const { village } = useVillage();
 	const [tableData, setData] = useState<HouseHold[]>([]);
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -44,7 +46,9 @@ export default function HouseHold() {
 		fetchData();
 	}, [fetchData]);
 
-	const filtered = tableData.filter((h) => {
+	const scoped = village ? tableData.filter((h) => h.villageId === village.villageId) : tableData;
+
+	const filtered = scoped.filter((h) => {
 		const q = search.toLowerCase();
 		return (
 			String(h.householdId).includes(q) ||

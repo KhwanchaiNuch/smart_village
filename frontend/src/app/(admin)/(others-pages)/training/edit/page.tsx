@@ -157,6 +157,8 @@ function TrainingEditContent() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label>วันเริ่ม</Label>
           <DatePicker
             id="startDate"
             placeholder="เลือกวันที่เริ่ม"

@@ -19,6 +19,17 @@ public class Tambon {
 	@Column(name = "name_th")
 	private String nameTh;
 
+	@Column(name = "zipcode", length = 5)
+	private String zipcode;
+
+	public String getZipcode() {
+		return zipcode;
+	}
+
+	public void setZipcode(String zipcode) {
+		this.zipcode = zipcode;
+	}
+
 	public Integer getTambonId() {
 		return tambonId;
 	}

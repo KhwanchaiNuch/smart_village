@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useVillage } from "../context/VillageContext";
 import {
 	BoxCubeIcon,
 	InfoIcon,
@@ -31,21 +32,51 @@ type NavItem = {
 	name: string;
 	icon: React.ReactNode;
 	path?: string;
-	subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+	subItems?: { name: string; path: string; icon?: React.ReactNode; pro?: boolean; new?: boolean }[];
 };
+
+const PinIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+		<path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+		<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+	</svg>
+);
 
 const adminNavItems: NavItem[] = [
 	{ icon: <GridIcon />, name: "Dashboard", path: "/" },
-	{ icon: <CalenderIcon/>, name: "รหัสครัวเรือน", path: "/household" },
-	{ icon: <UserCircleIcon/>, name: "บุคคล", path: "/person" },
-	{ icon: <HeartIcon/>, name: "บันทึกสุขภาพ", path: "/healthrecord" },
-	{ icon: <TimeIcon/>, name: "เยื่ยมบ้าน", path: "/visitlog" },
-	{ icon: <TrainingIcon/>, name: "อบรมพัฒนา", path: "/training" },
-	{ icon: <CommunityIssueIcon/>, name: "ปัญหาชุมชน", path: "/communityissue" },
-	{ icon: <HouseholdEconomicIcon/>, name: "เศรษฐกิจครัวเรือน", path: "/householdeconomic" },
-	{ icon: <PersonSkillIcon/>, name: "ทักษะบุคคล", path: "/personskill" },
-	{ icon: <VillageSurveyIcon/>, name: "ความต้องการชุมชน", path: "/villagesurvey" },
-	{ icon: <VillageResourceIcon/>, name: "ทรัพยากรชุมชน", path: "/villageresource" },
+	{
+		icon: (
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+			</svg>
+		),
+		name: "ข้อมูลพื้นที่",
+		subItems: [
+			{ icon: PinIcon, name: "จังหวัด", path: "/province" },
+			{ icon: PinIcon, name: "อำเภอ", path: "/amphur" },
+			{ icon: PinIcon, name: "ตำบล", path: "/tambon" },
+		],
+	},
+	{
+		icon: (
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+			</svg>
+		),
+		name: "จัดการหมู่บ้าน",
+		subItems: [
+			{ icon: <CalenderIcon/>, name: "รหัสครัวเรือน", path: "/household" },
+			{ icon: <UserCircleIcon/>, name: "บุคคล", path: "/person" },
+			{ icon: <HeartIcon/>, name: "บันทึกสุขภาพ", path: "/healthrecord" },
+			{ icon: <TimeIcon/>, name: "เยี่ยมบ้าน", path: "/visitlog" },
+			{ icon: <TrainingIcon/>, name: "อบรมพัฒนา", path: "/training" },
+			{ icon: <CommunityIssueIcon/>, name: "ปัญหาชุมชน", path: "/communityissue" },
+			{ icon: <HouseholdEconomicIcon/>, name: "เศรษฐกิจครัวเรือน", path: "/householdeconomic" },
+			{ icon: <PersonSkillIcon/>, name: "ทักษะบุคคล", path: "/personskill" },
+			{ icon: <VillageSurveyIcon/>, name: "ความต้องการชุมชน", path: "/villagesurvey" },
+			{ icon: <VillageResourceIcon/>, name: "ทรัพยากรชุมชน", path: "/villageresource" },
+		],
+	},
 ];
 
 const villagerNavItems: NavItem[] = [
@@ -88,13 +119,32 @@ const AppSidebar: React.FC = () => {
 	const { isExpanded, isMobileOpen } = useSidebar();
 	const pathname = usePathname();
 
+	const { village, setVillage } = useVillage();
+	const router = useRouter();
+
+	const changeVillage = () => {
+		setVillage(null);
+		router.push("/village");
+	};
+
 	const [role, setRole] = useState<string | null>(null);
 	useEffect(() => {
 		setRole(localStorage.getItem("role"));
 	}, []);
 
+	// gate: ยังไม่เลือกหมู่บ้าน → "จัดการหมู่บ้าน" เป็นลิงก์ตรงไปหน้าเลือกพื้นที่
+	//        เลือกแล้ว → กลายเป็นกลุ่มเมนูย่อยตามปกติ
+	const villageGatedNavItems: NavItem[] = adminNavItems.map((item) => {
+		if (item.name === "จัดการหมู่บ้าน" && item.subItems) {
+			return village
+				? item
+				: { icon: item.icon, name: item.name, path: "/village" };
+		}
+		return item;
+	});
+
 	const computedAdminNavItems: NavItem[] = [
-		...adminNavItems,
+		...villageGatedNavItems,
 		...(role === "ADMIN" ? [{
 			icon: (
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
@@ -216,12 +266,17 @@ const AppSidebar: React.FC = () => {
 										<li key={subItem.name}>
 											<Link
 												href={subItem.path}
-												className={`menu-dropdown-item ${
+												className={`menu-dropdown-item flex items-center gap-2 ${
 													isActive(subItem.path)
 														? "menu-dropdown-item-active"
 														: "menu-dropdown-item-inactive"
 												}`}
 											>
+												{subItem.icon && (
+													<span className="flex items-center justify-center w-5 h-5 flex-shrink-0 [&>svg]:!w-5 [&>svg]:!h-5">
+														{subItem.icon}
+													</span>
+												)}
 												{subItem.name}
 												<span className="flex items-center gap-1 ml-auto">
 													{subItem.new && (
@@ -310,6 +365,26 @@ const AppSidebar: React.FC = () => {
 					)}
 				</Link>
 			</div>
+			{/* Active village banner */}
+			{role !== "VILLAGE" && (isExpanded || isMobileOpen) && (
+				<div className="relative z-10 mb-4 rounded-xl bg-white/10 border border-white/20 px-3 py-2">
+					{village ? (
+						<>
+							<p className="text-[10px] uppercase tracking-wide text-white/50">หมู่บ้านที่ใช้งาน</p>
+							<p className="text-sm font-semibold text-white truncate">
+								{village.villageName}{village.moo ? ` (หมู่ ${village.moo})` : ""}
+							</p>
+							<button onClick={changeVillage} className="text-[11px] text-white/70 hover:text-white underline">
+								เปลี่ยนพื้นที่
+							</button>
+						</>
+					) : (
+						<p className="text-xs text-white/70 leading-snug">
+							⚠️ ยังไม่ได้เลือกหมู่บ้าน<br />ไปที่ <strong>ข้อมูลพื้นที่ › หมู่บ้าน</strong> แล้วกด "ใช้งาน"
+						</p>
+					)}
+				</div>
+			)}
 			<div className="relative z-10 flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
 				<nav className="mb-6">
 					<div className="flex flex-col gap-4">

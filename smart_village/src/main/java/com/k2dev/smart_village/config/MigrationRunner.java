@@ -122,6 +122,48 @@ public class MigrationRunner implements ApplicationRunner {
         try {
             jdbc.execute("ALTER TABLE village_resource ADD COLUMN IF NOT EXISTS village_id INTEGER REFERENCES village(village_id)");
         } catch (Exception ignored) {}
+
+        // ── tambon: เพิ่มคอลัมน์ zipcode ─────────────────────────────
+        try {
+            jdbc.execute("ALTER TABLE tambon ADD COLUMN IF NOT EXISTS zipcode VARCHAR(5)");
+        } catch (Exception ignored) {}
+
+        // ── seed ข้อมูลจังหวัด/อำเภอ/ตำบล จากไฟล์สำเร็จรูป (รันครั้งเดียวตอนตารางว่าง) ──
+        seedGeo();
+    }
+
+    /** import province/amphur/tambon จาก seed-geo.sql ถ้าตาราง tambon ยังว่าง */
+    private void seedGeo() {
+        try {
+            Integer cnt = jdbc.queryForObject("SELECT COUNT(*) FROM tambon", Integer.class);
+            if (cnt != null && cnt >= 7000) {
+                return; // import ครบแล้ว ไม่ seed ซ้ำ (ON CONFLICT กันซ้ำอยู่แล้ว แต่ข้ามเพื่อความเร็ว)
+            }
+            org.springframework.core.io.ClassPathResource res =
+                new org.springframework.core.io.ClassPathResource("seed-geo.sql");
+            String sql;
+            try (java.io.InputStream in = res.getInputStream()) {
+                sql = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            // ตัดบรรทัด comment ออกก่อน เพื่อไม่ให้ติดมากับ statement แรก
+            sql = sql.replaceAll("(?m)^\\s*--.*$", "");
+            for (String stmt : sql.split(";\\s*\\r?\\n")) {
+                String s = stmt.trim();
+                if (s.isEmpty()) continue;
+                jdbc.execute(s);
+            }
+            // ปรับ sequence ให้เริ่มหลังรหัสราชการ (กันชนเวลาผู้ใช้เพิ่มเอง)
+            for (String[] t : new String[][]{
+                    {"province", "province_id"}, {"amphur", "amphur_id"}, {"tambon", "tambon_id"}}) {
+                try {
+                    jdbc.execute("SELECT setval(pg_get_serial_sequence('" + t[0] + "','" + t[1] + "'), " +
+                        "GREATEST((SELECT COALESCE(MAX(" + t[1] + "),0) FROM " + t[0] + "), 1))");
+                } catch (Exception ignored) {}
+            }
+            System.out.println("[MigrationRunner] ✅ Seeded geo data (province/amphur/tambon)");
+        } catch (Exception e) {
+            System.err.println("[MigrationRunner] geo seed skipped: " + e.getMessage());
+        }
     }
 
     /** welfare_card: ถ้า DB มีเป็น VARCHAR → แปลงเป็น BOOLEAN */

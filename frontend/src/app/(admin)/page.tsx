@@ -247,10 +247,10 @@ export default function Dashboard() {
       </div>
 
       {/* ===== KPI TOP 3 + Village Index ===== */}
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 gap-4 items-stretch">
         {/* KPI 3 ใบ */}
-        <div className="col-span-12 xl:col-span-9">
-          <div className="flex items-center justify-between mb-3">
+        <div className="col-span-12 xl:col-span-9 flex flex-col">
+          <div className="flex items-center justify-between mb-3 min-h-[34px]">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               ตัวชี้วัดหลัก (KPI)
             </h2>
@@ -264,11 +264,11 @@ export default function Dashboard() {
               ดูทั้งหมด ({allKpi.length})
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
             {topKpi.map((card) => {
               const c = colorMap[card.color];
               return (
-                <div key={card.label} className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 flex items-center gap-4">
+                <div key={card.label} className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 flex items-center gap-4 h-full">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${c.badge}`}>
                     {card.icon}
                   </div>
@@ -290,22 +290,29 @@ export default function Dashboard() {
         </div>
 
         {/* Village Index — ขวา */}
-        <div className="col-span-12 xl:col-span-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 flex flex-col items-center justify-center mt-8 xl:mt-0">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Village Index</p>
-          <div className="relative flex items-center justify-center my-2">
-            <svg width="110" height="110" viewBox="0 0 140 140">
-              <circle cx="70" cy="70" r="58" fill="none" stroke="#f3f4f6" strokeWidth="12" />
-              <circle cx="70" cy="70" r="58" fill="none" stroke="#10b981" strokeWidth="12" strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 58 * 0.72} ${2 * Math.PI * 58}`}
-                strokeDashoffset={2 * Math.PI * 58 * 0.25}
-                transform="rotate(-90 70 70)" />
-            </svg>
-            <div className="absolute text-center">
-              <p className="text-2xl font-bold text-emerald-600">72</p>
-              <p className="text-[10px] text-gray-400">/ 100</p>
-            </div>
+        <div className="col-span-12 xl:col-span-3 flex flex-col mt-8 xl:mt-0">
+          <div className="flex items-center mb-3 min-h-[34px]">
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              ดัชนีหมู่บ้าน
+            </h2>
           </div>
-          <p className="text-xs font-semibold text-emerald-600">🟢 เข้มแข็ง</p>
+          <div className="flex-1 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 flex flex-col items-center justify-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Village Index</p>
+            <div className="relative flex items-center justify-center my-1">
+              <svg width="84" height="84" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="58" fill="none" stroke="#f3f4f6" strokeWidth="12" />
+                <circle cx="70" cy="70" r="58" fill="none" stroke="#10b981" strokeWidth="12" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 58 * 0.72} ${2 * Math.PI * 58}`}
+                  strokeDashoffset={2 * Math.PI * 58 * 0.25}
+                  transform="rotate(-90 70 70)" />
+              </svg>
+              <div className="absolute text-center">
+                <p className="text-2xl font-bold text-emerald-600">72</p>
+                <p className="text-[10px] text-gray-400">/ 100</p>
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-emerald-600">🟢 เข้มแข็ง</p>
+          </div>
         </div>
       </div>
 

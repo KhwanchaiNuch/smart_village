@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 interface Person {
 	firstName: string;
@@ -18,7 +19,9 @@ interface Person {
 }
 
 export default function Person() {
+	const { village } = useVillage();
 	const [tableData, setData] = useState<Person[]>([]);
+	const [villageHouseholdIds, setVillageHouseholdIds] = useState<number[] | null>(null);
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState("");
@@ -44,7 +47,21 @@ export default function Person() {
 		fetchData();
 	}, [fetchData]);
 
-	const filtered = tableData.filter((p) => {
+	// โหลดรายการ household_id ของหมู่บ้านที่ใช้งาน เพื่อกรองบุคคล
+	useEffect(() => {
+		if (!village) { setVillageHouseholdIds(null); return; }
+		axios.get<{ householdId: number; villageId: number }[]>(`/households`)
+			.then((res) => setVillageHouseholdIds(
+				res.data.filter((h) => h.villageId === village.villageId).map((h) => h.householdId)
+			))
+			.catch(() => setVillageHouseholdIds([]));
+	}, [village]);
+
+	const scoped = villageHouseholdIds
+		? tableData.filter((p) => villageHouseholdIds.includes(p.householdId))
+		: tableData;
+
+	const filtered = scoped.filter((p) => {
 		const q = search.toLowerCase();
 		return (
 			String(p.personId).includes(q) ||
