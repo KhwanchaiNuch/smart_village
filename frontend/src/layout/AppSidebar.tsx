@@ -136,14 +136,16 @@ const AppSidebar: React.FC = () => {
 
 	// gate: ยังไม่เลือกหมู่บ้าน → "จัดการหมู่บ้าน" เป็นลิงก์ตรงไปหน้าเลือกพื้นที่
 	//        เลือกแล้ว → กลายเป็นกลุ่มเมนูย่อยตามปกติ
-	const villageGatedNavItems: NavItem[] = adminNavItems.map((item) => {
-		if (item.name === "จัดการหมู่บ้าน" && item.subItems) {
-			return village
-				? item
-				: { icon: item.icon, name: item.name, path: "/village" };
-		}
-		return item;
-	});
+	const villageGatedNavItems: NavItem[] = adminNavItems
+		.filter((item) => item.name !== "ข้อมูลพื้นที่" || role === "ADMIN")
+		.map((item) => {
+			if (item.name === "จัดการหมู่บ้าน" && item.subItems) {
+				return village
+					? item
+					: { icon: item.icon, name: item.name, path: "/village" };
+			}
+			return item;
+		});
 
 	const computedAdminNavItems: NavItem[] = [
 		...villageGatedNavItems,
