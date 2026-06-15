@@ -1,14 +1,12 @@
 package com.k2dev.smart_village.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "training_event")
-@Data
 public class TrainingEvent {
 
     @Id

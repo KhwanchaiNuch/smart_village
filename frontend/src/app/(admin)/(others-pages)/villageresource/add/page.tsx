@@ -146,7 +146,6 @@ export default function VillageResourceAdd() {
             {errors.gpsLat && <p className="mt-1 text-xs text-red-500">{errors.gpsLat}</p>}
           </div>
           <div>
-          <div>
             <p className="text-xs text-gray-500 mb-1">Longitude (ลองจิจูด)</p>
             <Input name="gpsLng" value={form.gpsLng} onChange={handleChange}
               type="text" placeholder="เช่น 100.992541"

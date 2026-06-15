@@ -170,6 +170,7 @@ function VillageResourceEditContent() {
               type="text" placeholder="เช่น 100.992541"
               className={errors.gpsLng ? "border-red-400" : ""} />
             {errors.gpsLng && <p className="mt-1 text-xs text-red-500">{errors.gpsLng}</p>}
+          </div>
         </div>
         {form.gpsLat && form.gpsLng && !errors.gpsLat && !errors.gpsLng && (
           <a
