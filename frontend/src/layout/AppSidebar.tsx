@@ -134,13 +134,17 @@ const AppSidebar: React.FC = () => {
 		setRole(localStorage.getItem("role"));
 	}, []);
 
+	// PROVINCE/AMPHUR/TAMBON ไม่ต้องเลือกหมู่บ้าน → เห็น sub-items ทั้งหมดทันที
+	const higherRoles = ["PROVINCE", "AMPHUR", "TAMBON"];
+	const isHigherRole = role !== null && higherRoles.includes(role);
+
 	// gate: ยังไม่เลือกหมู่บ้าน → "จัดการหมู่บ้าน" เป็นลิงก์ตรงไปหน้าเลือกพื้นที่
-	//        เลือกแล้ว → กลายเป็นกลุ่มเมนูย่อยตามปกติ
+	//        เลือกแล้ว (หรือ higher role) → กลายเป็นกลุ่มเมนูย่อยตามปกติ
 	const villageGatedNavItems: NavItem[] = adminNavItems
 		.filter((item) => item.name !== "ข้อมูลพื้นที่" || role === "ADMIN")
 		.map((item) => {
 			if (item.name === "จัดการหมู่บ้าน" && item.subItems) {
-				return village
+				return (village || isHigherRole)
 					? item
 					: { icon: item.icon, name: item.name, path: "/village" };
 			}
@@ -392,10 +396,22 @@ const AppSidebar: React.FC = () => {
 					)}
 				</Link>
 			</div>
-			{/* Active village banner */}
+			{/* Active village / scope banner */}
 			{role !== "VILLAGE" && (isExpanded || isMobileOpen) && (
 				<div className="relative z-10 mb-4 rounded-xl bg-white/10 border border-white/20 px-3 py-2">
-					{village ? (
+					{isHigherRole ? (
+						/* PROVINCE / AMPHUR / TAMBON → แสดง scope level */
+						<>
+							<p className="text-[10px] uppercase tracking-wide text-white/50">ขอบเขตการดูแล</p>
+							<p className="text-sm font-semibold text-white">
+								{role === "PROVINCE" && "ระดับจังหวัด"}
+								{role === "AMPHUR"   && "ระดับอำเภอ"}
+								{role === "TAMBON"   && "ระดับตำบล"}
+							</p>
+							<p className="text-[11px] text-white/60">ดูข้อมูลทั้งหมดในพื้นที่รับผิดชอบ</p>
+						</>
+					) : village ? (
+						/* ADMIN เลือกหมู่บ้านแล้ว */
 						<>
 							<p className="text-[10px] uppercase tracking-wide text-white/50">หมู่บ้านที่ใช้งาน</p>
 							<p className="text-sm font-semibold text-white truncate">
@@ -406,6 +422,7 @@ const AppSidebar: React.FC = () => {
 							</button>
 						</>
 					) : (
+						/* ADMIN ยังไม่ได้เลือกหมู่บ้าน */
 						<p className="text-xs text-white/70 leading-snug">
 							⚠️ ยังไม่ได้เลือกหมู่บ้าน<br />ไปที่ <strong>ข้อมูลพื้นที่ › หมู่บ้าน</strong> แล้วกด "ใช้งาน"
 						</p>

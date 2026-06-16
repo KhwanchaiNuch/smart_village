@@ -1,7 +1,8 @@
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.Household;
-import com.k2dev.smart_village.repository.HouseholdRepository;
+import com.k2dev.smart_village.entity.Person;
+import com.k2dev.smart_village.repository.*;
 import com.k2dev.smart_village.security.ScopeUtil;
 import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,11 @@ public class HouseholdController {
     @Autowired private HouseholdRepository repo;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private GeoScopeService geoScope;
+    @Autowired private HouseholdEconomicRepository economicRepo;
+    @Autowired private PersonRepository personRepo;
+    @Autowired private VisitLogRepository visitLogRepo;
+    @Autowired private CommunityIssueRepository communityIssueRepo;
+    @Autowired private VillageNeedSurveyRepository needSurveyRepo;
 
     // ─── helper: ตรวจสอบว่า household นี้อยู่ใน village ของ user ─────────────
     private boolean notOwned(Household h) {
@@ -106,6 +112,20 @@ public class HouseholdController {
                 return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
             if (!ScopeUtil.isAdmin() && notOwned(existing))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
+
+            Long hhIdLong = id.longValue();
+
+            // ลบ child records ทั้งหมดก่อน
+            economicRepo.deleteAll(economicRepo.findByHouseholdId(hhIdLong));
+            communityIssueRepo.deleteAll(communityIssueRepo.findByHouseholdId(hhIdLong));
+            visitLogRepo.deleteAll(visitLogRepo.findByHouseholdId(hhIdLong));
+            needSurveyRepo.deleteAll(needSurveyRepo.findByHouseholdId(id));
+
+            // ลบ persons + children ของ person
+            List<Person> persons = personRepo.findByHouseholdId(id);
+            personRepo.deleteAll(persons);
+
+            // ลบ household
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
         } catch (Exception e) {

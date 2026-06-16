@@ -34,7 +34,7 @@ export default function TrainingAdd() {
     document.title = "Smart Village | Training Add";
     const r = localStorage.getItem("role");
     setRole(r);
-    if (r === "ADMIN") {
+    if (r !== "VILLAGE") {
       axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
     }
   }, []);
@@ -58,8 +58,11 @@ export default function TrainingAdd() {
     if (!validate()) return;
     setSaving(true);
     try {
+      const scopeId = localStorage.getItem("scopeId");
       await axios.post("/training-events/add", {
-        villageId: role === "ADMIN" && adminVillageId ? Number(adminVillageId) : null,
+        villageId: role === "VILLAGE"
+          ? (scopeId ? Number(scopeId) : null)
+          : (adminVillageId ? Number(adminVillageId) : null),
         trainingName: form.trainingName,
         trainingType: form.trainingType,
         organizer: form.organizer || null,
@@ -87,10 +90,18 @@ export default function TrainingAdd() {
   return (
     <ComponentCard title="เพิ่มโครงการอบรม (Add Training Event)">
 
-      {/* Admin: เลือกหมู่บ้าน */}
-      {role === "ADMIN" && (
+      {/* Village selector */}
+      {role === "VILLAGE" ? (
+        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 text-sm text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-blue-400 flex-shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+          บันทึกในหมู่บ้านของคุณโดยอัตโนมัติ
+        </div>
+      ) : (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-          <Label>หมู่บ้านที่จัดอบรม (ถ้าไม่ระบุจะเป็นข้อมูลระดับ Admin)</Label>
+          <Label>หมู่บ้านที่จัดอบรม</Label>
           <select
             value={adminVillageId}
             onChange={e => setAdminVillageId(e.target.value)}

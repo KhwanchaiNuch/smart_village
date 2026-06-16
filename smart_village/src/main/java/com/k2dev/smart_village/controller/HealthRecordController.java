@@ -7,6 +7,7 @@ import com.k2dev.smart_village.repository.HealthRecordRepository;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.PersonRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class HealthRecordController {
     @Autowired private HealthRecordRepository repo;
     @Autowired private HouseholdRepository householdRepo;
     @Autowired private PersonRepository personRepo;
+    @Autowired private GeoScopeService geoScope;
 
     // ─── helper: ตรวจว่า person (via personId) อยู่ใน village ของ user ────────
     private boolean personOwned(Long personId) {
@@ -33,16 +35,26 @@ public class HealthRecordController {
     }
 
     @GetMapping
-    public List<HealthRecord> list() {
-    	System.out.println("xxx");
-        if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
+    public List<HealthRecord> list(@RequestParam(required = false) Integer villageId) {
+        if (ScopeUtil.isAdmin()) {
+            if (villageId != null) {
+                List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
+                        .map(Household::getHouseholdId).toList();
+                List<Long> pIds = personRepo.findByHouseholdIdIn(hhIds).stream()
+                        .map(p -> p.getPersonId().longValue()).toList();
+                return pIds.isEmpty() ? List.of() : repo.findByPersonIdIn(pIds);
+            }
+            return repo.findAll();
+        }
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageIdIn(vids).stream()
                 .map(Household::getHouseholdId).toList();
+        if (hhIds.isEmpty()) return List.of();
         List<Long> personIds = personRepo.findByHouseholdIdIn(hhIds).stream()
                 .map(p -> p.getPersonId().longValue()).toList();
-        return repo.findByPersonIdIn(personIds);
+        return personIds.isEmpty() ? List.of() : repo.findByPersonIdIn(personIds);
     }
 
     @GetMapping("/{id}")

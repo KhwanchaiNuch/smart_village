@@ -12,6 +12,7 @@ import java.util.List;
 
 public interface VillageRepository extends JpaRepository<Village, Integer> {
     List<Village> findByTambonId(Integer tambonId);
+    List<Village> findByTambonIdIn(List<Integer> tambonIds);
 
     /** สร้าง village ด้วย explicit ID ถ้ายังไม่มี (ป้องกัน JPA merge() แทน insert()) */
     @Modifying

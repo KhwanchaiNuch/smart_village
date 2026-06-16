@@ -23,7 +23,7 @@ import java.util.Optional;
  * 1. Path ที่ขึ้น bypass list → allow ทันที
  * 2. ADMIN role → allow ทันที (bypass ทุก permission)
  * 3. หา Menu ที่ตรง path → ถ้าไม่มี menu ตรง → allow (path ที่ไม่ได้ map)
- * 4. หา role_menu record → ถ้าไม่มี row → deny 403
+ * 4. หา role_menu record → ถ้าไม่มี row → allow (ยังไม่ได้ตั้งค่า = เข้าได้ทั้งหมด)
  * 5. ตรวจ HTTP method vs permission flag → deny ถ้าไม่ผ่าน
  */
 @Component
@@ -89,21 +89,15 @@ public class PermissionInterceptor implements HandlerInterceptor {
         // ไม่มี menu ตรง → allow (path ที่ไม่ได้ declare ใน menu)
         if (matchedMenu == null) return true;
 
-        // 4. หา Role
+        // 4. หา Role — ถ้าไม่มี role ใน system → allow (role ที่ยังไม่ได้ลงทะเบียน)
         Optional<Role> roleOpt = roleRepo.findByName(user.getRole());
-        if (roleOpt.isEmpty()) {
-            response.sendError(403, "ไม่พบ Role ในระบบ");
-            return false;
-        }
+        if (roleOpt.isEmpty()) return true;
 
-        // 5. หา permission record
+        // 5. หา permission record — ถ้าไม่มี entry → allow (ยังไม่ได้ตั้งค่า = เปิดหมด)
         Optional<RoleMenu> permOpt = roleMenuRepo.findById(
             new RoleMenuId(roleOpt.get().getId(), matchedMenu.getId())
         );
-        if (permOpt.isEmpty()) {
-            response.sendError(403, "ไม่มีสิทธิ์เข้าถึงเมนูนี้");
-            return false;
-        }
+        if (permOpt.isEmpty()) return true;
 
         RoleMenu perm   = permOpt.get();
         String   method = request.getMethod().toUpperCase();

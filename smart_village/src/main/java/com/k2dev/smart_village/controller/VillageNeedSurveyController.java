@@ -5,6 +5,7 @@ import com.k2dev.smart_village.entity.VillageNeedSurvey;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.VillageNeedSurveyRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class VillageNeedSurveyController {
 
     @Autowired private VillageNeedSurveyRepository repo;
     @Autowired private HouseholdRepository householdRepo;
+    @Autowired private GeoScopeService geoScope;
 
     private boolean householdOwned(Integer householdId) {
         if (householdId == null) return false;
@@ -29,11 +31,12 @@ public class VillageNeedSurveyController {
     @GetMapping
     public List<VillageNeedSurvey> list() {
         if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
-                .map(h -> h.getHouseholdId()).toList();
-        return repo.findByHouseholdIdIn(hhIds);
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageIdIn(vids).stream()
+                .map(Household::getHouseholdId).toList();
+        return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/{id}")

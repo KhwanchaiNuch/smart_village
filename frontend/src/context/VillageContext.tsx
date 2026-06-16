@@ -30,25 +30,32 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const role    = localStorage.getItem("role");
     const scopeId = localStorage.getItem("scopeId");
 
-    // 1. ลอง restore จาก localStorage
+    // PROVINCE / AMPHUR / TAMBON → ไม่ต้องเลือกหมู่บ้าน backend จัดการ scope เอง
+    const higherRoles = ["PROVINCE", "AMPHUR", "TAMBON"];
+    if (role && higherRoles.includes(role)) {
+      localStorage.removeItem("activeVillage");
+      setLoaded(true);
+      return;
+    }
+
+    // 1. ลอง restore จาก localStorage (ADMIN หรือ VILLAGE)
     const raw = localStorage.getItem("activeVillage");
     if (raw) {
       try {
         const stored: ActiveVillage = JSON.parse(raw);
-        // non-ADMIN: ใช้ค่า cache ได้เฉพาะเมื่อ villageId ตรงกับ scopeId ของตัวเอง
-        // ADMIN: ใช้ค่า cache ได้เสมอ (เขาเลือกเองได้)
+        // VILLAGE: ใช้ cache ได้เฉพาะเมื่อ villageId ตรงกับ scopeId ของตัวเอง
+        // ADMIN: ใช้ cache ได้เสมอ
         if (role === "ADMIN" || !scopeId || stored.villageId === Number(scopeId)) {
           setVillageState(stored);
           setLoaded(true);
           return;
         }
-        // ไม่ตรง → ล้างค่าเก่าออกแล้วไปหา village ใหม่
         localStorage.removeItem("activeVillage");
       } catch { /* ignore */ }
     }
 
-    // 2. Auto-init: non-ADMIN มี scopeId → fetch/ensure village อัตโนมัติ
-    if (role && role !== "ADMIN" && scopeId) {
+    // 2. Auto-init: VILLAGE role → fetch village จาก scopeId อัตโนมัติ
+    if (role === "VILLAGE" && scopeId) {
       axios
         .get<{ villageId: number; villageName: string; moo?: string }>(`/villages/ensure/${scopeId}`)
         .then((res) => {

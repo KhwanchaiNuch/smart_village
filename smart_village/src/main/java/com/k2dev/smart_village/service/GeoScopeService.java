@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * แปล role + scopeId ของ current user → List<villageId> ที่มีสิทธิ์เข้าถึง
@@ -52,24 +51,24 @@ public class GeoScopeService {
                     .stream().map(Village::getVillageId).distinct().toList();
 
             case "AMPHUR" -> {
+                // 1 query for tambons, then 1 IN query for villages
                 List<Integer> tambonIds = tambonRepo.findByAmphurId(scopeId)
                         .stream().map(Tambon::getTambonId).toList();
-                yield tambonIds.stream()
-                        .flatMap(tid -> villageRepo.findByTambonId(tid).stream())
-                        .map(Village::getVillageId)
-                        .distinct().toList();
+                if (tambonIds.isEmpty()) yield List.of();
+                yield villageRepo.findByTambonIdIn(tambonIds)
+                        .stream().map(Village::getVillageId).distinct().toList();
             }
 
             case "PROVINCE" -> {
+                // 1 query for amphurs, 1 IN query for tambons, 1 IN query for villages
                 List<Integer> amphurIds = amphurRepo.findByProvinceId(scopeId)
                         .stream().map(Amphur::getAmphurId).toList();
-                List<Integer> tambonIds = amphurIds.stream()
-                        .flatMap(aid -> tambonRepo.findByAmphurId(aid).stream())
-                        .map(Tambon::getTambonId).toList();
-                yield tambonIds.stream()
-                        .flatMap(tid -> villageRepo.findByTambonId(tid).stream())
-                        .map(Village::getVillageId)
-                        .distinct().toList();
+                if (amphurIds.isEmpty()) yield List.of();
+                List<Integer> tambonIds = tambonRepo.findByAmphurIdIn(amphurIds)
+                        .stream().map(Tambon::getTambonId).toList();
+                if (tambonIds.isEmpty()) yield List.of();
+                yield villageRepo.findByTambonIdIn(tambonIds)
+                        .stream().map(Village::getVillageId).distinct().toList();
             }
 
             default -> List.of();

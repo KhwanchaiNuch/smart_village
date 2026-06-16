@@ -5,6 +5,7 @@ import com.k2dev.smart_village.entity.HouseholdEconomic;
 import com.k2dev.smart_village.repository.HouseholdEconomicRepository;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class HouseholdEconomicController {
 
     @Autowired private HouseholdEconomicRepository repo;
     @Autowired private HouseholdRepository householdRepo;
+    @Autowired private GeoScopeService geoScope;
 
     private boolean householdOwned(Long householdId) {
         if (householdId == null) return false;
@@ -29,11 +31,12 @@ public class HouseholdEconomicController {
     @GetMapping
     public List<HouseholdEconomic> list() {
         if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        List<Long> hhIds = householdRepo.findByVillageId(vid).stream()
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        List<Long> hhIds = householdRepo.findByVillageIdIn(vids).stream()
                 .map(h -> h.getHouseholdId().longValue()).toList();
-        return repo.findByHouseholdIdIn(hhIds);
+        return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/{id}")

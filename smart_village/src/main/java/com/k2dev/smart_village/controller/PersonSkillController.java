@@ -7,6 +7,7 @@ import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.PersonRepository;
 import com.k2dev.smart_village.repository.PersonSkillRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class PersonSkillController {
     @Autowired private PersonSkillRepository repo;
     @Autowired private HouseholdRepository householdRepo;
     @Autowired private PersonRepository personRepo;
+    @Autowired private GeoScopeService geoScope;
 
     /** ตรวจสอบว่า person นี้อยู่ในหมู่บ้านของ user */
     private boolean personOwned(Integer personId) {
@@ -35,13 +37,15 @@ public class PersonSkillController {
     @GetMapping
     public List<PersonSkill> list() {
         if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
-                .map(h -> h.getHouseholdId()).toList();
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageIdIn(vids).stream()
+                .map(Household::getHouseholdId).toList();
+        if (hhIds.isEmpty()) return List.of();
         List<Integer> personIds = personRepo.findByHouseholdIdIn(hhIds).stream()
                 .map(p -> p.getPersonId()).toList();
-        return repo.findByPersonIdIn(personIds);
+        return personIds.isEmpty() ? List.of() : repo.findByPersonIdIn(personIds);
     }
 
     @GetMapping("/{id}")

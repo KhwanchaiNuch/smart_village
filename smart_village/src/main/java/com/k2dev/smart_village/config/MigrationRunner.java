@@ -143,6 +143,9 @@ public class MigrationRunner implements ApplicationRunner {
 
         // ── สร้าง village placeholder สำหรับ scope_id ที่ยังไม่มีใน village ──
         ensureVillagesForUsers();
+
+        // ── seed system roles ให้กำหนดสิทธิ์ในหน้า permission matrix ได้ ──
+        seedSystemRoles();
     }
 
     /** import province/amphur/tambon จาก seed-geo.sql ถ้าตาราง tambon ยังว่าง */
@@ -224,6 +227,27 @@ public class MigrationRunner implements ApplicationRunner {
         } catch (Exception e) {
             System.err.println("[MigrationRunner] ensureVillagesForUsers: " + e.getMessage());
         }
+    }
+
+    /**
+     * Seed ระบบ roles ที่จำเป็น (ADMIN, PROVINCE, AMPHUR, TAMBON, VILLAGE)
+     * ให้ ADMIN กำหนดสิทธิ์ผ่านหน้า Permission Matrix ได้
+     */
+    private void seedSystemRoles() {
+        String[] systemRoles = {"ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE"};
+        for (String roleName : systemRoles) {
+            try {
+                Integer cnt = jdbc.queryForObject(
+                    "SELECT COUNT(*) FROM \"role\" WHERE name = ?", Integer.class, roleName);
+                if (cnt == null || cnt == 0) {
+                    jdbc.update("INSERT INTO \"role\" (name, status) VALUES (?, true)", roleName);
+                    System.out.println("[MigrationRunner] Created system role: " + roleName);
+                }
+            } catch (Exception e) {
+                System.err.println("[MigrationRunner] seedSystemRoles " + roleName + ": " + e.getMessage());
+            }
+        }
+        System.out.println("[MigrationRunner] ✅ System roles ensured");
     }
 
     /** welfare_card: ถ้า DB มีเป็น VARCHAR → แปลงเป็น BOOLEAN */

@@ -8,4 +8,5 @@ public interface VillageResourceRepository extends JpaRepository<VillageResource
     List<VillageResource> findByVillageCode(String villageCode);
     List<VillageResource> findByResourceType(String resourceType);
     List<VillageResource> findByVillageId(Integer villageId);
+    List<VillageResource> findByVillageIdIn(List<Integer> villageIds);
 }

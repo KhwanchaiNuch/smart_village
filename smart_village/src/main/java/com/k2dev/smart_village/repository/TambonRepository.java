@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface TambonRepository extends JpaRepository<Tambon, Integer> {
     List<Tambon> findByAmphurId(Integer amphurId);
+    List<Tambon> findByAmphurIdIn(List<Integer> amphurIds);
 }

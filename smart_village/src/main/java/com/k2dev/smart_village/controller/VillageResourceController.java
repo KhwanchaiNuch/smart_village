@@ -3,6 +3,7 @@ package com.k2dev.smart_village.controller;
 import com.k2dev.smart_village.entity.VillageResource;
 import com.k2dev.smart_village.repository.VillageResourceRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class VillageResourceController {
 
     @Autowired private VillageResourceRepository repo;
+    @Autowired private GeoScopeService geoScope;
 
     private boolean villageOwned(Integer villageId) {
         Integer vid = ScopeUtil.getScopeId();
@@ -24,9 +26,10 @@ public class VillageResourceController {
     @GetMapping
     public List<VillageResource> list() {
         if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        return repo.findByVillageId(vid);
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        return repo.findByVillageIdIn(vids);
     }
 
     @GetMapping("/{id}")
