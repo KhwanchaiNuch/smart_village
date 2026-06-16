@@ -26,6 +26,9 @@ export default function SignInForm() {
         "http://localhost:8080/smart_village/api/auth/login",
         { username: identifier, password }
       );
+      // clear ค่า session เก่าก่อนเสมอ (ป้องกัน village ของ user คนก่อนค้างอยู่)
+      localStorage.removeItem("activeVillage");
+      localStorage.removeItem("permissions");
       localStorage.setItem("token",    res.data.token);
       localStorage.setItem("role",     res.data.role);
       localStorage.setItem("scopeId",  String(res.data.scopeId ?? ""));
@@ -41,7 +44,7 @@ export default function SignInForm() {
       } catch {
         localStorage.removeItem("permissions");
       }
-      router.push("/");
+      window.location.href = "/";
     } catch {
       Swal.fire({
         icon: "error",

@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from "@/lib/axios";
 
 export interface ActiveVillage {
   villageId: number;
@@ -26,17 +27,50 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    const role    = localStorage.getItem("role");
+    const scopeId = localStorage.getItem("scopeId");
+
+    // 1. ลอง restore จาก localStorage
     const raw = localStorage.getItem("activeVillage");
     if (raw) {
-      try { setVillageState(JSON.parse(raw)); } catch { /* ignore */ }
+      try {
+        const stored: ActiveVillage = JSON.parse(raw);
+        // non-ADMIN: ใช้ค่า cache ได้เฉพาะเมื่อ villageId ตรงกับ scopeId ของตัวเอง
+        // ADMIN: ใช้ค่า cache ได้เสมอ (เขาเลือกเองได้)
+        if (role === "ADMIN" || !scopeId || stored.villageId === Number(scopeId)) {
+          setVillageState(stored);
+          setLoaded(true);
+          return;
+        }
+        // ไม่ตรง → ล้างค่าเก่าออกแล้วไปหา village ใหม่
+        localStorage.removeItem("activeVillage");
+      } catch { /* ignore */ }
     }
-    setLoaded(true);
+
+    // 2. Auto-init: non-ADMIN มี scopeId → fetch/ensure village อัตโนมัติ
+    if (role && role !== "ADMIN" && scopeId) {
+      axios
+        .get<{ villageId: number; villageName: string; moo?: string }>(`/villages/ensure/${scopeId}`)
+        .then((res) => {
+          const v: ActiveVillage = {
+            villageId:   res.data.villageId,
+            villageName: res.data.villageName,
+            moo:         res.data.moo ?? null,
+          };
+          setVillageState(v);
+          localStorage.setItem("activeVillage", JSON.stringify(v));
+        })
+        .catch(() => {})
+        .finally(() => setLoaded(true));
+    } else {
+      setLoaded(true);
+    }
   }, []);
 
   const setVillage = (v: ActiveVillage | null) => {
     setVillageState(v);
     if (v) localStorage.setItem("activeVillage", JSON.stringify(v));
-    else localStorage.removeItem("activeVillage");
+    else    localStorage.removeItem("activeVillage");
   };
 
   return (

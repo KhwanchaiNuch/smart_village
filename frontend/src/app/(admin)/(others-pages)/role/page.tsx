@@ -6,9 +6,19 @@ import Swal from "sweetalert2";
 
 interface Role { id: number; name: string; status: boolean; createdAt: string; }
 
+type SortKey = "id" | "name" | "status" | "createdAt";
+
+
 export default function RolePage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("id");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) setSortOrder(o => o === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortOrder("asc"); }
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -41,9 +51,15 @@ export default function RolePage() {
     }
   };
 
-  const filtered = roles.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = [...roles]
+    .filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const av = a[sortKey] ?? "";
+      const bv = b[sortKey] ?? "";
+      if (av < bv) return sortOrder === "asc" ? -1 : 1;
+      if (av > bv) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
   return (
     <ComponentCard title="จัดการ Role">
@@ -63,18 +79,16 @@ export default function RolePage() {
         <table className="min-w-full border-collapse text-sm">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800">
-              <th className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-16">
-                ID
-              </th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                ชื่อ Role
-              </th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-32">
-                สถานะ
-              </th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-44">
-                วันที่สร้าง
-              </th>
+              {(["id","name","status","createdAt"] as SortKey[]).map((col, i) => (
+                <th key={col}
+                  onClick={() => handleSort(col)}
+                  className={`border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 select-none transition-colors
+                    ${i === 2 ? "text-center w-32" : i === 0 ? "text-left w-16" : "text-left"} ${i === 3 ? "w-44" : ""}`}>
+                  <span className={sortKey === col ? "underline underline-offset-2" : ""}>
+                    {["ID","ชื่อ Role","สถานะ","วันที่สร้าง"][i]}
+                  </span>
+                </th>
+              ))}
               <th className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-28">
                 จัดการ
               </th>

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface VillageResource {
   resourceId: number;
@@ -96,6 +97,7 @@ export default function VillageResourcePage() {
   const selCls = "h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
   return (
+    <PermissionGuard menuUrl="/villageresource">
     <div className="space-y-5">
       <ComponentCard title="">
         <div className="flex items-center justify-between mb-4">
@@ -199,5 +201,6 @@ export default function VillageResourcePage() {
         </div>
       </ComponentCard>
     </div>
+    </PermissionGuard>
   );
 }

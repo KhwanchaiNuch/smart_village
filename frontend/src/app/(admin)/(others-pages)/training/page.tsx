@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface TrainingEvent {
   id: number;
@@ -107,6 +108,7 @@ export default function TrainingPage() {
   };
 
   return (
+    <PermissionGuard menuUrl="/training">
     <ComponentCard title="">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
@@ -228,5 +230,6 @@ export default function TrainingPage() {
         </div>
       </div>
     </ComponentCard>
+    </PermissionGuard>
   );
 }

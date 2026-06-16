@@ -12,6 +12,9 @@ public class AppUserRequest {
     private String roleLevel;     // PROVINCE | AMPHUR | TAMBON | VILLAGE | ADMIN
     private Integer scopeId;
     private Boolean isActive;
+    private Integer provinceId;
+    private Integer amphurId;
+    private Integer tambonId;
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -30,4 +33,13 @@ public class AppUserRequest {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Integer getProvinceId() { return provinceId; }
+    public void setProvinceId(Integer provinceId) { this.provinceId = provinceId; }
+
+    public Integer getAmphurId() { return amphurId; }
+    public void setAmphurId(Integer amphurId) { this.amphurId = amphurId; }
+
+    public Integer getTambonId() { return tambonId; }
+    public void setTambonId(Integer tambonId) { this.tambonId = tambonId; }
 }

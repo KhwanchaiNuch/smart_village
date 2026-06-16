@@ -5,6 +5,7 @@ import com.k2dev.smart_village.entity.Person;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.repository.PersonRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ public class PersonController {
 
     @Autowired private PersonRepository repo;
     @Autowired private HouseholdRepository householdRepo;
+    @Autowired private GeoScopeService geoScope;
 
     // ─── helper: ตรวจว่า household ของ person นี้อยู่ใน village ของ user ────
     private boolean householdOwned(Integer householdId) {
@@ -28,13 +30,22 @@ public class PersonController {
     }
 
     @GetMapping
-    public List<Person> list() {
-        if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        if (vid == null) return List.of();
-        List<Integer> hhIds = householdRepo.findByVillageId(vid).stream()
+    public List<Person> list(@RequestParam(required = false) Integer villageId) {
+        if (ScopeUtil.isAdmin()) {
+            if (villageId != null) {
+                List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
+                        .map(Household::getHouseholdId).toList();
+                return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
+            }
+            return repo.findAll();
+        }
+        // hierarchical scope
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        List<Integer> hhIds = householdRepo.findByVillageIdIn(vids).stream()
                 .map(Household::getHouseholdId).toList();
-        return repo.findByHouseholdIdIn(hhIds);
+        return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
     }
 
     @GetMapping("/by-village/{villageId}")

@@ -3,8 +3,10 @@ package com.k2dev.smart_village.controller;
 import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.repository.HouseholdRepository;
 import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.Map;
 public class HouseholdController {
 
     @Autowired private HouseholdRepository repo;
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private GeoScopeService geoScope;
 
     // ─── helper: ตรวจสอบว่า household นี้อยู่ใน village ของ user ─────────────
     private boolean notOwned(Household h) {
@@ -23,10 +27,15 @@ public class HouseholdController {
     }
 
     @GetMapping
-    public List<Household> list() {
-        if (ScopeUtil.isAdmin()) return repo.findAll();
-        Integer vid = ScopeUtil.getScopeId();
-        return vid != null ? repo.findByVillageId(vid) : List.of();
+    public List<Household> list(@RequestParam(required = false) Integer villageId) {
+        if (ScopeUtil.isAdmin()) {
+            if (villageId != null) return repo.findByVillageId(villageId);
+            return repo.findAll();
+        }
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null) return repo.findAll();
+        if (vids.isEmpty()) return List.of();
+        return repo.findByVillageIdIn(vids);
     }
 
     @GetMapping("/by-village/{villageId}")
@@ -50,6 +59,15 @@ public class HouseholdController {
                 Integer vid = ScopeUtil.getScopeId();
                 if (vid == null)
                     return ResponseEntity.badRequest().body(Map.of("message", "ไม่พบ scopeId กรุณา login ใหม่"));
+                // defensive: สร้าง village placeholder ถ้ายังไม่มีใน DB (JdbcTemplate + fallback)
+                String vname = "หมู่บ้านหมู่ " + vid;
+                try {
+                    jdbc.update("INSERT INTO village (village_id, village_name) VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING", vid, vname);
+                } catch (Exception e1) {
+                    try {
+                        jdbc.update("INSERT INTO village (village_id, village_name) OVERRIDING SYSTEM VALUE VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING", vid, vname);
+                    } catch (Exception ignored) {}
+                }
                 h.setVillageId(vid);
             } else if (h.getVillageId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "กรุณาระบุ villageId"));

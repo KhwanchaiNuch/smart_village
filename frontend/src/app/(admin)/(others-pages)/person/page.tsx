@@ -8,6 +8,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
 import { usePermission } from "@/context/PermissionContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Person {
 	firstName: string;
@@ -148,6 +149,7 @@ export default function Person() {
 	};
 
 	return (
+		<PermissionGuard menuUrl="/person">
 		<>
 			<ComponentCard title=''>
 				<div className="flex items-center justify-between mb-4">
@@ -278,5 +280,6 @@ export default function Person() {
 				</div>
 			</ComponentCard>
 		</>
+		</PermissionGuard>
 	);
 }

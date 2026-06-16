@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface CommunityIssue {
   id: number;
@@ -129,6 +130,7 @@ export default function CommunityIssuePage() {
   const selectCls = "h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
   return (
+    <PermissionGuard menuUrl="/communityissue">
     <div className="space-y-5">
       {/* ── Metric Cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -291,5 +293,6 @@ export default function CommunityIssuePage() {
         </div>
       </ComponentCard>
     </div>
+    </PermissionGuard>
   );
 }

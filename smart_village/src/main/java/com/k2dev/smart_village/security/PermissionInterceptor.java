@@ -39,6 +39,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
         "/api/role-menus/",
         "/api/roles/",
         "/api/menus/",
+        "/api/villages/ensure/",   // VillageContext auto-init — ต้องให้ทุก user เข้าได้
         "/swagger-ui",
         "/v3/api-docs",
         "/error"
