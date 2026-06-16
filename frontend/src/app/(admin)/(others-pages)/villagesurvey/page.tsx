@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface VillageNeedSurvey {
   surveyId: number;
@@ -31,6 +32,7 @@ const PRIORITY_CONFIG: Record<number, { label: string; bg: string; text: string 
 };
 
 export default function VillageSurveyPage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [surveys, setSurveys] = useState<VillageNeedSurvey[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -43,10 +45,11 @@ export default function VillageSurveyPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      const vid = village?.villageId;
       const [sRes, pRes, hRes] = await Promise.all([
-        axios.get<VillageNeedSurvey[]>("/village-need-surveys"),
-        axios.get<Person[]>("/persons"),
-        axios.get<Household[]>("/households"),
+        axios.get<VillageNeedSurvey[]>(vid ? `/village-need-surveys?villageId=${vid}` : "/village-need-surveys"),
+        axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
+        axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households"),
       ]);
       setSurveys(sRes.data);
       setPersons(pRes.data);
@@ -55,7 +58,7 @@ export default function VillageSurveyPage() {
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | ความต้องการชุมชน";

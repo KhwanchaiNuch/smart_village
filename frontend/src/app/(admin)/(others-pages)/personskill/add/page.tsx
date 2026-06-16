@@ -5,6 +5,7 @@ import Label from "@/components/form/Label";
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -17,6 +18,7 @@ interface Person {
 const SKILL_LEVELS = ["เบื้องต้น", "ปานกลาง", "ดี", "เชี่ยวชาญ"];
 
 export default function PersonSkillAdd() {
+  const { village, loaded } = useVillage();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -28,11 +30,13 @@ export default function PersonSkillAdd() {
   });
 
   const fetchPersons = useCallback(async () => {
+    if (!loaded) return;
     try {
-      const res = await axios.get<Person[]>("/persons");
+      const vid = village?.villageId;
+      const res = await axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons");
       setPersons(res.data);
     } catch { /* non-critical */ }
-  }, []);
+  }, [loaded, village]);
 
   useEffect(() => {
     document.title = "Smart Village | เพิ่มทักษะบุคคล";

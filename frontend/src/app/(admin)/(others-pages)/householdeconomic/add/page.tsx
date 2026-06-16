@@ -6,6 +6,7 @@ import DatePicker from "@/components/form/date-picker";
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -18,6 +19,7 @@ interface Household {
 const DEBT_TYPES = ["ไม่มีหนี้", "หนี้ กยศ.", "หนี้สินเชื่อบ้าน", "หนี้บัตรเครดิต", "หนี้สหกรณ์", "หนี้นอกระบบ", "อื่น ๆ"];
 
 export default function HouseholdEconomicAdd() {
+  const { village, loaded } = useVillage();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
@@ -31,11 +33,13 @@ export default function HouseholdEconomicAdd() {
   });
 
   const fetchHouseholds = useCallback(async () => {
+    if (!loaded) return;
     try {
-      const res = await axios.get<Household[]>("/households");
+      const vid = village?.villageId;
+      const res = await axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households");
       setHouseholds(res.data);
     } catch { /* non-critical */ }
-  }, []);
+  }, [loaded, village]);
 
   useEffect(() => {
     document.title = "Smart Village | เพิ่มข้อมูลเศรษฐกิจครัวเรือน";

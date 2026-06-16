@@ -8,6 +8,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface HealthRecord {
 	id: number;
@@ -28,6 +29,7 @@ interface Person {
 }
 
 export default function HealthRecordPage() {
+	const { village } = useVillage();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const [tableData, setData] = useState<HealthRecord[]>([]);
 	const [personMap, setPersonMap] = useState<Map<number, string>>(new Map());
@@ -37,9 +39,10 @@ export default function HealthRecordPage() {
 
 	const fetchData = useCallback(async () => {
 		try {
+			const vid = village?.villageId;
 			const [recordsRes, personsRes] = await Promise.all([
-				axios.get<HealthRecord[]>("/health-records"),
-				axios.get<Person[]>("/persons"),
+				axios.get<HealthRecord[]>(vid ? `/health-records?villageId=${vid}` : "/health-records"),
+				axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
 			]);
 			const sorted = [...recordsRes.data].sort((a, b) => a.id - b.id);
 			setData(sorted);
@@ -57,7 +60,7 @@ export default function HealthRecordPage() {
 				text: error?.response?.data?.message || "ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่",
 			});
 		}
-	}, []);
+	}, [village]);
 
 	useEffect(() => {
 		document.title = "Smart Village | Health Record";

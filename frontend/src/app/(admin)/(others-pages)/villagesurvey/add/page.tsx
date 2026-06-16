@@ -7,6 +7,7 @@ import DatePicker from "@/components/form/date-picker";
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 type FormErrors = Partial<Record<string, string>>;
 interface Person { personId: number; firstName: string; lastName: string; }
@@ -15,6 +16,7 @@ interface Household { householdId: number; houseNo: string; moo: string | null; 
 const NEED_TYPES = ["สาธารณูปโภค", "สาธารณสุข", "การศึกษา", "อาชีพ/รายได้", "ที่อยู่อาศัย", "สวัสดิการ", "ความปลอดภัย", "อื่น ๆ"];
 
 export default function VillageSurveyAdd() {
+  const { village, loaded } = useVillage();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -25,15 +27,17 @@ export default function VillageSurveyAdd() {
   });
 
   const fetchRefs = useCallback(async () => {
+    if (!loaded) return;
     try {
+      const vid = village?.villageId;
       const [pRes, hRes] = await Promise.all([
-        axios.get<Person[]>("/persons"),
-        axios.get<Household[]>("/households"),
+        axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
+        axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households"),
       ]);
       setPersons(pRes.data);
       setHouseholds(hRes.data);
     } catch { /* non-critical */ }
-  }, []);
+  }, [loaded, village]);
 
   useEffect(() => {
     document.title = "Smart Village | เพิ่มความต้องการชุมชน";

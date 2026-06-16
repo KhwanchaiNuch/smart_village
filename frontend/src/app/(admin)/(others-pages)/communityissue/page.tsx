@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface CommunityIssue {
   id: number;
@@ -50,6 +51,7 @@ function formatBudget(n: number | null): string {
 }
 
 export default function CommunityIssuePage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [issues, setIssues] = useState<CommunityIssue[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -61,7 +63,8 @@ export default function CommunityIssuePage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await axios.get<CommunityIssue[]>("/community-issues");
+      const vid = village?.villageId;
+      const res = await axios.get<CommunityIssue[]>(vid ? `/community-issues?villageId=${vid}` : "/community-issues");
       const sorted = [...res.data].sort((a, b) => {
         if (!a.dueDate && !b.dueDate) return 0;
         if (!a.dueDate) return 1;
@@ -73,7 +76,7 @@ export default function CommunityIssuePage() {
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | Community Issues";

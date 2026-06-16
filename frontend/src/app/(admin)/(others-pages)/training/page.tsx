@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface TrainingEvent {
   id: number;
@@ -25,6 +26,7 @@ interface TrainingParticipant {
 }
 
 export default function TrainingPage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [events, setEvents] = useState<TrainingEvent[]>([]);
   const [countMap, setCountMap] = useState<Map<number, number>>(new Map());
@@ -34,8 +36,9 @@ export default function TrainingPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      const vid = village?.villageId;
       const [eventsRes, participantsRes] = await Promise.all([
-        axios.get<TrainingEvent[]>("/training-events"),
+        axios.get<TrainingEvent[]>(vid ? `/training-events?villageId=${vid}` : "/training-events"),
         axios.get<TrainingParticipant[]>("/training-participants"),
       ]);
       const sorted = [...eventsRes.data].sort((a, b) => a.id - b.id);
@@ -50,7 +53,7 @@ export default function TrainingPage() {
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | Training";

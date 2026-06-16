@@ -24,18 +24,26 @@ public class PersonSkillController {
     @Autowired private PersonRepository personRepo;
     @Autowired private GeoScopeService geoScope;
 
-    /** ตรวจสอบว่า person นี้อยู่ในหมู่บ้านของ user */
+    /** ตรวจสอบว่า person นี้อยู่ใน scope ของ user */
     private boolean personOwned(Integer personId) {
         if (personId == null) return false;
         Person p = personRepo.findById(personId).orElse(null);
         if (p == null) return false;
         Household hh = householdRepo.findById(p.getHouseholdId()).orElse(null);
-        Integer vid = ScopeUtil.getScopeId();
-        return hh != null && vid != null && vid.equals(hh.getVillageId());
+        Integer scopeId = ScopeUtil.getScopeId();
+        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
     }
 
     @GetMapping
-    public List<PersonSkill> list() {
+    public List<PersonSkill> list(@RequestParam(required = false) Integer villageId) {
+        if (villageId != null) {
+            List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
+                    .map(Household::getHouseholdId).toList();
+            if (hhIds.isEmpty()) return List.of();
+            List<Integer> personIds = personRepo.findByHouseholdIdIn(hhIds).stream()
+                    .map(p -> p.getPersonId()).toList();
+            return personIds.isEmpty() ? List.of() : repo.findByPersonIdIn(personIds);
+        }
         if (ScopeUtil.isAdmin()) return repo.findAll();
         List<Integer> vids = geoScope.getVillageIds();
         if (vids == null) return repo.findAll();
@@ -52,7 +60,7 @@ public class PersonSkillController {
     public ResponseEntity<?> get(@PathVariable Integer id) {
         PersonSkill s = repo.findById(id).orElse(null);
         if (s == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !personOwned(s.getPersonId()))
+        if (ScopeUtil.isVillageLevel() && !personOwned(s.getPersonId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(s);
     }
@@ -65,7 +73,7 @@ public class PersonSkillController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody PersonSkill e) {
         try {
-            if (!ScopeUtil.isAdmin() && !personOwned(e.getPersonId()))
+            if (ScopeUtil.isVillageLevel() && !personOwned(e.getPersonId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             e.setSkillId(null);
             return ResponseEntity.ok(repo.save(e));
@@ -77,7 +85,7 @@ public class PersonSkillController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody PersonSkill e) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 PersonSkill existing = repo.findById(e.getSkillId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!personOwned(existing.getPersonId()))
@@ -94,7 +102,7 @@ public class PersonSkillController {
         try {
             PersonSkill existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !personOwned(existing.getPersonId()))
+            if (ScopeUtil.isVillageLevel() && !personOwned(existing.getPersonId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

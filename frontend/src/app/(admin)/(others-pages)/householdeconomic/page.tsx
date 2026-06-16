@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface HouseholdEconomic {
   id: number;
@@ -25,6 +26,7 @@ function formatMoney(n: number | null): string {
 }
 
 export default function HouseholdEconomicPage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [records, setRecords] = useState<HouseholdEconomic[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -34,13 +36,14 @@ export default function HouseholdEconomicPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await axios.get<HouseholdEconomic[]>("/household-economics");
+      const vid = village?.villageId;
+      const res = await axios.get<HouseholdEconomic[]>(vid ? `/household-economics?villageId=${vid}` : "/household-economics");
       setRecords(res.data);
       setSelectedIds([]);
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | เศรษฐกิจครัวเรือน";

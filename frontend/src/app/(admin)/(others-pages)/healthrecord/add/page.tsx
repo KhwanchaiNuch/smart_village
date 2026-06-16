@@ -8,6 +8,7 @@ import DatePicker from '@/components/form/date-picker';
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 interface Person {
 	personId: number;
@@ -19,6 +20,7 @@ interface Person {
 type FormErrors = Partial<Record<string, string>>;
 
 export default function HealthRecordAdd() {
+	const { village, loaded } = useVillage();
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [errors, setErrors] = useState<FormErrors>({});
 	const [saving, setSaving] = useState(false);
@@ -36,10 +38,12 @@ export default function HealthRecordAdd() {
 
 	useEffect(() => {
 		document.title = "Smart Village | Health Record Add";
-		axios.get<Person[]>("/persons")
+		if (!loaded) return;
+		const vid = village?.villageId;
+		axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons")
 			.then((res) => setPersons(res.data))
 			.catch((err) => console.error(err));
-	}, []);
+	}, [loaded, village]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;

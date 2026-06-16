@@ -75,12 +75,18 @@ public class GeoScopeService {
         };
     }
 
-    /**
-     * ดึง householdId ทั้งหมดที่อยู่ใน scope ของ user
-     * (helper ให้ controllers ที่ filter ผ่าน householdId)
-     */
     public <T> boolean inScope(List<Integer> villageIds, Integer villageId) {
         if (villageIds == null) return true; // ADMIN: all
         return villageIds.contains(villageId);
+    }
+
+    /**
+     * ตรวจว่า villageId นี้อยู่ใน scope ของ current user
+     * ใช้แทน ScopeUtil.getScopeId().equals(villageId) ใน write operations
+     * รองรับทุก role: VILLAGE, TAMBON, AMPHUR, PROVINCE, ADMIN
+     */
+    public boolean inScopeByVillage(Integer villageId) {
+        List<Integer> vids = getVillageIds();
+        return inScope(vids, villageId);
     }
 }

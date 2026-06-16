@@ -34,4 +34,10 @@ public class ScopeUtil {
         UserPrincipal u = currentUser();
         return u != null ? u.getScopeId() : null;
     }
+
+    /** true ถ้า role = "VILLAGE" (scopeId คือ villageId จริงๆ) */
+    public static boolean isVillageLevel() {
+        UserPrincipal u = currentUser();
+        return u != null && "VILLAGE".equals(u.getRole());
+    }
 }

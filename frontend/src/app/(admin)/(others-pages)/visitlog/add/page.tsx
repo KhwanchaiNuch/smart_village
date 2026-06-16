@@ -7,6 +7,7 @@ import DatePicker from '@/components/form/date-picker';
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 interface Person {
 	personId: number;
@@ -22,6 +23,7 @@ interface Household {
 type FormErrors = Partial<Record<string, string>>;
 
 export default function VisitLogAdd() {
+	const { village, loaded } = useVillage();
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [households, setHouseholds] = useState<Household[]>([]);
 	const [errors, setErrors] = useState<FormErrors>({});
@@ -39,16 +41,18 @@ export default function VisitLogAdd() {
 
 	useEffect(() => {
 		document.title = "Smart Village | Visit Log Add";
+		if (!loaded) return;
+		const vid = village?.villageId;
 		Promise.all([
-			axios.get<Person[]>("/persons"),
-			axios.get<Household[]>("/households"),
+			axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
+			axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households"),
 		])
 			.then(([personsRes, householdsRes]) => {
 				setPersons(personsRes.data);
 				setHouseholds(householdsRes.data);
 			})
 			.catch((err) => console.error(err));
-	}, []);
+	}, [loaded, village]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;

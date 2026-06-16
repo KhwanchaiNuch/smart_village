@@ -2,6 +2,8 @@ package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.Village;
 import com.k2dev.smart_village.repository.VillageRepository;
+import com.k2dev.smart_village.security.ScopeUtil;
+import com.k2dev.smart_village.service.GeoScopeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,11 +16,9 @@ import java.util.Map;
 @RequestMapping("/api/villages")
 public class VillageController {
 
-    @Autowired
-    private VillageRepository repo;
-
-    @Autowired
-    private JdbcTemplate jdbc;
+    @Autowired private VillageRepository repo;
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private GeoScopeService geoScope;
 
     @GetMapping
     public List<Village> list(@RequestParam(required = false) Integer tambonId) {
@@ -29,6 +29,26 @@ public class VillageController {
     @GetMapping("/all")
     public List<Village> listAll() {
         return repo.findAll();
+    }
+
+    /**
+     * GET /api/villages/scoped
+     * คืน village เฉพาะที่อยู่ใน scope ของ user ที่ login อยู่
+     * ADMIN → ทุกหมู่บ้าน | PROVINCE → ทุกหมู่บ้านในจังหวัด | AMPHUR → ทุกหมู่บ้านในอำเภอ
+     * TAMBON → ทุกหมู่บ้านในตำบล | VILLAGE → แค่หมู่บ้านตัวเอง
+     */
+    @GetMapping("/scoped")
+    public List<Village> listScoped() {
+        if (ScopeUtil.isAdmin()) return repo.findAll();
+        if (ScopeUtil.isVillageLevel()) {
+            Integer vid = ScopeUtil.getScopeId();
+            if (vid == null) return List.of();
+            return repo.findById(vid).map(List::of).orElse(List.of());
+        }
+        // PROVINCE / AMPHUR / TAMBON → ใช้ GeoScopeService
+        List<Integer> vids = geoScope.getVillageIds();
+        if (vids == null || vids.isEmpty()) return List.of();
+        return repo.findAllById(vids);
     }
 
     @GetMapping("/{id}")
