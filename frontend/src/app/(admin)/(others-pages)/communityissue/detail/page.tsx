@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
@@ -53,7 +53,7 @@ function formatDate(dt: string | null): string {
   return d.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function CommunityIssueDetailPage() {
+function CommunityIssueDetailPageContent() {
   const params  = useSearchParams();
   const router  = useRouter();
   const id      = params.get("id");
@@ -490,5 +490,13 @@ export default function CommunityIssueDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CommunityIssueDetailPage() {
+  return (
+    <Suspense>
+      <CommunityIssueDetailPageContent />
+    </Suspense>
   );
 }
