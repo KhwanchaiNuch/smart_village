@@ -1,7 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const API_BASE = "http://localhost:8080/smart_village/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api";
 
 const apiClient = axios.create({
 	baseURL: API_BASE,
