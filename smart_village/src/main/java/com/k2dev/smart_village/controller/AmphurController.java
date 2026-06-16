@@ -24,6 +24,11 @@ public class AmphurController {
         return repo.findByProvinceId(provinceId);
     }
 
+    @GetMapping("/all")
+    public List<Amphur> listAll() {
+        return repo.findAll();
+    }
+
     @PostMapping("/add")
     public Amphur add(@RequestBody Amphur a) {
         return repo.save(a);

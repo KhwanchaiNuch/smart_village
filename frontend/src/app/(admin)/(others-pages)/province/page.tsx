@@ -47,13 +47,6 @@ export default function ProvincePage() {
     const name = await promptName("แก้ไขจังหวัด", p.nameTh); if (!name) return;
     try { await axios.post("/provinces/edit", { provinceId: p.provinceId, nameTh: name }); await fetchData(); ok(); } catch (e) { err(e); }
   };
-  const delItem = async (p: Province) => {
-    const r = await Swal.fire({ icon: "warning", title: "ยืนยันการลบ?", html: `ลบ <b>${p.nameTh}</b> และข้อมูลย่อยที่เกี่ยวข้อง`,
-      showCancelButton: true, confirmButtonText: "ใช่, ลบเลย", cancelButtonText: "ยกเลิก", confirmButtonColor: "#dc2626", cancelButtonColor: "#6b7280" });
-    if (!r.isConfirmed) return;
-    try { await axios.delete(`/provinces/${p.provinceId}`); await fetchData(); ok(); } catch (e) { err(e); }
-  };
-
   const filtered = rows.filter((p) => {
     const q = search.toLowerCase();
     return !q || p.nameTh.toLowerCase().includes(q) || String(p.provinceId).includes(q);
@@ -64,13 +57,36 @@ export default function ProvincePage() {
   const toggleOne = (id: number, c: boolean) => setSelectedIds((prev) => (c ? [...prev, id] : prev.filter((x) => x !== id)));
 
   const handleDeleteSelected = async () => {
-    if (selectedIds.length === 0) return;
-    const r = await Swal.fire({ icon: "warning", title: "ยืนยันการลบ?", html: `ลบ <b>${selectedIds.length}</b> รายการ`,
-      showCancelButton: true, confirmButtonText: "ใช่, ลบเลย", cancelButtonText: "ยกเลิก", confirmButtonColor: "#dc2626", cancelButtonColor: "#6b7280" });
-    if (!r.isConfirmed) return;
-    setLoading(true);
-    try { await Promise.allSettled(selectedIds.map((id) => axios.delete(`/provinces/${id}`))); await fetchData(); ok(); }
-    catch { Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด" }); } finally { setLoading(false); }
+    if (selectedIds.length === 0) {
+      Swal.fire({ icon: "warning", title: "ยังไม่ได้เลือกรายการ", text: "กรุณาเลือกจังหวัดที่ต้องการลบอย่างน้อย 1 รายการ" });
+      return;
+    }
+    const result = await Swal.fire({
+      icon: "warning", title: "ยืนยันการลบ?",
+      html: `คุณกำลังจะลบจังหวัดจำนวน <b>${selectedIds.length}</b> รายการ<br/>หากมีอำเภออยู่ภายในจะลบไม่ได้`,
+      showCancelButton: true, confirmButtonText: "ใช่, ลบเลย", cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626", cancelButtonColor: "#6b7280",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      setLoading(true);
+      const responses = await Promise.allSettled(selectedIds.map((id) => axios.delete(`/provinces/${id}`)));
+      const failed = responses.filter((r) => r.status === "rejected").length;
+      const success = selectedIds.length - failed;
+      await fetchData();
+
+      if (failed === 0) {
+        Swal.fire({ icon: "success", title: "ลบสำเร็จ", text: `ลบจังหวัดเรียบร้อย ${success} รายการ`, timer: 1800, showConfirmButton: false });
+      } else {
+        Swal.fire({ icon: "warning", title: "ลบบางส่วนไม่สำเร็จ", text: `สำเร็จ ${success} รายการ, ล้มเหลว ${failed} รายการ` });
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: "ไม่สามารถลบข้อมูลได้ กรุณาตรวจสอบสิทธิ์หรือลองใหม่อีกครั้ง" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selCls = "h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white";
@@ -121,13 +137,8 @@ export default function ProvincePage() {
                       <TableCell className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           {canEdit("/province") && (
-                          <button onClick={() => editItem(p)} className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600">
-                            <svg className="fill-current" width="16" height="16" viewBox="0 0 20 20"><path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" /></svg>
-                          </button>
-                          )}
-                          {canDelete("/province") && (
-                          <button onClick={() => delItem(p)} className="flex h-9 w-9 items-center justify-center rounded-full border border-red-600 bg-red-600 text-white hover:bg-red-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                          <button onClick={() => editItem(p)} className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600">
+                            <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20"><path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" /></svg>
                           </button>
                           )}
                         </div>

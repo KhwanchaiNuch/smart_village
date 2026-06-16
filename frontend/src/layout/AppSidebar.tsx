@@ -56,6 +56,7 @@ const adminNavItems: NavItem[] = [
 			{ icon: PinIcon, name: "จังหวัด", path: "/province" },
 			{ icon: PinIcon, name: "อำเภอ", path: "/amphur" },
 			{ icon: PinIcon, name: "ตำบล", path: "/tambon" },
+			{ icon: PinIcon, name: "หมู่บ้าน", path: "/village" },
 		],
 	},
 	{
@@ -66,6 +67,7 @@ const adminNavItems: NavItem[] = [
 		),
 		name: "จัดการหมู่บ้าน",
 		subItems: [
+			{ icon: <GridIcon/>, name: "Dashboard หมู่บ้าน", path: "/village-dashboard" },
 			{ icon: <CalenderIcon/>, name: "รหัสครัวเรือน", path: "/household" },
 			{ icon: <UserCircleIcon/>, name: "บุคคล", path: "/person" },
 			{ icon: <HeartIcon/>, name: "บันทึกสุขภาพ", path: "/healthrecord" },
@@ -424,7 +426,7 @@ const AppSidebar: React.FC = () => {
 					) : (
 						/* ADMIN ยังไม่ได้เลือกหมู่บ้าน */
 						<p className="text-xs text-white/70 leading-snug">
-							⚠️ ยังไม่ได้เลือกหมู่บ้าน<br />ไปที่ <strong>ข้อมูลพื้นที่ › หมู่บ้าน</strong> แล้วกด "ใช้งาน"
+							⚠️ ยังไม่ได้เลือกหมู่บ้าน<br />ไปที่ <strong>ข้อมูลพื้นที่ › หมู่บ้าน</strong> แล้วดับเบิ้ลคลิกที่หมู่บ้าน
 						</p>
 					)}
 				</div>
