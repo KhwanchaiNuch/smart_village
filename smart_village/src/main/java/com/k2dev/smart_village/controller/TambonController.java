@@ -23,7 +23,12 @@ public class TambonController {
     public List<Tambon> list(@RequestParam Integer amphurId) {
         return repo.findByAmphurId(amphurId);
     }
-    
+
+    @GetMapping("/all")
+    public List<Tambon> listAll() {
+        return repo.findAll();
+    }
+
     @GetMapping("/{id}")
 	public Tambon get(@PathVariable Integer id) {
 		return repo.findById(id).orElseThrow();
