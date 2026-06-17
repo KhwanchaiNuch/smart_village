@@ -121,14 +121,6 @@ export default function VillageResourceAdd() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label>รหัสหมู่บ้าน (Village Code)</Label>
-          <Input name="villageCode" value={form.villageCode} onChange={handleChange}
-            type="text" placeholder="เช่น M001, VLG-001" />
-        </div>
-      </div>
-
       <div>
         <Label>รายละเอียด</Label>
         <TextArea value={form.description} onChange={(v) => setForm((p) => ({ ...p, description: v }))}

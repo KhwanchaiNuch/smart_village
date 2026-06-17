@@ -4,9 +4,10 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import DatePicker from "@/components/form/date-picker";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -23,9 +24,16 @@ const ISSUE_TYPES = [
 const STATUSES = ["ยังไม่แก้", "กำลังทำ", "แก้แล้ว"];
 
 export default function CommunityIssueAdd() {
+  const { village, loaded } = useVillage();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
+
+  // รูปภาพ — เก็บ File object ไว้ก่อน upload พร้อม submit
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     householdId: "",
     area: "",
@@ -40,13 +48,15 @@ export default function CommunityIssueAdd() {
   });
 
   const fetchHouseholds = useCallback(async () => {
+    if (!loaded) return;
     try {
-      const res = await axios.get<Household[]>("/households");
+      const vid = village?.villageId;
+      const res = await axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households");
       setHouseholds(res.data);
     } catch {
       // non-critical
     }
-  }, []);
+  }, [loaded, village]);
 
   useEffect(() => {
     document.title = "Smart Village | Add Community Issue";
@@ -57,6 +67,23 @@ export default function CommunityIssueAdd() {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+  };
+
+  // เลือกไฟล์ → preview ทันที (ไม่ upload ก่อน)
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    // revoke URL เก่าก่อนสร้างใหม่ (ป้องกัน memory leak)
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const validate = (): boolean => {
@@ -73,18 +100,28 @@ export default function CommunityIssueAdd() {
     if (!validate()) return;
     setSaving(true);
     try {
-      await axios.post("/community-issues/add", {
-        householdId: form.householdId ? parseInt(form.householdId) : null,
-        area: form.area,
-        issueType: form.issueType,
-        severity: parseInt(form.severity),
-        status: form.status,
-        owner: form.owner || null,
-        impactPeople: form.impactPeople ? parseInt(form.impactPeople) : null,
-        budgetEstimate: form.budgetEstimate ? parseFloat(form.budgetEstimate) : null,
-        dueDate: form.dueDate || null,
-        remark: form.remark || null,
+      // ส่งเป็น multipart/form-data — fields + file ในคราวเดียว
+      const fd = new FormData();
+      if (form.householdId) fd.append("householdId", form.householdId);
+      fd.append("area",         form.area);
+      fd.append("issueType",    form.issueType);
+      fd.append("severity",     form.severity);
+      fd.append("status",       form.status);
+      if (form.owner)          fd.append("owner",          form.owner);
+      if (form.impactPeople)   fd.append("impactPeople",   form.impactPeople);
+      if (form.budgetEstimate) fd.append("budgetEstimate", form.budgetEstimate);
+      if (form.dueDate)        fd.append("dueDate",        form.dueDate);
+      if (form.remark)         fd.append("remark",         form.remark);
+      // villageId สำหรับ backend สร้าง folder hierarchy
+      const vid = village?.villageId;
+      if (vid) fd.append("villageId", String(vid));
+      // แนบไฟล์ (ถ้ามี)
+      if (imageFile) fd.append("file", imageFile);
+
+      await axios.post("/community-issues/add", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       await Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1800, showConfirmButton: false });
       window.location.href = "/communityissue";
     } catch (err: any) {
@@ -192,15 +229,44 @@ export default function CommunityIssueAdd() {
             onChange={(_, d) => setForm((p) => ({ ...p, dueDate: d }))}
           />
         </div>
-        <div>
-          {/* spacer */}
-        </div>
       </div>
 
       {/* Remark */}
       <div>
         <Label>หมายเหตุ / รายละเอียดเพิ่มเติม</Label>
         <TextArea value={form.remark} onChange={(v) => setForm((p) => ({ ...p, remark: v }))} rows={3} placeholder="อธิบายปัญหาเพิ่มเติม..." />
+      </div>
+
+      {/* Image upload — preview local, upload พร้อม submit */}
+      <div>
+        <Label>รูปภาพประกอบ (ถ้ามี)</Label>
+        <div
+          className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-6 cursor-pointer hover:border-blue-400 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {imagePreview ? (
+            <div className="relative w-full max-w-xs">
+              <img src={imagePreview} alt="preview" className="w-full rounded-lg object-contain max-h-48" />
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                className="absolute -top-2 -right-2 rounded-full bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+              >✕</button>
+              <p className="mt-2 text-center text-xs text-gray-500">
+                {imageFile?.name} ({((imageFile?.size ?? 0) / 1024).toFixed(0)} KB)
+              </p>
+            </div>
+          ) : (
+            <div className="text-center text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-10 h-10 mx-auto mb-2 opacity-50">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+              </svg>
+              <p className="text-sm">คลิกเพื่อเลือกรูปภาพ</p>
+              <p className="text-xs mt-1">PNG, JPG, WEBP ไม่เกิน 10 MB</p>
+            </div>
+          )}
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
       </div>
 
       <div className="flex gap-3 mt-4">

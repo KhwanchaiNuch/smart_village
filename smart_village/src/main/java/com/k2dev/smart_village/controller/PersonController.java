@@ -21,12 +21,12 @@ public class PersonController {
     @Autowired private HouseholdRepository householdRepo;
     @Autowired private GeoScopeService geoScope;
 
-    // ─── helper: ตรวจว่า household ของ person นี้อยู่ใน village ของ user ────
+    // ─── helper: ตรวจว่า household ของ person อยู่ใน village ของ VILLAGE user ────
     private boolean householdOwned(Integer householdId) {
         if (householdId == null) return false;
-        Integer vid = ScopeUtil.getScopeId();
         Household hh = householdRepo.findById(householdId).orElse(null);
-        return hh != null && vid != null && vid.equals(hh.getVillageId());
+        Integer scopeId = ScopeUtil.getScopeId();
+        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
     }
 
     @GetMapping
@@ -71,7 +71,7 @@ public class PersonController {
     public ResponseEntity<?> add(@RequestBody Person p) {
         try {
             p.setPersonId(null);
-            if (!ScopeUtil.isAdmin() && !householdOwned(p.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(p.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(p));
         } catch (Exception e) {
@@ -84,7 +84,7 @@ public class PersonController {
         try {
             if (p.getPersonId() == null)
                 return ResponseEntity.badRequest().body(Map.of("message", "ต้องระบุ personId"));
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 Person existing = repo.findById(p.getPersonId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบบุคคลนี้"));
                 if (!householdOwned(existing.getHouseholdId()))
@@ -101,7 +101,7 @@ public class PersonController {
         try {
             Person existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.notFound().build();
-            if (!ScopeUtil.isAdmin() && !householdOwned(existing.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

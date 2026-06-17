@@ -26,7 +26,7 @@ public class HouseholdController {
     @Autowired private CommunityIssueRepository communityIssueRepo;
     @Autowired private VillageNeedSurveyRepository needSurveyRepo;
 
-    // ─── helper: ตรวจสอบว่า household นี้อยู่ใน village ของ user ─────────────
+    // ─── helper: ตรวจสอบว่า household นี้อยู่ใน village ของ user (เฉพาะ VILLAGE role) ─────────────
     private boolean notOwned(Household h) {
         Integer vid = ScopeUtil.getScopeId();
         return vid == null || !vid.equals(h.getVillageId());
@@ -53,7 +53,8 @@ public class HouseholdController {
     public ResponseEntity<?> get(@PathVariable Integer id) {
         Household h = repo.findById(id).orElse(null);
         if (h == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-        if (!ScopeUtil.isAdmin() && notOwned(h))
+        // เฉพาะ VILLAGE role — ตรวจว่าเป็นหมู่บ้านของตัวเอง
+        if (ScopeUtil.isVillageLevel() && notOwned(h))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(h);
     }
@@ -61,21 +62,38 @@ public class HouseholdController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody Household h) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
+                // VILLAGE: ใช้ scopeId เป็น villageId + สร้าง placeholder ถ้ายังไม่มี
                 Integer vid = ScopeUtil.getScopeId();
                 if (vid == null)
                     return ResponseEntity.badRequest().body(Map.of("message", "ไม่พบ scopeId กรุณา login ใหม่"));
-                // defensive: สร้าง village placeholder ถ้ายังไม่มีใน DB (JdbcTemplate + fallback)
-                String vname = "หมู่บ้านหมู่ " + vid;
+                // สร้าง placeholder village ด้วย tambon_id จาก app_user
+                String uname = ScopeUtil.currentUser() != null ? ScopeUtil.currentUser().getUsername() : null;
                 try {
-                    jdbc.update("INSERT INTO village (village_id, village_name) VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING", vid, vname);
+                    jdbc.update(
+                        "INSERT INTO village (village_id, tambon_id, village_name) " +
+                        "OVERRIDING SYSTEM VALUE " +
+                        "SELECT ?, u.tambon_id, ? FROM app_user u WHERE u.username = ? LIMIT 1 " +
+                        "ON CONFLICT (village_id) DO NOTHING",
+                        vid, "หมู่บ้านหมู่ " + vid, uname
+                    );
                 } catch (Exception e1) {
                     try {
-                        jdbc.update("INSERT INTO village (village_id, village_name) OVERRIDING SYSTEM VALUE VALUES (?, ?) ON CONFLICT (village_id) DO NOTHING", vid, vname);
-                    } catch (Exception ignored) {}
+                        jdbc.update(
+                            "INSERT INTO village (village_id, village_name) " +
+                            "OVERRIDING SYSTEM VALUE VALUES (?, ?) " +
+                            "ON CONFLICT (village_id) DO NOTHING",
+                            vid, "หมู่บ้านหมู่ " + vid
+                        );
+                    } catch (Exception e2) {
+                        return ResponseEntity.status(500).body(Map.of("message", "ไม่สามารถสร้างข้อมูลหมู่บ้านได้: " + e2.getMessage()));
+                    }
                 }
                 h.setVillageId(vid);
-            } else if (h.getVillageId() == null) {
+            } else if (!ScopeUtil.isAdmin() && h.getVillageId() == null) {
+                // PROVINCE/AMPHUR/TAMBON: ต้องส่ง villageId มาจาก frontend
+                return ResponseEntity.badRequest().body(Map.of("message", "กรุณาเลือกหมู่บ้าน"));
+            } else if (ScopeUtil.isAdmin() && h.getVillageId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "กรุณาระบุ villageId"));
             }
             h.setHouseholdId(null);
@@ -93,11 +111,13 @@ public class HouseholdController {
             Household existing = repo.findById(h.getHouseholdId()).orElse(null);
             if (existing == null)
                 return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-            if (!ScopeUtil.isAdmin()) {
+            // เฉพาะ VILLAGE: ตรวจ + lock villageId ของตัวเอง
+            if (ScopeUtil.isVillageLevel()) {
                 if (notOwned(existing))
                     return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
                 h.setVillageId(ScopeUtil.getScopeId());
             }
+            // PROVINCE/AMPHUR/TAMBON/ADMIN: ใช้ villageId จาก body ได้เลย
             return ResponseEntity.ok(repo.save(h));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
@@ -110,7 +130,8 @@ public class HouseholdController {
             Household existing = repo.findById(id).orElse(null);
             if (existing == null)
                 return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-            if (!ScopeUtil.isAdmin() && notOwned(existing))
+            // เฉพาะ VILLAGE: ตรวจ ownership
+            if (ScopeUtil.isVillageLevel() && notOwned(existing))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
 
             Long hhIdLong = id.longValue();

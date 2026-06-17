@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface PersonSkill {
   skillId: number;
@@ -31,6 +32,7 @@ const LEVEL_CONFIG: Record<string, { bg: string; text: string }> = {
 };
 
 export default function PersonSkillPage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [skills, setSkills] = useState<PersonSkill[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -42,9 +44,10 @@ export default function PersonSkillPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      const vid = village?.villageId;
       const [skillRes, personRes] = await Promise.all([
-        axios.get<PersonSkill[]>("/person-skills"),
-        axios.get<Person[]>("/persons"),
+        axios.get<PersonSkill[]>(vid ? `/person-skills?villageId=${vid}` : "/person-skills"),
+        axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
       ]);
       setSkills(skillRes.data);
       setPersons(personRes.data);
@@ -52,7 +55,7 @@ export default function PersonSkillPage() {
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | ทักษะบุคคล";

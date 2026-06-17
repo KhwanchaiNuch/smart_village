@@ -24,12 +24,17 @@ public class HouseholdEconomicController {
     private boolean householdOwned(Long householdId) {
         if (householdId == null) return false;
         Household hh = householdRepo.findById(householdId.intValue()).orElse(null);
-        Integer vid = ScopeUtil.getScopeId();
-        return hh != null && vid != null && vid.equals(hh.getVillageId());
+        Integer scopeId = ScopeUtil.getScopeId();
+        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
     }
 
     @GetMapping
-    public List<HouseholdEconomic> list() {
+    public List<HouseholdEconomic> list(@RequestParam(required = false) Integer villageId) {
+        if (villageId != null) {
+            List<Long> hhIds = householdRepo.findByVillageId(villageId).stream()
+                    .map(h -> h.getHouseholdId().longValue()).toList();
+            return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
+        }
         if (ScopeUtil.isAdmin()) return repo.findAll();
         List<Integer> vids = geoScope.getVillageIds();
         if (vids == null) return repo.findAll();
@@ -43,7 +48,7 @@ public class HouseholdEconomicController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         HouseholdEconomic e = repo.findById(id).orElse(null);
         if (e == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !householdOwned(e.getHouseholdId()))
+        if (ScopeUtil.isVillageLevel() && !householdOwned(e.getHouseholdId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(e);
     }
@@ -61,7 +66,7 @@ public class HouseholdEconomicController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody HouseholdEconomic e) {
         try {
-            if (!ScopeUtil.isAdmin() && !householdOwned(e.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(e.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(e));
         } catch (Exception ex) {
@@ -72,7 +77,7 @@ public class HouseholdEconomicController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody HouseholdEconomic e) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 HouseholdEconomic existing = repo.findById(e.getId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!householdOwned(existing.getHouseholdId()))
@@ -89,7 +94,7 @@ public class HouseholdEconomicController {
         try {
             HouseholdEconomic existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !householdOwned(existing.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

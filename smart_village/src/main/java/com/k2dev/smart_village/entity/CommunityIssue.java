@@ -43,6 +43,9 @@ public class CommunityIssue {
     @Column(columnDefinition = "TEXT")
     private String remark;
 
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -91,6 +94,9 @@ public class CommunityIssue {
 
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

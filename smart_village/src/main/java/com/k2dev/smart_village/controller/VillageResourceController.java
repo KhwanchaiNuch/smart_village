@@ -19,12 +19,15 @@ public class VillageResourceController {
     @Autowired private GeoScopeService geoScope;
 
     private boolean villageOwned(Integer villageId) {
-        Integer vid = ScopeUtil.getScopeId();
-        return vid != null && vid.equals(villageId);
+        Integer scopeId = ScopeUtil.getScopeId();
+        return scopeId != null && scopeId.equals(villageId);
     }
 
     @GetMapping
-    public List<VillageResource> list() {
+    public List<VillageResource> list(@RequestParam(required = false) Integer villageId) {
+        if (villageId != null) {
+            return repo.findByVillageIdIn(java.util.List.of(villageId));
+        }
         if (ScopeUtil.isAdmin()) return repo.findAll();
         List<Integer> vids = geoScope.getVillageIds();
         if (vids == null) return repo.findAll();
@@ -36,7 +39,7 @@ public class VillageResourceController {
     public ResponseEntity<?> get(@PathVariable Integer id) {
         VillageResource r = repo.findById(id).orElse(null);
         if (r == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !villageOwned(r.getVillageId()))
+        if (ScopeUtil.isVillageLevel() && !villageOwned(r.getVillageId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(r);
     }
@@ -54,7 +57,7 @@ public class VillageResourceController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody VillageResource e) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 e.setVillageId(ScopeUtil.getScopeId());
             }
             e.setResourceId(null);
@@ -67,7 +70,7 @@ public class VillageResourceController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody VillageResource e) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 VillageResource existing = repo.findById(e.getResourceId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!villageOwned(existing.getVillageId()))
@@ -85,7 +88,7 @@ public class VillageResourceController {
         try {
             VillageResource existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !villageOwned(existing.getVillageId()))
+            if (ScopeUtil.isVillageLevel() && !villageOwned(existing.getVillageId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

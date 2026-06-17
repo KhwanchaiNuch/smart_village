@@ -24,14 +24,14 @@ public class HealthRecordController {
     @Autowired private PersonRepository personRepo;
     @Autowired private GeoScopeService geoScope;
 
-    // ─── helper: ตรวจว่า person (via personId) อยู่ใน village ของ user ────────
+    // ─── helper: ตรวจว่า person (via personId) อยู่ใน scope ของ user ────────
     private boolean personOwned(Long personId) {
         if (personId == null) return false;
         Person person = personRepo.findById(personId.intValue()).orElse(null);
         if (person == null || person.getHouseholdId() == null) return false;
         Household hh = householdRepo.findById(person.getHouseholdId()).orElse(null);
-        Integer vid = ScopeUtil.getScopeId();
-        return hh != null && vid != null && vid.equals(hh.getVillageId());
+        Integer scopeId = ScopeUtil.getScopeId();
+        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
     }
 
     @GetMapping
@@ -61,7 +61,7 @@ public class HealthRecordController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         HealthRecord hr = repo.findById(id).orElse(null);
         if (hr == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !personOwned(hr.getPersonId()))
+        if (ScopeUtil.isVillageLevel() && !personOwned(hr.getPersonId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(hr);
     }
@@ -69,7 +69,7 @@ public class HealthRecordController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody HealthRecord h) {
         try {
-            if (!ScopeUtil.isAdmin() && !personOwned(h.getPersonId()))
+            if (ScopeUtil.isVillageLevel() && !personOwned(h.getPersonId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(h));
         } catch (Exception e) {
@@ -80,7 +80,7 @@ public class HealthRecordController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody HealthRecord h) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 HealthRecord existing = repo.findById(h.getId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!personOwned(existing.getPersonId()))
@@ -97,7 +97,7 @@ public class HealthRecordController {
         try {
             HealthRecord existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !personOwned(existing.getPersonId()))
+            if (ScopeUtil.isVillageLevel() && !personOwned(existing.getPersonId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

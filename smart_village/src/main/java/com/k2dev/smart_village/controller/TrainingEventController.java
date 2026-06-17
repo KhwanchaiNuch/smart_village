@@ -19,8 +19,8 @@ public class TrainingEventController {
     @Autowired private GeoScopeService geoScope;
 
     private boolean villageOwned(Integer villageId) {
-        Integer vid = ScopeUtil.getScopeId();
-        return vid != null && vid.equals(villageId);
+        Integer scopeId = ScopeUtil.getScopeId();
+        return scopeId != null && scopeId.equals(villageId);
     }
 
     @GetMapping
@@ -39,7 +39,7 @@ public class TrainingEventController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         TrainingEvent t = repo.findById(id).orElse(null);
         if (t == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !villageOwned(t.getVillageId()))
+        if (ScopeUtil.isVillageLevel() && !villageOwned(t.getVillageId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(t);
     }
@@ -52,7 +52,7 @@ public class TrainingEventController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody TrainingEvent t) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 t.setVillageId(ScopeUtil.getScopeId());
             }
             t.setId(null);
@@ -65,7 +65,7 @@ public class TrainingEventController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody TrainingEvent t) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 TrainingEvent existing = repo.findById(t.getId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!villageOwned(existing.getVillageId()))
@@ -83,7 +83,7 @@ public class TrainingEventController {
         try {
             TrainingEvent existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !villageOwned(existing.getVillageId()))
+            if (ScopeUtil.isVillageLevel() && !villageOwned(existing.getVillageId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

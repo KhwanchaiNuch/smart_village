@@ -158,6 +158,7 @@ export default function PersonAdd() {
 							name="cid"
 							value={form.cid}
 							onChange={handleChange}
+							placeholder="เช่น 1234567890123"
 						/>
 					</div>
 					<div>
@@ -167,6 +168,7 @@ export default function PersonAdd() {
 							value={form.title}
 							onChange={handleChange}
 							type="text"
+							placeholder="เช่น นาย, นาง, นางสาว"
 						/>
 					</div>
 				</div>
@@ -179,6 +181,7 @@ export default function PersonAdd() {
 							value={form.first_name}
 							onChange={handleChange}
 							type="text"
+							placeholder="เช่น สมชาย"
 						/>
 					</div>
 					<div>
@@ -188,6 +191,7 @@ export default function PersonAdd() {
 							value={form.last_name}
 							onChange={handleChange}
 							type="text"
+							placeholder="เช่น ใจดี"
 						/>
 					</div>
 					<div>
@@ -197,6 +201,7 @@ export default function PersonAdd() {
 							value={form.age}
 							onChange={handleChange}
 							type="text"
+							placeholder="เช่น 35"
 						/>
 					</div>
 				</div>
@@ -241,30 +246,30 @@ export default function PersonAdd() {
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<div>
 						<Label>สถานะสมรส</Label>
-						<Input name="marital_status" value={form.marital_status} onChange={handleChange} type="text" />
+						<Input name="marital_status" value={form.marital_status} onChange={handleChange} type="text" placeholder="เช่น โสด, สมรส, หม้าย" />
 					</div>
 					<div>
 						<Label>ระดับการศึกษา</Label>
-						<Input name="education_level" value={form.education_level} onChange={handleChange} type="text" />
+						<Input name="education_level" value={form.education_level} onChange={handleChange} type="text" placeholder="เช่น ประถมศึกษา, มัธยมศึกษา, ปริญญาตรี" />
 					</div>
 					<div>
 						<Label>อาชีพหลัก</Label>
-						<Input name="occupation" value={form.occupation} onChange={handleChange} type="text" />
+						<Input name="occupation" value={form.occupation} onChange={handleChange} type="text" placeholder="เช่น เกษตรกร, ค้าขาย, รับราชการ" />
 					</div>
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<div>
 						<Label>อาชีพรอง</Label>
-						<Input name="secondary_occupation" value={form.secondary_occupation} onChange={handleChange} type="text" />
+						<Input name="secondary_occupation" value={form.secondary_occupation} onChange={handleChange} type="text" placeholder="เช่น ค้าขาย, รับจ้าง" />
 					</div>
 					<div>
 						<Label>รายได้/เดือน (โดยประมาณ)</Label>
-						<Input name="income_per_month" value={form.income_per_month} onChange={handleChange} type="text" />
+						<Input name="income_per_month" value={form.income_per_month} onChange={handleChange} type="text" placeholder="เช่น 5000" />
 					</div>
 					<div>
 						<Label>รายการโรคประจำตัว</Label>
-						<Input name="disease_list" value={form.disease_list} onChange={handleChange} type="text" />
+						<Input name="disease_list" value={form.disease_list} onChange={handleChange} type="text" placeholder="เช่น เบาหวาน, ความดันโลหิตสูง" />
 					</div>
 				</div>
 
@@ -311,7 +316,7 @@ export default function PersonAdd() {
 
 				<div>
 					<Label>ประเภทความพิการ</Label>
-					<Input name="disability_type" value={form.disability_type} onChange={handleChange} type="text" />
+					<Input name="disability_type" value={form.disability_type} onChange={handleChange} type="text" placeholder="เช่น พิการทางการเคลื่อนไหว, ทางสายตา" />
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">

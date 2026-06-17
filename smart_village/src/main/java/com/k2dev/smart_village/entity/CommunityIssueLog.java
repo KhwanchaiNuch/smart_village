@@ -38,6 +38,9 @@ public class CommunityIssueLog {
     @Column(length = 500)
     private String remark5;
 
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -75,6 +78,9 @@ public class CommunityIssueLog {
 
     public String getRemark5() { return remark5; }
     public void setRemark5(String remark5) { this.remark5 = remark5; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

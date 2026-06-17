@@ -24,8 +24,8 @@ public class VisitLogController {
     private boolean householdOwned(Long householdId) {
         if (householdId == null) return false;
         Household hh = householdRepo.findById(householdId.intValue()).orElse(null);
-        Integer vid = ScopeUtil.getScopeId();
-        return hh != null && vid != null && vid.equals(hh.getVillageId());
+        Integer scopeId = ScopeUtil.getScopeId();
+        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
     }
 
     @GetMapping
@@ -50,7 +50,7 @@ public class VisitLogController {
     public ResponseEntity<?> get(@PathVariable Long id) {
         VisitLog v = repo.findById(id).orElse(null);
         if (v == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (!ScopeUtil.isAdmin() && !householdOwned(v.getHouseholdId()))
+        if (ScopeUtil.isVillageLevel() && !householdOwned(v.getHouseholdId()))
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
         return ResponseEntity.ok(v);
     }
@@ -68,7 +68,7 @@ public class VisitLogController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody VisitLog v) {
         try {
-            if (!ScopeUtil.isAdmin() && !householdOwned(v.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(v.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(v));
         } catch (Exception e) {
@@ -79,7 +79,7 @@ public class VisitLogController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody VisitLog v) {
         try {
-            if (!ScopeUtil.isAdmin()) {
+            if (ScopeUtil.isVillageLevel()) {
                 VisitLog existing = repo.findById(v.getId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
                 if (!householdOwned(existing.getHouseholdId()))
@@ -96,7 +96,7 @@ public class VisitLogController {
         try {
             VisitLog existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (!ScopeUtil.isAdmin() && !householdOwned(existing.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));

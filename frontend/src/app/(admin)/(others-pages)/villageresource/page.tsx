@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface VillageResource {
   resourceId: number;
@@ -33,6 +34,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 const DEFAULT_COLOR = { bg: "bg-indigo-100", text: "text-indigo-700" };
 
 export default function VillageResourcePage() {
+  const { village } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [resources, setResources] = useState<VillageResource[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -42,13 +44,14 @@ export default function VillageResourcePage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await axios.get<VillageResource[]>("/village-resources");
+      const vid = village?.villageId;
+      const res = await axios.get<VillageResource[]>(vid ? `/village-resources?villageId=${vid}` : "/village-resources");
       setResources(res.data);
       setSelectedIds([]);
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, []);
+  }, [village]);
 
   useEffect(() => {
     document.title = "Smart Village | ทรัพยากรชุมชน";

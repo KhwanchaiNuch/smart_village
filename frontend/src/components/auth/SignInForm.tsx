@@ -7,7 +7,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
 export default function SignInForm() {
@@ -23,7 +23,7 @@ export default function SignInForm() {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://localhost:8080/smart_village/api/auth/login",
+        "/auth/login",
         { username: identifier, password }
       );
       // clear ค่า session เก่าก่อนเสมอ (ป้องกัน village ของ user คนก่อนค้างอยู่)
@@ -37,7 +37,7 @@ export default function SignInForm() {
       // fetch permissions ทันที แล้วเก็บ cache ก่อน redirect
       try {
         const permRes = await axios.get(
-          "http://localhost:8080/smart_village/api/role-menus/my-permissions",
+          "/role-menus/my-permissions",
           { headers: { Authorization: `Bearer ${res.data.token}` } }
         );
         localStorage.setItem("permissions", JSON.stringify(permRes.data));
