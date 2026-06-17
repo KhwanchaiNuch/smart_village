@@ -1,14 +1,28 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { useCurrentUser, resolveAvatarSrc } from "@/context/CurrentUserContext";
+
+const ROLE_LABEL: Record<string, string> = {
+	ADMIN:    "ผู้ดูแลระบบ",
+	PROVINCE: "ผู้ใช้ระดับจังหวัด",
+	AMPHUR:   "ผู้ใช้ระดับอำเภอ",
+	TAMBON:   "ผู้ใช้ระดับตำบล",
+	VILLAGE:  "ผู้ใช้ระดับหมู่บ้าน",
+};
 
 export default function UserDropdown() {
 	const router = useRouter();
 	const [isOpen, setIsOpen] = useState(false);
+	const { user } = useCurrentUser();
+
+	const displayName = user?.fullName || user?.username || "ผู้ใช้งาน";
+	const firstName   = displayName.split(" ")[0];
+	const avatarSrc   = resolveAvatarSrc(user?.avatarUrl);
+	const roleLabel   = user ? (ROLE_LABEL[user.roleLevel] || user.roleLevel) : "";
 
 	function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 		e.stopPropagation();
@@ -38,14 +52,17 @@ export default function UserDropdown() {
 			>
 				<span className="mr-3 overflow-hidden rounded-full h-11 w-11">
 					<Image
+						key={avatarSrc}
 						width={44}
 						height={44}
-						src="/images/user/owner.jpg"
-						alt="User"
+						src={avatarSrc}
+						alt={displayName}
+						className="w-full h-full object-cover"
+						unoptimized
 					/>
 				</span>
 
-				<span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+				<span className="block mr-1 font-medium text-theme-sm">{firstName}</span>
 
 				<svg
 					className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
@@ -73,10 +90,11 @@ export default function UserDropdown() {
 			>
 				<div>
 					<span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-						Musharof Chowdhury
+						{displayName}
 					</span>
 					<span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-						randomuser@pimjo.com
+						{user?.username ? `@${user.username}` : ""}
+						{roleLabel && <span className="ml-2 text-gray-400">· {roleLabel}</span>}
 					</span>
 				</div>
 

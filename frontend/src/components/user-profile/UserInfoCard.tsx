@@ -1,187 +1,253 @@
-"use client";
-import React from "react";
-import { useModal } from "../../hooks/useModal";
-import { Modal } from "../ui/modal";
-import Button from "../ui/button/Button";
-import Input from "../form/input/InputField";
-import Label from "../form/Label";
+"use client"
+import React, { useState } from "react";
+import axios from "@/lib/axios";
+import Swal from "sweetalert2";
+import { useModal } from "@/hooks/useModal";
+import { Modal } from "@/components/ui/modal";
+import Button from "@/components/ui/button/Button";
+import Input from "@/components/form/input/InputField";
+import Label from "@/components/form/Label";
+import type { CurrentUser } from "@/context/CurrentUserContext";
 
-export default function UserInfoCard() {
-  const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
+interface Props {
+  profile: CurrentUser;
+  onReload: () => Promise<void> | void;
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  ADMIN:    "ผู้ดูแลระบบ",
+  PROVINCE: "ผู้ใช้ระดับจังหวัด",
+  AMPHUR:   "ผู้ใช้ระดับอำเภอ",
+  TAMBON:   "ผู้ใช้ระดับตำบล",
+  VILLAGE:  "ผู้ใช้ระดับหมู่บ้าน",
+};
+
+export default function UserInfoCard({ profile, onReload }: Props) {
+  const editName = useModal();
+  const editPwd  = useModal();
+
+  // ── edit name state ──
+  const [fullName, setFullName] = useState(profile.fullName || "");
+  const [savingName, setSavingName] = useState(false);
+  const [nameErrors, setNameErrors] = useState<Record<string, string>>({});
+
+  // ── change password state ──
+  const [pwd, setPwd] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [savingPwd, setSavingPwd] = useState(false);
+  const [pwdErrors, setPwdErrors] = useState<Record<string, string>>({});
+
+  const setPwdField = (field: keyof typeof pwd, value: string) => {
+    setPwd((p) => ({ ...p, [field]: value }));
+    // เคลียร์ error ของ field ที่กำลังพิมพ์ + form-level error
+    setPwdErrors((e) => {
+      const next = { ...e };
+      delete next[field];
+      delete next.form;
+      return next;
+    });
   };
+
+  const openEditName = () => {
+    setFullName(profile.fullName || "");
+    setNameErrors({});
+    editName.openModal();
+  };
+
+  const openEditPwd = () => {
+    setPwd({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    setPwdErrors({});
+    editPwd.openModal();
+  };
+
+  const validateName = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!fullName.trim()) errs.fullName = "กรุณากรอกชื่อ-สกุล";
+    setNameErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validatePwd = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!pwd.oldPassword) errs.oldPassword = "กรุณากรอกรหัสผ่านเดิม";
+    if (!pwd.newPassword) errs.newPassword = "กรุณากรอกรหัสผ่านใหม่";
+    else if (pwd.newPassword.length < 6) errs.newPassword = "ต้องยาวอย่างน้อย 6 ตัวอักษร";
+    if (pwd.newPassword !== pwd.confirmPassword) errs.confirmPassword = "รหัสผ่านไม่ตรงกัน";
+    setPwdErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSaveName = async () => {
+    if (!validateName()) return;
+    setSavingName(true);
+    try {
+      await axios.put("/profile/me", { fullName: fullName.trim() });
+      await onReload();
+      editName.closeModal();
+      Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1500, showConfirmButton: false });
+    } catch (err: any) {
+      Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleSavePwd = async () => {
+    if (!validatePwd()) return;
+    setSavingPwd(true);
+    try {
+      await axios.post("/profile/me/password", {
+        oldPassword: pwd.oldPassword,
+        newPassword: pwd.newPassword,
+      });
+      editPwd.closeModal();
+      Swal.fire({ icon: "success", title: "เปลี่ยนรหัสผ่านสำเร็จ", timer: 1800, showConfirmButton: false });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "กรุณาลองใหม่";
+      // backend ตอบ "รหัสผ่านเดิมไม่ถูกต้อง" → ผูกกับ field oldPassword ให้ผู้ใช้แก้ในที่เดียว
+      if (msg.includes("รหัสผ่านเดิม") || msg.toLowerCase().includes("old")) {
+        setPwdErrors({ oldPassword: msg });
+      } else {
+        setPwdErrors({ form: msg });
+      }
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+
+  const inputCls = (err?: string) =>
+    `${err ? "border-red-500" : "border-gray-300 dark:border-gray-700"} w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:bg-gray-900 dark:text-white`;
+
+  const roleLabel = ROLE_LABEL[profile.roleLevel] || profile.roleLevel;
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+        <div className="flex-1">
+          <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-4 lg:mb-6">
+            ข้อมูลส่วนตัว
           </h4>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">Username</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90 font-mono">
+                {profile.username}
               </p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
-              </p>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">ชื่อ-สกุล</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {profile.fullName || "-"}
               </p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
-              </p>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">ระดับสิทธิ์</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{roleLabel}</p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
-              </p>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">พื้นที่รับผิดชอบ</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{profile.scopeLabel}</p>
             </div>
           </div>
         </div>
 
-        <button
-          onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-        >
-          <svg
-            className="fill-current"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <div className="flex flex-col gap-2 lg:items-end">
+          <button
+            onClick={openEditName}
+            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
           >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
-            />
-          </svg>
-          Edit
-        </button>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+            </svg>
+            แก้ไขชื่อ-สกุล
+          </button>
+          <button
+            onClick={openEditPwd}
+            className="flex items-center justify-center gap-2 rounded-full border border-orange-400 bg-white px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 dark:border-orange-500/40 dark:bg-gray-800 dark:text-orange-300 dark:hover:bg-orange-500/10"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+            เปลี่ยนรหัสผ่าน
+          </button>
+        </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+      {/* ── Modal: แก้ชื่อ-สกุล ────────────────────────────────────── */}
+      <Modal isOpen={editName.isOpen} onClose={editName.closeModal} className="max-w-[500px] m-4">
+        <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-8">
           <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
-            </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
-            </p>
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">แก้ไขชื่อ-สกุล</h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">อัปเดตชื่อที่แสดงในระบบ</p>
           </div>
-          <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
+          <div className="px-2 pb-2">
+            <Label>ชื่อ-สกุล</Label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={inputCls(nameErrors.fullName)}
+              placeholder="กรอกชื่อ-สกุล"
+            />
+            {nameErrors.fullName && <p className="mt-1 text-xs text-red-500">{nameErrors.fullName}</p>}
+          </div>
+          <div className="flex items-center justify-end gap-3 px-2 mt-6">
+            <Button size="sm" variant="outline" onClick={editName.closeModal} disabled={savingName}>ยกเลิก</Button>
+            <Button size="sm" onClick={handleSaveName} disabled={savingName}>
+              {savingName ? "กำลังบันทึก..." : "บันทึก"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Facebook</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://www.facebook.com/PimjoHQ"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>X.com</Label>
-                    <Input type="text" defaultValue="https://x.com/PimjoHQ" />
-                  </div>
-
-                  <div>
-                    <Label>Linkedin</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://www.linkedin.com/company/pimjo"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Instagram</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://instagram.com/PimjoHQ"
-                    />
-                  </div>
-                </div>
+      {/* ── Modal: เปลี่ยนรหัสผ่าน ─────────────────────────────────── */}
+      <Modal isOpen={editPwd.isOpen} onClose={editPwd.closeModal} className="max-w-[500px] m-4">
+        <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-8">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">เปลี่ยนรหัสผ่าน</h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">กรุณายืนยันรหัสผ่านเดิมก่อนตั้งใหม่</p>
+          </div>
+          <div className="grid grid-cols-1 gap-y-4 px-2 pb-2">
+            {pwdErrors.form && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300">
+                {pwdErrors.form}
               </div>
-              <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Personal Information
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" defaultValue="Musharof" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" defaultValue="Chowdhury" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" defaultValue="randomuser@pimjo.com" />
-                  </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" defaultValue="+09 363 398 46" />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" defaultValue="Team Manager" />
-                  </div>
-                </div>
-              </div>
+            )}
+            <div>
+              <Label>รหัสผ่านเดิม</Label>
+              <Input
+                type="password"
+                value={pwd.oldPassword}
+                onChange={(e) => setPwdField("oldPassword", e.target.value)}
+                error={!!pwdErrors.oldPassword}
+              />
+              {pwdErrors.oldPassword && <p className="mt-1 text-xs text-red-500">{pwdErrors.oldPassword}</p>}
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
+            <div>
+              <Label>รหัสผ่านใหม่</Label>
+              <Input
+                type="password"
+                value={pwd.newPassword}
+                onChange={(e) => setPwdField("newPassword", e.target.value)}
+              />
+              {pwdErrors.newPassword && <p className="mt-1 text-xs text-red-500">{pwdErrors.newPassword}</p>}
             </div>
-          </form>
+            <div>
+              <Label>ยืนยันรหัสผ่านใหม่</Label>
+              <Input
+                type="password"
+                value={pwd.confirmPassword}
+                onChange={(e) => setPwdField("confirmPassword", e.target.value)}
+              />
+              {pwdErrors.confirmPassword && <p className="mt-1 text-xs text-red-500">{pwdErrors.confirmPassword}</p>}
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-3 px-2 mt-6">
+            <Button size="sm" variant="outline" onClick={editPwd.closeModal} disabled={savingPwd}>ยกเลิก</Button>
+            <Button size="sm" onClick={handleSavePwd} disabled={savingPwd}>
+              {savingPwd ? "กำลังบันทึก..." : "บันทึก"}
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

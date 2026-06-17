@@ -136,6 +136,7 @@ public class MigrationRunner implements ApplicationRunner {
             "ALTER TABLE app_user ADD COLUMN IF NOT EXISTS province_id INTEGER",
             "ALTER TABLE app_user ADD COLUMN IF NOT EXISTS amphur_id INTEGER",
             "ALTER TABLE app_user ADD COLUMN IF NOT EXISTS tambon_id INTEGER",
+            "ALTER TABLE app_user ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)",
         };
         for (String sql : userGeoCols) {
             try { jdbc.execute(sql); } catch (Exception ignored) {}

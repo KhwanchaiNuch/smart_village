@@ -40,6 +40,9 @@ public class AppUser {
     @Column(name = "tambon_id")
     private Integer tambonId;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -110,6 +113,9 @@ public class AppUser {
 
     public Integer getTambonId() { return tambonId; }
     public void setTambonId(Integer tambonId) { this.tambonId = tambonId; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public Boolean getIsActive() {
         return isActive;
