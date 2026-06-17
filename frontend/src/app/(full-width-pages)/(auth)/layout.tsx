@@ -21,16 +21,20 @@ export default function AuthLayout({
               {/* <!-- ===== Common Grid Shape Start ===== --> */}
               <GridShape />
               <div className="flex flex-col items-center max-w-xs">
-                <Link href="/" className="block mb-4">
+                <Link href="/" className="block mb-6">
                   <Image
-                    width={72}
-                    height={72}
-                    src="./images/logo/auth-logo.svg"
-                    alt="Logo"
+                    width={180}
+                    height={180}
+                    src="/images/logo/smart-village-logo.png"
+                    alt="Smart Village Logo"
+                    className="object-contain"
                   />
                 </Link>
-                <p className="text-center text-gray-400 dark:text-white/60">
-                  Free and Open-Source Tailwind CSS Admin Dashboard Template
+                <p className="text-center text-white text-xl font-bold tracking-wide">
+                  Smart Village
+                </p>
+                <p className="text-center text-gray-400 dark:text-white/60 mt-2 text-sm">
+                  ระบบบริหารจัดการหมู่บ้านอัจฉริยะ
                 </p>
               </div>
             </div>

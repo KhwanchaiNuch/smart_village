@@ -392,9 +392,13 @@ const AppSidebar: React.FC = () => {
 				className={`relative z-10 py-8 flex  ${!isExpanded ? "lg:justify-center" : "justify-start"}`}
 			>
 				<Link href={role === "VILLAGE" ? "/villager" : "/"} className="flex items-center gap-3">
-					<img src="/images/logo/logo-m.svg" alt="Logo" className="flex-shrink-0 w-9 h-9" />
+					<img
+						src="/images/logo/smart-village-logo.png"
+						alt="Smart Village"
+						className="flex-shrink-0 w-9 h-9 object-contain"
+					/>
 					{(isExpanded || isMobileOpen) && (
-						<span className="text-xl font-bold text-white tracking-wide">M6</span>
+						<span className="text-xl font-bold text-white tracking-wide">Smart Village</span>
 					)}
 				</Link>
 			</div>
