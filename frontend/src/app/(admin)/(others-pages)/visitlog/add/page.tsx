@@ -8,11 +8,13 @@ import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Person {
 	personId: number;
 	firstName: string;
 	lastName: string;
+	householdId?: number | null;
 }
 
 interface Household {
@@ -56,7 +58,15 @@ export default function VisitLogAdd() {
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: value }));
+		setForm((prev) => {
+			const updated = { ...prev, [name]: value };
+			// auto-fill household เมื่อเลือกบุคคล
+			if (name === "personId" && value) {
+				const person = persons.find((p) => String(p.personId) === value);
+				updated.householdId = person?.householdId ? String(person.householdId) : "";
+			}
+			return updated;
+		});
 		if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
 	};
 
@@ -71,7 +81,7 @@ export default function VisitLogAdd() {
 	const validate = (): boolean => {
 		const newErrors: FormErrors = {};
 		if (!form.personId) newErrors.personId = "กรุณาเลือกบุคคล";
-		if (!form.householdId) newErrors.householdId = "กรุณาเลือกครัวเรือน";
+		// householdId optional — auto-fill จากบุคคลที่เลือก
 		if (!form.visitDate) newErrors.visitDate = "กรุณาระบุวันที่เยี่ยม";
 		if (!form.visitor.trim()) newErrors.visitor = "กรุณาระบุชื่อผู้เยี่ยม";
 		if (!form.visitReason.trim()) newErrors.visitReason = "กรุณาระบุวัตถุประสงค์การเยี่ยม";
@@ -85,7 +95,7 @@ export default function VisitLogAdd() {
 		try {
 			const payload = {
 				personId: parseInt(form.personId),
-				householdId: parseInt(form.householdId),
+				householdId: form.householdId ? parseInt(form.householdId) : null,
 				visitDate: form.visitDate,
 				visitor: form.visitor,
 				visitReason: form.visitReason,
@@ -121,6 +131,7 @@ export default function VisitLogAdd() {
 		}`;
 
 	return (
+		<PermissionGuard menuUrl="/visitlog" action="add">
 		<>
 			<ComponentCard title="เพิ่มบันทึกการเยี่ยมบ้าน (Add Visit Log)">
 
@@ -144,21 +155,23 @@ export default function VisitLogAdd() {
 					</div>
 
 					<div>
-						<Label>ครัวเรือนที่เยี่ยม <span className="text-red-500">*</span></Label>
+						<Label>ครัวเรือนที่เยี่ยม</Label>
 						<select
 							name="householdId"
 							value={form.householdId}
 							onChange={handleChange}
 							className={selectClass("householdId")}
 						>
-							<option value="">-- เลือกครัวเรือน --</option>
+							<option value="">-- ไม่ระบุ --</option>
 							{households.map((h) => (
 								<option key={h.householdId} value={h.householdId}>
 									บ้านเลขที่ {h.houseNo}
 								</option>
 							))}
 						</select>
-						{errors.householdId && <p className="mt-1 text-xs text-red-500">{errors.householdId}</p>}
+						{form.personId && form.householdId && (
+							<p className="mt-1 text-xs text-blue-500">กำหนดอัตโนมัติจากบุคคลที่เลือก</p>
+						)}
 					</div>
 				</div>
 
@@ -238,5 +251,6 @@ export default function VisitLogAdd() {
 				</div>
 			</ComponentCard>
 		</>
+	</PermissionGuard>
 	);
 }

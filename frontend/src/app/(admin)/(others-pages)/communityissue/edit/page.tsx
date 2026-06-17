@@ -1,4 +1,10 @@
 "use client"
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
+function imgUrl(url: string | null): string {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return API_BASE + url;
+}
 import ComponentCard from "@/components/common/ComponentCard";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
@@ -9,6 +15,7 @@ import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -88,7 +95,7 @@ function CommunityIssueEditContent() {
           dueDate: d.dueDate || "",
           remark: d.remark || "",
         });
-        if (d.imageUrl) setImagePreview(d.imageUrl);
+        if (d.imageUrl) setImagePreview(imgUrl(d.imageUrl));
       })
       .catch((err: any) =>
         Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message })
@@ -157,9 +164,7 @@ function CommunityIssueEditContent() {
       if (imageFile)        fd.append("file", imageFile);
       else if (imageRemoved) fd.append("removeImage", "true");
 
-      await axios.post("/community-issues/edit", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post("/community-issues/edit", fd);
       await Swal.fire({ icon: "success", title: "อัปเดตสำเร็จ", timer: 1800, showConfirmButton: false });
       window.location.href = "/communityissue";
     } catch (err: any) {
@@ -305,12 +310,16 @@ function CommunityIssueEditContent() {
       </div>
     </ComponentCard>
   );
+
 }
 
 export default function CommunityIssueEdit() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+        <PermissionGuard menuUrl="/communityissue" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
       <CommunityIssueEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

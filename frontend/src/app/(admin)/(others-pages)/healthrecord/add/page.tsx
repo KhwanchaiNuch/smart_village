@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Person {
 	personId: number;
@@ -113,6 +114,7 @@ export default function HealthRecordAdd() {
 		}`;
 
 	return (
+		<PermissionGuard menuUrl="/healthrecord" action="add">
 		<>
 			<ComponentCard title="เพิ่มข้อมูลสุขภาพเชิงตัวเลข (Add Health Record)">
 
@@ -250,5 +252,6 @@ export default function HealthRecordAdd() {
 				</div>
 			</ComponentCard>
 		</>
+	</PermissionGuard>
 	);
 }

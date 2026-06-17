@@ -19,6 +19,8 @@ public class CommunityIssue {
 
     private Long householdId;
 
+    private Integer villageId;
+
     @Column(length = 200)
     private String area;
 
@@ -67,6 +69,9 @@ public class CommunityIssue {
 
     public Long getHouseholdId() { return householdId; }
     public void setHouseholdId(Long householdId) { this.householdId = householdId; }
+
+    public Integer getVillageId() { return villageId; }
+    public void setVillageId(Integer villageId) { this.villageId = villageId; }
 
     public String getArea() { return area; }
     public void setArea(String area) { this.area = area; }

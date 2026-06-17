@@ -9,6 +9,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Person {
 	personId: number;
@@ -287,8 +288,11 @@ function HealthRecordEditContent() {
 
 export default function HealthRecordEdit() {
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
+				<PermissionGuard menuUrl="/healthrecord" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
 			<HealthRecordEditContent />
 		</Suspense>
+		</PermissionGuard>
+
 	);
 }

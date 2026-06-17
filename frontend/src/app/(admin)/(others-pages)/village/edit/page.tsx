@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur { amphurId: number; provinceId: number; nameTh: string; }
@@ -157,8 +158,11 @@ function VillageEditContent() {
 
 export default function VillageEdit() {
   return (
-    <Suspense fallback={<div className="p-6 text-gray-500">กำลังโหลด...</div>}>
+        <PermissionGuard menuUrl="/village" action="edit">
+<Suspense fallback={<div className="p-6 text-gray-500">กำลังโหลด...</div>}>
       <VillageEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

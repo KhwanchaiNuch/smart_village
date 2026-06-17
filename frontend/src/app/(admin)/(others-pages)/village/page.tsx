@@ -104,7 +104,7 @@ export default function VillagePage() {
 
 	const enterVillage = (v: Village) => {
 		setVillage({ villageId: v.villageId, villageName: v.villageName, moo: v.moo });
-		router.push("/village-dashboard");
+		router.push("/");
 	};
 
 	// ===== ลบรายการที่เลือก =====

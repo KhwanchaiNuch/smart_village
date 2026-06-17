@@ -18,6 +18,7 @@ interface Person {
 	lastName: string;
 	occupation: string;
 	personId: number;
+	age?: number | null;
 }
 
 export default function Person() {
@@ -203,10 +204,10 @@ export default function Person() {
 												<Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
 											</div>
 										</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ลำดับ</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ชื่อ</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">นามสกุล</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อาชีพ</TableCell>
+										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อายุ</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ป่วย/มีโรคเรื้อรังหรือไม่</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ติดเตียงหรือไม่</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
@@ -227,16 +228,16 @@ export default function Person() {
 													</div>
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.personId}
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													{person.firstName}
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													{person.lastName}
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.occupation}
+													{person.occupation || "—"}
+												</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+													{person.age != null ? `${person.age} ปี` : "—"}
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													<Badge size="sm" color={person.isSick === true ? "error" : person.isSick === false ? "success" : "warning"}>

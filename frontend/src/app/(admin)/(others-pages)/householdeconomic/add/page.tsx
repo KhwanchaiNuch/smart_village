@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -16,6 +17,10 @@ interface Household {
   moo: string | null;
 }
 
+interface HouseholdEconomic {
+  householdId: number;
+}
+
 const DEBT_TYPES = ["ไม่มีหนี้", "หนี้ กยศ.", "หนี้สินเชื่อบ้าน", "หนี้บัตรเครดิต", "หนี้สหกรณ์", "หนี้นอกระบบ", "อื่น ๆ"];
 
 export default function HouseholdEconomicAdd() {
@@ -23,6 +28,7 @@ export default function HouseholdEconomicAdd() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
+  const [existingHouseholdIds, setExistingHouseholdIds] = useState<Set<number>>(new Set());
   const [form, setForm] = useState({
     householdId: "",
     incomeTotalPerMonth: "",
@@ -32,19 +38,23 @@ export default function HouseholdEconomicAdd() {
     recordDate: "",
   });
 
-  const fetchHouseholds = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!loaded) return;
     try {
       const vid = village?.villageId;
-      const res = await axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households");
-      setHouseholds(res.data);
+      const [hhRes, econRes] = await Promise.all([
+        axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households"),
+        axios.get<HouseholdEconomic[]>(vid ? `/household-economics?villageId=${vid}` : "/household-economics"),
+      ]);
+      setHouseholds(hhRes.data);
+      setExistingHouseholdIds(new Set(econRes.data.map((e) => Number(e.householdId))));
     } catch { /* non-critical */ }
   }, [loaded, village]);
 
   useEffect(() => {
     document.title = "Smart Village | เพิ่มข้อมูลเศรษฐกิจครัวเรือน";
-    fetchHouseholds();
-  }, [fetchHouseholds]);
+    fetchData();
+  }, [fetchData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -89,19 +99,27 @@ export default function HouseholdEconomicAdd() {
     }`;
 
   return (
+    <PermissionGuard menuUrl="/householdeconomic" action="add">
     <ComponentCard title="เพิ่มข้อมูลเศรษฐกิจครัวเรือน">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label>ครัวเรือน <span className="text-red-500">*</span></Label>
           <select name="householdId" value={form.householdId} onChange={handleChange} className={selectClass("householdId")}>
             <option value="">-- เลือกครัวเรือน --</option>
-            {households.map((h, i) => (
-              <option key={h.householdId ?? i} value={h.householdId}>
-                บ้านเลขที่ {h.houseNo || "-"}{h.moo ? ` หมู่ ${h.moo}` : ""}
-              </option>
-            ))}
+            {households
+              .filter((h) => !existingHouseholdIds.has(h.householdId))
+              .map((h, i) => (
+                <option key={h.householdId ?? i} value={h.householdId}>
+                  บ้านเลขที่ {h.houseNo || "-"}{h.moo ? ` หมู่ ${h.moo}` : ""}
+                </option>
+              ))}
           </select>
           {errors.householdId && <p className="mt-1 text-xs text-red-500">{errors.householdId}</p>}
+          {existingHouseholdIds.size > 0 && (
+            <p className="mt-1 text-xs text-gray-400">
+              {existingHouseholdIds.size} ครัวเรือนที่มีข้อมูลแล้วไม่แสดงในรายการ
+            </p>
+          )}
         </div>
         <div>
           <Label>วันที่บันทึก <span className="text-red-500">*</span></Label>
@@ -154,5 +172,6 @@ export default function HouseholdEconomicAdd() {
         </a>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

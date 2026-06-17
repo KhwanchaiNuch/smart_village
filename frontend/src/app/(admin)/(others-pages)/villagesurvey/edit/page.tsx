@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 interface Person { personId: number; firstName: string; lastName: string; }
@@ -180,8 +181,11 @@ function VillageSurveyEditContent() {
 
 export default function VillageSurveyEdit() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+        <PermissionGuard menuUrl="/villagesurvey" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
       <VillageSurveyEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

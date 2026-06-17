@@ -3,6 +3,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Role { id: number; name: string; status: boolean; }
 interface Menu { id: number; name: string; url: string; status: boolean; }
@@ -130,6 +131,7 @@ export default function PermissionPage() {
   if (!data) return <div className="p-8 text-center text-gray-400">กำลังโหลด...</div>;
 
   return (
+    <PermissionGuard adminOnly>
     <ComponentCard title="ตั้งค่าสิทธิ์การเข้าถึงเมนู">
       {/* Toolbar */}
       <div className="flex justify-between items-center mb-5">
@@ -258,5 +260,6 @@ export default function PermissionPage() {
         </div>
       )}
     </ComponentCard>
+    </PermissionGuard>
   );
 }

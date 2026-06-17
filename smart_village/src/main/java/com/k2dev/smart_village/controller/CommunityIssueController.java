@@ -49,7 +49,7 @@ public class CommunityIssueController {
             if (villageId != null) {
                 List<Long> hhIds = householdRepo.findByVillageId(villageId).stream()
                         .map(h -> h.getHouseholdId().longValue()).toList();
-                return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
+                return repo.findByVillageIdOrHouseholdIdIn(villageId, hhIds);
             }
             return repo.findAll();
         }
@@ -58,15 +58,20 @@ public class CommunityIssueController {
         if (vids.isEmpty()) return List.of();
         List<Long> hhIds = householdRepo.findByVillageIdIn(vids).stream()
                 .map(h -> h.getHouseholdId().longValue()).toList();
-        return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
+        return repo.findByVillageIdInOrHouseholdIdIn(vids, hhIds);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
         CommunityIssue c = repo.findById(id).orElse(null);
         if (c == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-        if (ScopeUtil.isVillageLevel() && !householdOwned(c.getHouseholdId()))
-            return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
+        if (ScopeUtil.isVillageLevel()) {
+            Integer scopeId = ScopeUtil.getScopeId();
+            boolean ownedByVillageId = c.getVillageId() != null && c.getVillageId().equals(scopeId);
+            boolean ownedByHousehold = householdOwned(c.getHouseholdId());
+            if (!ownedByVillageId && !ownedByHousehold)
+                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
+        }
         return ResponseEntity.ok(c);
     }
 
@@ -117,8 +122,19 @@ public class CommunityIssueController {
             }
             issue.setRemark(remark != null && !remark.isBlank() ? remark : null);
 
+            // resolve villageId: ใช้ param ที่ส่งมา, ไม่มีให้ derive จาก household, ไม่มีให้ใช้ scope
+            Integer resolvedVillageId = villageId;
+            if (resolvedVillageId == null && householdId != null) {
+                Household hh = householdRepo.findById(householdId.intValue()).orElse(null);
+                if (hh != null) resolvedVillageId = hh.getVillageId();
+            }
+            if (resolvedVillageId == null && ScopeUtil.isVillageLevel()) {
+                resolvedVillageId = ScopeUtil.getScopeId();
+            }
+            issue.setVillageId(resolvedVillageId);
+
             // scope check
-            if (ScopeUtil.isVillageLevel() && !householdOwned(issue.getHouseholdId()))
+            if (ScopeUtil.isVillageLevel() && issue.getHouseholdId() != null && !householdOwned(issue.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
 
             // save ก่อน → ได้ issueId
@@ -159,8 +175,12 @@ public class CommunityIssueController {
             CommunityIssue existing = repo.findById(id).orElse(null);
             if (existing == null)
                 return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
-                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
+            if (ScopeUtil.isVillageLevel()) {
+                Integer scopeId = ScopeUtil.getScopeId();
+                boolean byVillage = existing.getVillageId() != null && existing.getVillageId().equals(scopeId);
+                if (!byVillage && !householdOwned(existing.getHouseholdId()))
+                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
+            }
 
             // อัปเดต fields
             existing.setHouseholdId(householdId);
@@ -199,8 +219,12 @@ public class CommunityIssueController {
         try {
             CommunityIssue existing = repo.findById(id).orElse(null);
             if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
-            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
-                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
+            if (ScopeUtil.isVillageLevel()) {
+                Integer scopeId = ScopeUtil.getScopeId();
+                boolean byVillage = existing.getVillageId() != null && existing.getVillageId().equals(scopeId);
+                if (!byVillage && !householdOwned(existing.getHouseholdId()))
+                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
+            }
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
         } catch (Exception e) {
@@ -211,7 +235,7 @@ public class CommunityIssueController {
 
     // ─── helper: บันทึกไฟล์ลง path แบบ geo hierarchy ─────────────────────────
     private String saveFile(MultipartFile file, Integer villageId, Long issueId,
-                            HttpServletRequest request) throws IOException {
+                            HttpServletRequest ignored) throws IOException {
         // สร้าง sub-path จาก geo chain
         String subPath;
         if (villageId != null) {
@@ -254,10 +278,6 @@ public class CommunityIssueController {
         // บันทึกไฟล์
         Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-        // return URL
-        String baseUrl = request.getScheme() + "://"
-                + request.getServerName() + ":" + request.getServerPort()
-                + request.getContextPath();
-        return baseUrl + "/uploads/" + subPath + "/" + filename;
+        return "/uploads/" + subPath + "/" + filename;
     }
 }

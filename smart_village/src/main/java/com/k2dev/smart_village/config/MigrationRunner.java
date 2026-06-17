@@ -29,6 +29,15 @@ public class MigrationRunner implements ApplicationRunner {
     }
 
     private void runMigrations() {
+        // ── community_issue + village_need_survey: เพิ่ม village_id ────
+        String[] villageScopeCols = {
+            "ALTER TABLE community_issue ADD COLUMN IF NOT EXISTS village_id INTEGER",
+            "ALTER TABLE village_need_survey ADD COLUMN IF NOT EXISTS village_id INTEGER",
+        };
+        for (String sql : villageScopeCols) {
+            try { jdbc.execute(sql); } catch (Exception ignored) {}
+        }
+
         // ── person: เพิ่มคอลัมน์ที่อาจขาด ────────────────────────────
         String[] personCols = {
             "ALTER TABLE person ADD COLUMN IF NOT EXISTS cid VARCHAR(13)",
@@ -52,6 +61,7 @@ public class MigrationRunner implements ApplicationRunner {
             "ALTER TABLE person ADD COLUMN IF NOT EXISTS status VARCHAR(50)",
             "ALTER TABLE person ADD COLUMN IF NOT EXISTS is_sick BOOLEAN",
             "ALTER TABLE person ADD COLUMN IF NOT EXISTS is_bedridden BOOLEAN",
+            "ALTER TABLE person ADD COLUMN IF NOT EXISTS created_at TIMESTAMP",
         };
         for (String sql : personCols) {
             try { jdbc.execute(sql); } catch (Exception ignored) {}

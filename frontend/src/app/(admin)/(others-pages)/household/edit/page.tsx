@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 function HouseHoldEditContent() {
 	const router = useRouter();
@@ -305,8 +306,11 @@ function HouseHoldEditContent() {
 
 export default function HouseHoldEdit() {
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
+				<PermissionGuard menuUrl="/household" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
 			<HouseHoldEditContent />
 		</Suspense>
+		</PermissionGuard>
+
 	)
 }

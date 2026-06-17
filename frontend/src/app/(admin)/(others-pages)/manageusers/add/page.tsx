@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 const ROLES = [
   { value: "ADMIN",    label: "ผู้ดูแลระบบ"          },
@@ -152,6 +153,7 @@ export default function AddUserPage() {
   const needVillage = form.roleLevel === "VILLAGE";
 
   return (
+    <PermissionGuard adminOnly>
     <div className="space-y-5">
       <ComponentCard title="">
         <div className="flex items-center justify-between mb-6">
@@ -329,5 +331,6 @@ export default function AddUserPage() {
         </form>
       </ComponentCard>
     </div>
+  </PermissionGuard>
   );
 }

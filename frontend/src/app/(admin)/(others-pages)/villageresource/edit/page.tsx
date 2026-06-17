@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -198,8 +199,11 @@ function VillageResourceEditContent() {
 
 export default function VillageResourceEdit() {
   return (
-    <Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
+        <PermissionGuard menuUrl="/villageresource" action="edit">
+<Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
       <VillageResourceEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

@@ -9,6 +9,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 function PersonEditContent() {
 	const router = useRouter();
@@ -352,8 +353,11 @@ function PersonEditContent() {
 
 export default function PersonEdit() {
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
+				<PermissionGuard menuUrl="/person" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
 			<PersonEditContent />
 		</Suspense>
+		</PermissionGuard>
+
 	)
 }

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur { amphurId: number; provinceId: number; nameTh: string; }
@@ -75,6 +76,7 @@ export default function VillageAdd() {
   const selCls = "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
+    <PermissionGuard menuUrl="/village" action="add">
     <ComponentCard title="เพิ่มหมู่บ้าน">
       <div className="space-y-5">
         <ComponentCard title="ที่ตั้งของหมู่บ้าน">
@@ -152,5 +154,6 @@ export default function VillageAdd() {
         </div>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

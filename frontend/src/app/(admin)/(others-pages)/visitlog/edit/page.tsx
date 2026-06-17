@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Person {
 	personId: number;
@@ -270,8 +271,11 @@ function VisitLogEditContent() {
 
 export default function VisitLogEdit() {
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
+				<PermissionGuard menuUrl="/visitlog" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
 			<VisitLogEditContent />
 		</Suspense>
+		</PermissionGuard>
+
 	);
 }

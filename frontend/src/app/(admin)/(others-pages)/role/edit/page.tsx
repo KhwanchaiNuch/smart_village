@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 function RoleEditContent() {
   const searchParams = useSearchParams();
@@ -75,8 +76,11 @@ function RoleEditContent() {
 
 export default function RoleEdit() {
   return (
-    <Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
+  <PermissionGuard adminOnly>
+<Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
       <RoleEditContent />
     </Suspense>
+  </PermissionGuard>
+
   );
 }

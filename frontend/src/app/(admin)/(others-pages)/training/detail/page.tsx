@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface TrainingEvent {
   id: number;
@@ -370,8 +371,11 @@ function TrainingDetailContent() {
 
 export default function TrainingDetail() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+        <PermissionGuard menuUrl="/training">
+<Suspense fallback={<div>Loading...</div>}>
       <TrainingDetailContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

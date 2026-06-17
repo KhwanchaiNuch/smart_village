@@ -68,7 +68,6 @@ const adminNavItems: NavItem[] = [
 		),
 		name: "จัดการหมู่บ้าน",
 		subItems: [
-			{ icon: <GridIcon/>, name: "Dashboard หมู่บ้าน", path: "/village-dashboard" },
 			{ icon: <CalenderIcon/>, name: "รหัสครัวเรือน", path: "/household" },
 			{ icon: <UserCircleIcon/>, name: "บุคคล", path: "/person" },
 			{ icon: <HeartIcon/>, name: "บันทึกสุขภาพ", path: "/healthrecord" },
@@ -397,7 +396,7 @@ const AppSidebar: React.FC = () => {
 					<img
 						src="/images/logo/smart-village-logo.png"
 						alt="Smart Village"
-						className="flex-shrink-0 w-9 h-9 object-contain"
+						className="flex-shrink-0 w-12 h-9 object-contain"
 					/>
 					{(isExpanded || isMobileOpen) && (
 						<span className="text-xl font-bold text-white tracking-wide">Smart Village</span>

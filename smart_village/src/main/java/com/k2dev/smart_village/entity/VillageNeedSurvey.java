@@ -16,6 +16,7 @@ public class VillageNeedSurvey {
 
     private Integer householdId;
     private Integer personId;
+    private Integer villageId;
 
     @Column(length = 100)
     private String needType;
@@ -44,6 +45,9 @@ public class VillageNeedSurvey {
 
     public Integer getPersonId() { return personId; }
     public void setPersonId(Integer personId) { this.personId = personId; }
+
+    public Integer getVillageId() { return villageId; }
+    public void setVillageId(Integer villageId) { this.villageId = villageId; }
 
     public String getNeedType() { return needType; }
     public void setNeedType(String needType) { this.needType = needType; }

@@ -6,6 +6,7 @@ import Label from "@/components/form/Label";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -82,6 +83,7 @@ export default function VillageResourceAdd() {
     }`;
 
   return (
+    <PermissionGuard menuUrl="/villageresource" action="add">
     <ComponentCard title="เพิ่มทรัพยากรชุมชน">
 
       {/* Admin: เลือกหมู่บ้าน */}
@@ -174,5 +176,6 @@ export default function VillageResourceAdd() {
         </button>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

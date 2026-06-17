@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -84,6 +85,7 @@ export default function PersonSkillAdd() {
     }`;
 
   return (
+    <PermissionGuard menuUrl="/personskill" action="add">
     <ComponentCard title="เพิ่มทักษะบุคคล">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -132,5 +134,6 @@ export default function PersonSkillAdd() {
         </a>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

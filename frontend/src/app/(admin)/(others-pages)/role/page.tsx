@@ -3,6 +3,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Role { id: number; name: string; status: boolean; createdAt: string; }
 
@@ -62,6 +63,7 @@ export default function RolePage() {
     });
 
   return (
+    <PermissionGuard adminOnly>
     <ComponentCard title="จัดการ Role">
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <input
@@ -136,5 +138,6 @@ export default function RolePage() {
 
       <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">ทั้งหมด {filtered.length} รายการ</p>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

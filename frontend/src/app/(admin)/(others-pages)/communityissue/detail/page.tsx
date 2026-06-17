@@ -3,7 +3,16 @@ import { useEffect, useRef, useState, useCallback, Suspense} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+
+// แปลง relative path (/uploads/...) → absolute URL ที่ชี้ไป backend
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
+function imgUrl(url: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return API_BASE + url;
+}
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface CommunityIssue {
   id: number;
@@ -164,11 +173,11 @@ function CommunityIssueDetailPageContent() {
         fd.append("issueId", String(editLog.issueId));
         if (formImageFile)        fd.append("file", formImageFile);
         else if (formImageRemoved) fd.append("removeImage", "true");
-        await axios.post("/community-issue-logs/edit", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        await axios.post("/community-issue-logs/edit", fd);
       } else {
         fd.append("issueId", String(id));
         if (formImageFile) fd.append("file", formImageFile);
-        await axios.post("/community-issue-logs/add", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        await axios.post("/community-issue-logs/add", fd);
       }
 
       setShowPopup(false);
@@ -225,7 +234,7 @@ function CommunityIssueDetailPageContent() {
     try {
       const fd = buildIssueFd({ file });
       if (!fd) return;
-      await axios.post("/community-issues/edit", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      await axios.post("/community-issues/edit", fd);
       await fetchAll();
       Swal.fire({ icon: "success", title: "อัปโหลดรูปสำเร็จ", timer: 1200, showConfirmButton: false });
     } catch {
@@ -246,7 +255,7 @@ function CommunityIssueDetailPageContent() {
     try {
       const fd = buildIssueFd({ remove: true });
       if (!fd) return;
-      await axios.post("/community-issues/edit", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      await axios.post("/community-issues/edit", fd);
       await fetchAll();
     } catch {
       Swal.fire({ icon: "error", title: "ลบรูปไม่สำเร็จ" });
@@ -343,8 +352,8 @@ function CommunityIssueDetailPageContent() {
                 </div>
               </div>
               {issue.imageUrl ? (
-                <div onClick={() => setLightboxUrl(issue.imageUrl)} className="block cursor-zoom-in">
-                  <img src={issue.imageUrl} alt="รูปภาพปัญหา" className="w-full rounded-xl object-cover max-h-48 border border-gray-200 hover:opacity-90 transition-opacity" />
+                <div onClick={() => setLightboxUrl(imgUrl(issue.imageUrl))} className="block cursor-zoom-in">
+                  <img src={imgUrl(issue.imageUrl)!} alt="รูปภาพปัญหา" className="w-full rounded-xl object-cover max-h-48 border border-gray-200 hover:opacity-90 transition-opacity" />
                 </div>
               ) : (
                 <div onClick={() => issueFileRef.current?.click()} className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:border-blue-400 transition-colors">
@@ -391,8 +400,8 @@ function CommunityIssueDetailPageContent() {
                   <p className="text-sm font-semibold text-gray-800 dark:text-white">{log.title}</p>
                   {log.detail && <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">{log.detail}</p>}
                   {log.imageUrl && (
-                    <div onClick={() => setLightboxUrl(log.imageUrl)} className="block mt-3 cursor-zoom-in">
-                      <img src={log.imageUrl} alt="รูปภาพบันทึก" className="rounded-xl object-cover max-h-48 w-auto border border-gray-200 hover:opacity-90 transition-opacity" />
+                    <div onClick={() => setLightboxUrl(imgUrl(log.imageUrl))} className="block mt-3 cursor-zoom-in">
+                      <img src={imgUrl(log.imageUrl)!} alt="รูปภาพบันทึก" className="rounded-xl object-cover max-h-48 w-auto border border-gray-200 hover:opacity-90 transition-opacity" />
                     </div>
                   )}
                 </div>
@@ -495,8 +504,11 @@ function CommunityIssueDetailPageContent() {
 
 export default function CommunityIssueDetailPage() {
   return (
-    <Suspense>
+        <PermissionGuard menuUrl="/communityissue">
+<Suspense>
       <CommunityIssueDetailPageContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

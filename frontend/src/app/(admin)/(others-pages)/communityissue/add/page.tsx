@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -25,6 +26,7 @@ const STATUSES = ["ยังไม่แก้", "กำลังทำ", "แ�
 
 export default function CommunityIssueAdd() {
   const { village, loaded } = useVillage();
+  const [role, setRole] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
@@ -60,6 +62,7 @@ export default function CommunityIssueAdd() {
 
   useEffect(() => {
     document.title = "Smart Village | Add Community Issue";
+    setRole(localStorage.getItem("role"));
     fetchHouseholds();
   }, [fetchHouseholds]);
 
@@ -118,9 +121,7 @@ export default function CommunityIssueAdd() {
       // แนบไฟล์ (ถ้ามี)
       if (imageFile) fd.append("file", imageFile);
 
-      await axios.post("/community-issues/add", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await axios.post("/community-issues/add", fd);
 
       await Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1800, showConfirmButton: false });
       window.location.href = "/communityissue";
@@ -148,7 +149,26 @@ export default function CommunityIssueAdd() {
   };
 
   return (
+    <PermissionGuard menuUrl="/communityissue" action="add">
     <ComponentCard title="แจ้งปัญหาชุมชน (Add Community Issue)">
+      {/* Village context banner */}
+      {loaded && village && (
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm text-blue-700 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4 shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+          บันทึกสำหรับ: <strong className="ml-1">{village.villageName}{village.moo ? ` หมู่ ${village.moo}` : ""}</strong>
+        </div>
+      )}
+      {loaded && !village && role === "ADMIN" && (
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-2.5 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-4 shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          ยังไม่ได้เลือกหมู่บ้าน — กรุณาเลือกหมู่บ้านจากแถบด้านบนก่อนเพิ่มข้อมูล
+        </div>
+      )}
       {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -282,5 +302,6 @@ export default function CommunityIssueAdd() {
         </a>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

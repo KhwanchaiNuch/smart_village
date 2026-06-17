@@ -6,9 +6,11 @@ import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 // โครงสร้างข้อมูลครัวเรือนที่ใช้แสดงใน dropdown
 interface HouseholdOption {
@@ -19,23 +21,26 @@ interface HouseholdOption {
 
 export default function PersonAdd() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const { village } = useVillage();
 
 	// --- dropdown ครัวเรือน ---
-	// เก็บรายการครัวเรือนทั้งหมดที่โหลดมาจาก API เพื่อแสดงใน <select>
 	const [households, setHouseholds] = useState<HouseholdOption[]>([]);
+	// ถ้ามี ?householdId= ใน URL → ล็อค dropdown ไว้เลย
+	const lockedHouseholdId = searchParams.get("householdId") ?? "";
 
 	useEffect(() => {
 		document.title = "Smart Village | Person Add";
 
-		// โหลดรายการครัวเรือนทั้งหมดเพื่อสร้าง dropdown
-		// ใช้ GET /households ซึ่งคืนค่า householdId, houseNo, moo
-		axios.get<HouseholdOption[]>("/households")
+		// โหลด households — กรองตาม village ถ้า admin เลือก village ไว้
+		const url = village ? `/households?villageId=${village.villageId}` : "/households";
+		axios.get<HouseholdOption[]>(url)
 			.then(res => setHouseholds(res.data))
 			.catch(() => {});
-	}, []);
+	}, [village]);
 
 	const [form, setForm] = useState({
-		household_id: "",
+		household_id: lockedHouseholdId,
 		cid: "",
 		title: "",
 		first_name: "",
@@ -127,6 +132,7 @@ export default function PersonAdd() {
 	};
 
 	return (
+		<PermissionGuard menuUrl="/person" action="add">
 		<>
 			<ComponentCard title="เพิ่มบุคคล ( Add Person )">
 
@@ -142,7 +148,8 @@ export default function PersonAdd() {
 						<select
 							value={form.household_id}
 							onChange={(e) => setForm(prev => ({ ...prev, household_id: e.target.value }))}
-							className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+							disabled={!!lockedHouseholdId}
+							className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 focus:border-brand-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-900 dark:text-white"
 						>
 							<option value="">-- เลือกครัวเรือน --</option>
 							{households.map(h => (
@@ -357,5 +364,6 @@ export default function PersonAdd() {
 				</div>
 			</ComponentCard>
 		</>
+	</PermissionGuard>
 	);
 }

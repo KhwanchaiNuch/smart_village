@@ -5,6 +5,7 @@ import Label from "@/components/form/Label";
 import { useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -36,6 +37,7 @@ export default function MenuAdd() {
   };
 
   return (
+    <PermissionGuard adminOnly>
     <ComponentCard title="เพิ่ม Menu">
       <div className="max-w-md space-y-5">
         <div>
@@ -78,5 +80,6 @@ export default function MenuAdd() {
         </div>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

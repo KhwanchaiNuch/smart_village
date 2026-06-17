@@ -3,6 +3,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Menu { id: number; name: string; url: string; status: boolean; createdAt: string; }
 
@@ -65,6 +66,7 @@ export default function MenuPage() {
     });
 
   return (
+    <PermissionGuard adminOnly>
     <ComponentCard title="จัดการ Menu">
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <input
@@ -142,5 +144,6 @@ export default function MenuPage() {
 
       <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">ทั้งหมด {filtered.length} รายการ</p>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

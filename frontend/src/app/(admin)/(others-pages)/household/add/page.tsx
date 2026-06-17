@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur   { amphurId: number; nameTh: string; provinceId: number; }
@@ -187,6 +188,7 @@ export default function HouseHoldAdd() {
     }
 
     return (
+      <PermissionGuard menuUrl="/household" action="add">
       <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700 space-y-3">
         <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">เลือกที่ตั้งครัวเรือน</p>
 
@@ -377,5 +379,6 @@ export default function HouseHoldAdd() {
         </div>
       </ComponentCard>
     </>
+  </PermissionGuard>
   );
 }

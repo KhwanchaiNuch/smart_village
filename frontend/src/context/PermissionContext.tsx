@@ -86,11 +86,12 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
   const find = (menuUrl: string) =>
     permissions.find(p => p.menuUrl === menuUrl);
 
-  // ถ้าไม่มีเมนูใน DB (unprotected path) → อนุญาต เพื่อ consistent กับ backend interceptor
+  // canView: ถ้าไม่อยู่ใน DB → อนุญาต (หน้าไม่ได้ลงทะเบียน = ไม่มี restriction เช่น dashboard /)
+  // canAdd/Edit/Delete: ถ้าไม่อยู่ใน DB → ปฏิเสธ (ต้องมี permission ชัดเจนจึงทำได้)
   const canView   = (menuUrl: string) => isAdmin || (find(menuUrl)?.canView   ?? true);
-  const canAdd    = (menuUrl: string) => isAdmin || (find(menuUrl)?.canAdd    ?? true);
-  const canEdit   = (menuUrl: string) => isAdmin || (find(menuUrl)?.canEdit   ?? true);
-  const canDelete = (menuUrl: string) => isAdmin || (find(menuUrl)?.canDelete ?? true);
+  const canAdd    = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canAdd    ?? false));
+  const canEdit   = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canEdit   ?? false));
+  const canDelete = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canDelete ?? false));
 
   return (
     <PermissionContext.Provider value={{ permissions, loading, refreshPerms, isAdmin, canView, canAdd, canEdit, canDelete }}>

@@ -133,7 +133,7 @@ public class CommunityIssueLogController {
 
     // ─── helper: บันทึกไฟล์ log (แผน C: folder เดียวกับ issue + prefix log-) ──
     private String saveLogFile(MultipartFile file, Integer villageId, Long issueId, Long logId,
-                               HttpServletRequest request) throws IOException {
+                               HttpServletRequest ignored) throws IOException {
         // แผน C: เก็บในโฟลเดอร์เดียวกับ issue ไม่มี /logs subfolder
         // แยกด้วย prefix "log-" ในชื่อไฟล์
         String subPath;
@@ -168,9 +168,6 @@ public class CommunityIssueLogController {
         String filename = "log-" + UUID.randomUUID() + ext;
         Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-        String baseUrl = request.getScheme() + "://"
-                + request.getServerName() + ":" + request.getServerPort()
-                + request.getContextPath();
-        return baseUrl + "/uploads/" + subPath + "/" + filename;
+        return "/uploads/" + subPath + "/" + filename;
     }
 }

@@ -7,6 +7,7 @@ import DatePicker from "@/components/form/date-picker";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -88,6 +89,7 @@ export default function TrainingAdd() {
     }`;
 
   return (
+    <PermissionGuard menuUrl="/training" action="add">
     <ComponentCard title="เพิ่มโครงการอบรม (Add Training Event)">
 
       {/* Village selector */}
@@ -206,5 +208,6 @@ export default function TrainingAdd() {
         </button>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

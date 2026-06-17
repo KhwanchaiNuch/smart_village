@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -226,8 +227,11 @@ function TrainingEditContent() {
 
 export default function TrainingEdit() {
   return (
-    <Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
+        <PermissionGuard menuUrl="/training" action="edit">
+<Suspense fallback={<div className="p-6">กำลังโหลด...</div>}>
       <TrainingEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }

@@ -4,6 +4,7 @@ import Badge from '@/components/ui/badge/Badge';
 import Checkbox from '@/components/form/input/Checkbox';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
@@ -21,6 +22,7 @@ interface HouseHold {
 }
 
 export default function HouseHold() {
+	const router = useRouter();
 	const { village } = useVillage();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const [tableData, setData] = useState<HouseHold[]>([]);
@@ -241,7 +243,8 @@ export default function HouseHold() {
 										return (
 											<TableRow
 												key={order.householdId}
-												className={isSelected ? "bg-red-50 dark:bg-red-500/10" : ""}
+												className={`cursor-pointer ${isSelected ? "bg-red-50 dark:bg-red-500/10" : "hover:bg-gray-50 dark:hover:bg-white/[0.03]"}`}
+												onDoubleClick={() => router.push(`/household/detail?id=${order.householdId}`)}
 											>
 												{/* checkbox ของแต่ละแถว */}
 												<TableCell className="px-4 py-3 text-center">

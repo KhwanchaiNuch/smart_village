@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 const ROLES = [
   { value: "ADMIN",    label: "ผู้ดูแลระบบ"          },
@@ -397,8 +398,11 @@ function EditUserContent() {
 
 export default function EditUserPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400">กำลังโหลด...</div>}>
+  <PermissionGuard adminOnly>
+<Suspense fallback={<div className="flex items-center justify-center py-20 text-gray-400">กำลังโหลด...</div>}>
       <EditUserContent />
     </Suspense>
+  </PermissionGuard>
+
   );
 }

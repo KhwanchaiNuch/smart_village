@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ปิดขีดจำกัด POST size ของ Tomcat (default 2MB) เพื่อรองรับการ upload ไฟล์ขนาดใหญ่ -->
+<Context>
+    <Connector maxPostSize="-1" />
+</Context>

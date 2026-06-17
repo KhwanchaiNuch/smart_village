@@ -5,6 +5,7 @@ import Label from "@/components/form/Label";
 import { useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 export default function RoleAdd() {
   const [name, setName] = useState("");
@@ -25,6 +26,7 @@ export default function RoleAdd() {
   };
 
   return (
+    <PermissionGuard adminOnly>
     <ComponentCard title="เพิ่ม Role">
       <div className="max-w-md space-y-5">
         <div>
@@ -60,5 +62,6 @@ export default function RoleAdd() {
         </div>
       </div>
     </ComponentCard>
+  </PermissionGuard>
   );
 }

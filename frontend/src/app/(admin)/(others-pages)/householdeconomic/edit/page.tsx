@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -176,8 +177,11 @@ function HouseholdEconomicEditContent() {
 
 export default function HouseholdEconomicEdit() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+        <PermissionGuard menuUrl="/householdeconomic" action="edit">
+<Suspense fallback={<div>Loading...</div>}>
       <HouseholdEconomicEditContent />
     </Suspense>
+    </PermissionGuard>
+
   );
 }
