@@ -19,7 +19,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/**");
     }
 
-    /** เสิร์ฟไฟล์ upload จาก ./uploads/ โฟลเดอร์ */
+    // ── serve ไฟล์ที่อัปโหลด (avatar ฯลฯ) จาก ./uploads ──
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")

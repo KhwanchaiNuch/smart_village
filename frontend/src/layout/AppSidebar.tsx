@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useVillage } from "../context/VillageContext";
 import { usePermission } from "../context/PermissionContext";
+import { useCurrentUser, resolveAvatarSrc } from "../context/CurrentUserContext";
 import {
 	BoxCubeIcon,
 	InfoIcon,
@@ -124,6 +125,7 @@ const AppSidebar: React.FC = () => {
 	const { canView, loading: permLoading } = usePermission();
 
 	const { village, setVillage } = useVillage();
+	const { user: currentUser } = useCurrentUser();
 	const router = useRouter();
 
 	const changeVillage = () => {
@@ -456,15 +458,21 @@ const AppSidebar: React.FC = () => {
 			{/* User profile - bottom of sidebar */}
 			<div className={`mt-auto pb-6 pt-4 border-t border-white/20 flex flex-col items-center gap-2 relative z-10`}>
 				<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0">
-					<img src="/images/user/owner.jpg" alt="User" className="w-full h-full object-cover" />
+					{/* eslint-disable-next-line @next/next/no-img-element */}
+					<img
+						key={resolveAvatarSrc(currentUser?.avatarUrl)}
+						src={resolveAvatarSrc(currentUser?.avatarUrl)}
+						alt={currentUser?.fullName || currentUser?.username || "User"}
+						className="w-full h-full object-cover"
+					/>
 				</div>
 				{(isExpanded || isMobileOpen) && (
 					<div className="text-center">
-						<p className="text-white text-sm font-medium leading-tight">
-							{role === "VILLAGE" ? "ลูกบ้าน" : "ผู้ดูแลระบบ"}
+						<p className="text-white text-sm font-medium leading-tight truncate max-w-[200px]">
+							{currentUser?.fullName || currentUser?.username || (role === "VILLAGE" ? "ลูกบ้าน" : "ผู้ดูแลระบบ")}
 						</p>
 						<p className="text-white/60 text-xs mt-0.5">
-							{role === "VILLAGE" ? "Village" : "Admin"}
+							{role === "VILLAGE" ? "Village" : role === "ADMIN" ? "Admin" : role || ""}
 						</p>
 					</div>
 				)}
