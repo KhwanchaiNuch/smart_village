@@ -1,156 +1,50 @@
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.Household;
-import com.k2dev.smart_village.entity.Person;
-import com.k2dev.smart_village.repository.*;
-import com.k2dev.smart_village.security.ScopeUtil;
-import com.k2dev.smart_village.service.GeoScopeService;
+import com.k2dev.smart_village.service.HouseholdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/households")
 public class HouseholdController {
 
-    @Autowired private HouseholdRepository repo;
-    @Autowired private JdbcTemplate jdbc;
-    @Autowired private GeoScopeService geoScope;
-    @Autowired private HouseholdEconomicRepository economicRepo;
-    @Autowired private PersonRepository personRepo;
-    @Autowired private VisitLogRepository visitLogRepo;
-    @Autowired private CommunityIssueRepository communityIssueRepo;
-    @Autowired private VillageNeedSurveyRepository needSurveyRepo;
-
-    // ─── helper: ตรวจสอบว่า household นี้อยู่ใน village ของ user (เฉพาะ VILLAGE role) ─────────────
-    private boolean notOwned(Household h) {
-        Integer vid = ScopeUtil.getScopeId();
-        return vid == null || !vid.equals(h.getVillageId());
-    }
+    @Autowired private HouseholdService service;
 
     @GetMapping
-    public List<Household> list(@RequestParam(required = false) Integer villageId) {
-        if (ScopeUtil.isAdmin()) {
-            if (villageId != null) return repo.findByVillageId(villageId);
-            return repo.findAll();
-        }
-        List<Integer> vids = geoScope.getVillageIds();
-        if (vids == null) return repo.findAll();
-        if (vids.isEmpty()) return List.of();
-        return repo.findByVillageIdIn(vids);
+    public List<Household> list(
+            @RequestParam(required = false) Integer villageId,
+            @RequestParam(required = false) Integer tambonId,
+            @RequestParam(required = false) Integer amphurId,
+            @RequestParam(required = false) Integer provinceId) {
+        return service.list(villageId, tambonId, amphurId, provinceId);
     }
 
     @GetMapping("/by-village/{villageId}")
     public List<Household> listByVillage(@PathVariable Integer villageId) {
-        return repo.findByVillageId(villageId);
+        return service.listByVillage(villageId);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Integer id) {
-        Household h = repo.findById(id).orElse(null);
-        if (h == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-        // เฉพาะ VILLAGE role — ตรวจว่าเป็นหมู่บ้านของตัวเอง
-        if (ScopeUtil.isVillageLevel() && notOwned(h))
-            return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้"));
-        return ResponseEntity.ok(h);
+        return service.get(id);
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody Household h) {
-        try {
-            if (ScopeUtil.isVillageLevel()) {
-                // VILLAGE: ใช้ scopeId เป็น villageId + สร้าง placeholder ถ้ายังไม่มี
-                Integer vid = ScopeUtil.getScopeId();
-                if (vid == null)
-                    return ResponseEntity.badRequest().body(Map.of("message", "ไม่พบ scopeId กรุณา login ใหม่"));
-                // สร้าง placeholder village ด้วย tambon_id จาก app_user
-                String uname = ScopeUtil.currentUser() != null ? ScopeUtil.currentUser().getUsername() : null;
-                try {
-                    jdbc.update(
-                        "INSERT INTO village (village_id, tambon_id, village_name) " +
-                        "OVERRIDING SYSTEM VALUE " +
-                        "SELECT ?, u.tambon_id, ? FROM app_user u WHERE u.username = ? LIMIT 1 " +
-                        "ON CONFLICT (village_id) DO NOTHING",
-                        vid, "หมู่บ้านหมู่ " + vid, uname
-                    );
-                } catch (Exception e1) {
-                    try {
-                        jdbc.update(
-                            "INSERT INTO village (village_id, village_name) " +
-                            "OVERRIDING SYSTEM VALUE VALUES (?, ?) " +
-                            "ON CONFLICT (village_id) DO NOTHING",
-                            vid, "หมู่บ้านหมู่ " + vid
-                        );
-                    } catch (Exception e2) {
-                        return ResponseEntity.status(500).body(Map.of("message", "ไม่สามารถสร้างข้อมูลหมู่บ้านได้: " + e2.getMessage()));
-                    }
-                }
-                h.setVillageId(vid);
-            } else if (!ScopeUtil.isAdmin() && h.getVillageId() == null) {
-                // PROVINCE/AMPHUR/TAMBON: ต้องส่ง villageId มาจาก frontend
-                return ResponseEntity.badRequest().body(Map.of("message", "กรุณาเลือกหมู่บ้าน"));
-            } else if (ScopeUtil.isAdmin() && h.getVillageId() == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "กรุณาระบุ villageId"));
-            }
-            h.setHouseholdId(null);
-            return ResponseEntity.ok(repo.save(h));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
-        }
+        return service.add(h);
     }
 
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody Household h) {
-        try {
-            if (h.getHouseholdId() == null)
-                return ResponseEntity.badRequest().body(Map.of("message", "กรุณาระบุ householdId"));
-            Household existing = repo.findById(h.getHouseholdId()).orElse(null);
-            if (existing == null)
-                return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-            // เฉพาะ VILLAGE: ตรวจ + lock villageId ของตัวเอง
-            if (ScopeUtil.isVillageLevel()) {
-                if (notOwned(existing))
-                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
-                h.setVillageId(ScopeUtil.getScopeId());
-            }
-            // PROVINCE/AMPHUR/TAMBON/ADMIN: ใช้ villageId จาก body ได้เลย
-            return ResponseEntity.ok(repo.save(h));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
-        }
+        return service.edit(h);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
-        try {
-            Household existing = repo.findById(id).orElse(null);
-            if (existing == null)
-                return ResponseEntity.status(404).body(Map.of("message", "ไม่พบครัวเรือนนี้"));
-            // เฉพาะ VILLAGE: ตรวจ ownership
-            if (ScopeUtil.isVillageLevel() && notOwned(existing))
-                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
-
-            Long hhIdLong = id.longValue();
-
-            // ลบ child records ทั้งหมดก่อน
-            economicRepo.deleteAll(economicRepo.findByHouseholdId(hhIdLong));
-            communityIssueRepo.deleteAll(communityIssueRepo.findByHouseholdId(hhIdLong));
-            visitLogRepo.deleteAll(visitLogRepo.findByHouseholdId(hhIdLong));
-            needSurveyRepo.deleteAll(needSurveyRepo.findByHouseholdId(id));
-
-            // ลบ persons + children ของ person
-            List<Person> persons = personRepo.findByHouseholdId(id);
-            personRepo.deleteAll(persons);
-
-            // ลบ household
-            repo.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาด"));
-        }
+        return service.delete(id);
     }
 }

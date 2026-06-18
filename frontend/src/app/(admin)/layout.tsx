@@ -3,6 +3,7 @@
 import { useSidebar } from "@/context/SidebarContext";
 import { VillageProvider } from "@/context/VillageContext";
 import { PermissionProvider } from "@/context/PermissionContext";
+import { GeoScopeProvider } from "@/context/GeoScopeContext";
 import { CurrentUserProvider } from "@/context/CurrentUserContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
@@ -38,6 +39,7 @@ export default function AdminLayout({
   return (
     <PermissionProvider>
       <CurrentUserProvider>
+        <GeoScopeProvider>
         <VillageProvider>
         <div className="min-h-screen xl:flex">
           {/* Sidebar and Backdrop */}
@@ -54,6 +56,7 @@ export default function AdminLayout({
           </div>
         </div>
         </VillageProvider>
+        </GeoScopeProvider>
       </CurrentUserProvider>
     </PermissionProvider>
   );

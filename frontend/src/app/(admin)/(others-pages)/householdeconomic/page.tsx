@@ -12,6 +12,8 @@ import { useVillage } from "@/context/VillageContext";
 interface HouseholdEconomic {
   id: number;
   householdId: number | null;
+  houseNo: string | null;
+  moo: string | null;
   incomeTotalPerMonth: number | null;
   debtTotal: number | null;
   debtType: string | null;
@@ -26,7 +28,7 @@ function formatMoney(n: number | null): string {
 }
 
 export default function HouseholdEconomicPage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [records, setRecords] = useState<HouseholdEconomic[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -38,7 +40,9 @@ export default function HouseholdEconomicPage() {
     try {
       const vid = village?.villageId;
       const res = await axios.get<HouseholdEconomic[]>(vid ? `/household-economics?villageId=${vid}` : "/household-economics");
-      setRecords(res.data);
+      setRecords([...res.data].sort((a, b) =>
+        new Date(b.recordDate || 0).getTime() - new Date(a.recordDate || 0).getTime()
+      ));
       setSelectedIds([]);
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
@@ -47,8 +51,9 @@ export default function HouseholdEconomicPage() {
 
   useEffect(() => {
     document.title = "Smart Village | เศรษฐกิจครัวเรือน";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   const total = records.length;
   const countPoor = records.filter((r) => r.poorFlag === true).length;
@@ -61,7 +66,8 @@ export default function HouseholdEconomicPage() {
   const filtered = records.filter((r) => {
     const q = search.toLowerCase();
     const matchSearch = !q ||
-      String(r.householdId || "").includes(q) ||
+      (r.houseNo || "").toLowerCase().includes(q) ||
+      (r.moo || "").toLowerCase().includes(q) ||
       (r.debtType || "").toLowerCase().includes(q);
     const matchPoor = filterPoor === "" ? true : filterPoor === "true" ? r.poorFlag === true : r.poorFlag !== true;
     return matchSearch && matchPoor;
@@ -162,7 +168,7 @@ export default function HouseholdEconomicPage() {
                     <TableCell isHeader className="px-4 py-3 text-center">
                       <Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
                     </TableCell>
-                    <TableCell isHeader className="px-4 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">รหัสครัวเรือน</TableCell>
+                    <TableCell isHeader className="px-4 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">บ้านเลขที่</TableCell>
                     <TableCell isHeader className="px-4 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">รายได้/เดือน (บาท)</TableCell>
                     <TableCell isHeader className="px-4 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">หนี้สินรวม (บาท)</TableCell>
                     <TableCell isHeader className="px-4 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ประเภทหนี้</TableCell>
@@ -178,7 +184,7 @@ export default function HouseholdEconomicPage() {
                         <Checkbox checked={selectedIds.includes(r.id)} onChange={(c) => toggleSelectOne(r.id, c)} />
                       </TableCell>
                       <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-                        #{r.householdId ?? "-"}
+                        {r.houseNo ?? "-"}{r.moo ? ` หมู่ ${r.moo}` : ""}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-center text-gray-500 text-theme-sm dark:text-gray-400 font-mono">
                         {formatMoney(r.incomeTotalPerMonth)}

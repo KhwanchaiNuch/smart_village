@@ -1,11 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useVillage } from "../context/VillageContext";
 import { usePermission } from "../context/PermissionContext";
 import { useCurrentUser, resolveAvatarSrc } from "../context/CurrentUserContext";
+import { useGeoScope } from "../context/GeoScopeContext";
 import {
 	BoxCubeIcon,
 	InfoIcon,
@@ -123,36 +124,42 @@ const AppSidebar: React.FC = () => {
 	const pathname = usePathname();
 	const { canView, loading: permLoading } = usePermission();
 
-	const { village, setVillage } = useVillage();
+	const { village } = useVillage();
 	const { user: currentUser } = useCurrentUser();
-	const router = useRouter();
-
-	const changeVillage = () => {
-		setVillage(null);
-		router.push("/village");
-	};
-
-	const [role, setRole] = useState<string | null>(null);
-	useEffect(() => {
-		setRole(localStorage.getItem("role"));
-	}, []);
+	const { role } = useGeoScope();
 
 	// PROVINCE/AMPHUR/TAMBON ไม่ต้องเลือกหมู่บ้าน → เห็น sub-items ทั้งหมดทันที
 	const higherRoles = ["PROVINCE", "AMPHUR", "TAMBON"];
 	const isHigherRole = role !== null && higherRoles.includes(role);
 
+	// subItems ที่แต่ละ role ควรเห็นใน "ข้อมูลพื้นที่"
+	const areaSubPathsByRole: Record<string, string[]> = {
+		ADMIN:    ["/province", "/amphur", "/tambon", "/village"],
+		PROVINCE: ["/amphur", "/tambon", "/village"],
+		AMPHUR:   ["/tambon", "/village"],
+		TAMBON:   ["/village"],
+	};
+
 	// gate: ยังไม่เลือกหมู่บ้าน → "จัดการหมู่บ้าน" เป็นลิงก์ตรงไปหน้าเลือกพื้นที่
 	//        เลือกแล้ว (หรือ higher role) → กลายเป็นกลุ่มเมนูย่อยตามปกติ
 	const villageGatedNavItems: NavItem[] = adminNavItems
-		.filter((item) => item.name !== "ข้อมูลพื้นที่" || role === "ADMIN")
+		.filter((item) => {
+			if (item.name !== "ข้อมูลพื้นที่") return true;
+			// แสดง "ข้อมูลพื้นที่" เฉพาะ role ที่มี subItems ที่เหมาะสม
+			return role !== null && role in areaSubPathsByRole;
+		})
 		.map((item) => {
+			if (item.name === "ข้อมูลพื้นที่" && item.subItems && role && role !== "ADMIN") {
+				const allowed = areaSubPathsByRole[role] ?? [];
+				return { ...item, subItems: item.subItems.filter((s) => allowed.includes(s.path)) };
+			}
 			if (item.name === "จัดการหมู่บ้าน" && item.subItems) {
 				return (village || isHigherRole)
 					? item
 					: { icon: item.icon, name: item.name, path: "/village" };
 			}
 			return item;
-		});
+	});
 
 	const computedAdminNavItems: NavItem[] = [
 		...villageGatedNavItems,
@@ -403,36 +410,31 @@ const AppSidebar: React.FC = () => {
 					)}
 				</Link>
 			</div>
-			{/* Active village / scope banner */}
+			{/* Village indicator chip */}
 			{role !== "VILLAGE" && (isExpanded || isMobileOpen) && (
-				<div className="relative z-10 mb-4 rounded-xl bg-white/10 border border-white/20 px-3 py-2">
-					{isHigherRole ? (
-						/* PROVINCE / AMPHUR / TAMBON → แสดง scope level */
-						<>
-							<p className="text-[10px] uppercase tracking-wide text-white/50">ขอบเขตการดูแล</p>
-							<p className="text-sm font-semibold text-white">
-								{role === "PROVINCE" && "ระดับจังหวัด"}
-								{role === "AMPHUR"   && "ระดับอำเภอ"}
-								{role === "TAMBON"   && "ระดับตำบล"}
-							</p>
-							<p className="text-[11px] text-white/60">ดูข้อมูลทั้งหมดในพื้นที่รับผิดชอบ</p>
-						</>
-					) : village ? (
-						/* ADMIN เลือกหมู่บ้านแล้ว */
-						<>
-							<p className="text-[10px] uppercase tracking-wide text-white/50">หมู่บ้านที่ใช้งาน</p>
-							<p className="text-sm font-semibold text-white truncate">
-								{village.villageName}{village.moo ? ` (หมู่ ${village.moo})` : ""}
-							</p>
-							<button onClick={changeVillage} className="text-[11px] text-white/70 hover:text-white underline">
-								เปลี่ยนพื้นที่
-							</button>
-						</>
+				<div className="relative z-10 mb-3 rounded-xl bg-white/10 border border-white/20 px-3 py-2.5">
+					{village ? (
+						<div className="flex items-center justify-between gap-2">
+							<div className="flex items-center gap-1.5 min-w-0">
+								<span className="text-base flex-shrink-0">📍</span>
+								<div className="min-w-0">
+									<p className="text-[9px] uppercase tracking-widest text-white/40 leading-none mb-0.5">กำลังจัดการ</p>
+									<p className="text-[12px] font-medium text-white truncate">
+										{village.villageName}{village.moo ? ` หมู่ ${village.moo}` : ""}
+									</p>
+								</div>
+							</div>
+							<Link href="/village" className="flex-shrink-0 text-[10px] text-white/60 hover:text-white border border-white/20 hover:border-white/40 rounded px-1.5 py-0.5 transition-colors whitespace-nowrap">
+								เปลี่ยน
+							</Link>
+						</div>
 					) : (
-						/* ADMIN ยังไม่ได้เลือกหมู่บ้าน */
-						<p className="text-xs text-white/70 leading-snug">
-							⚠️ ยังไม่ได้เลือกหมู่บ้าน<br />ไปที่ <strong>ข้อมูลพื้นที่ › หมู่บ้าน</strong> แล้วดับเบิ้ลคลิกที่หมู่บ้าน
-						</p>
+						<div className="flex items-center justify-between gap-2">
+							<p className="text-[11px] text-white/50">ยังไม่ได้เลือกหมู่บ้าน</p>
+							<Link href="/village" className="flex-shrink-0 text-[10px] text-white/70 hover:text-white border border-white/20 hover:border-white/40 rounded px-1.5 py-0.5 transition-colors whitespace-nowrap">
+								เลือก →
+							</Link>
+						</div>
 					)}
 				</div>
 			)}

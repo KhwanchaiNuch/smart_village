@@ -2,44 +2,31 @@
 package com.k2dev.smart_village.controller;
 
 import com.k2dev.smart_village.entity.Province;
-import com.k2dev.smart_village.repository.ProvinceRepository;
-import lombok.RequiredArgsConstructor;
-
+import com.k2dev.smart_village.service.ProvinceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/provinces")
-@RequiredArgsConstructor
 public class ProvinceController {
 
-	@Autowired
-    private ProvinceRepository repo;
+    @Autowired private ProvinceService service;
 
     @GetMapping
-    public List<Province> list() {
-        return repo.findAll();
-    }
+    public List<Province> list() { return service.list(); }
 
     @GetMapping("/{id}")
-    public Province get(@PathVariable Integer id) {
-        return repo.findById(id).orElseThrow();
-    }
+    public ResponseEntity<?> get(@PathVariable Integer id) { return service.get(id); }
 
     @PostMapping("/add")
-    public Province add(@RequestBody Province p) {
-        return repo.save(p);
-    }
+    public Province add(@RequestBody Province p) { return service.add(p); }
 
     @PostMapping("/edit")
-    public Province edit(@RequestBody Province p) {
-        return repo.save(p);
-    }
+    public Province edit(@RequestBody Province p) { return service.edit(p); }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
-        repo.deleteById(id);
-    }
+    public void delete(@PathVariable Integer id) { service.delete(id); }
 }

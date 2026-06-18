@@ -158,7 +158,7 @@ function VillageEditContent() {
 
 export default function VillageEdit() {
   return (
-        <PermissionGuard menuUrl="/village" action="edit">
+        <PermissionGuard menuUrl="/village">
 <Suspense fallback={<div className="p-6 text-gray-500">กำลังโหลด...</div>}>
       <VillageEditContent />
     </Suspense>

@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
-// แปลง relative path (/uploads/...) → absolute URL ที่ชี้ไป backend
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
 function imgUrl(url: string | null): string | null {
   if (!url) return null;
@@ -28,6 +27,7 @@ interface CommunityIssue {
   remark: string | null;
   imageUrl: string | null;
   createdAt: string | null;
+  villageId?: number | null; // 👈 เพิ่ม Type รองรับ VillageId
 }
 
 interface IssueLog {
@@ -67,32 +67,28 @@ function CommunityIssueDetailPageContent() {
   const router  = useRouter();
   const id      = params.get("id");
   const { village } = useVillage();
-  const villageId   = village?.villageId ?? null;
+  const contextVillageId = village?.villageId ?? null;
 
   const [issue,     setIssue]     = useState<CommunityIssue | null>(null);
-  const [logs,      setLogs]      = useState<IssueLog[]>([]);
+  const [logs,       setLogs]      = useState<IssueLog[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [editLog,   setEditLog]   = useState<IssueLog | null>(null);
   const [saving,    setSaving]    = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
-  // ── popup form ─────────────────────────────────────────────────────────────
   const [formTitle,  setFormTitle]  = useState("");
   const [formDetail, setFormDetail] = useState("");
   const [formStatus, setFormStatus] = useState("");
 
-  // รูปใน popup — เก็บ File, ยัง upload พร้อม submit
   const [formImageFile,    setFormImageFile]    = useState<File | null>(null);
   const [formImagePreview, setFormImagePreview] = useState("");
   const [formImageRemoved, setFormImageRemoved] = useState(false);
   const [formObjectUrl,    setFormObjectUrl]    = useState("");
   const logFileRef = useRef<HTMLInputElement>(null);
 
-  // ── issue image (detail card) ──────────────────────────────────────────────
   const issueFileRef = useRef<HTMLInputElement>(null);
 
-  // ── cleanup object URLs ────────────────────────────────────────────────────
   useEffect(() => () => { if (formObjectUrl) URL.revokeObjectURL(formObjectUrl); }, [formObjectUrl]);
 
   const fetchAll = useCallback(async () => {
@@ -116,7 +112,6 @@ function CommunityIssueDetailPageContent() {
     fetchAll();
   }, [fetchAll]);
 
-  // ── popup helpers ──────────────────────────────────────────────────────────
   const resetForm = () => {
     setFormTitle(""); setFormDetail(""); setFormStatus("");
     if (formObjectUrl) { URL.revokeObjectURL(formObjectUrl); setFormObjectUrl(""); }
@@ -131,7 +126,7 @@ function CommunityIssueDetailPageContent() {
     setFormStatus(log.status || "");
     setFormImageFile(null);
     setFormObjectUrl("");
-    setFormImagePreview(log.imageUrl || "");  // แสดง URL เดิมก่อน
+    setFormImagePreview(log.imageUrl ? imgUrl(log.imageUrl) || "" : "");
     setFormImageRemoved(false);
     setShowPopup(true);
   };
@@ -166,12 +161,14 @@ function CommunityIssueDetailPageContent() {
       fd.append("title", formTitle);
       if (formDetail) fd.append("detail", formDetail);
       if (formStatus) fd.append("status", formStatus);
-      if (villageId)  fd.append("villageId", String(villageId));
+      
+      const targetVid = contextVillageId ?? issue?.villageId;
+      if (targetVid)  fd.append("villageId", String(targetVid));
 
       if (editLog) {
         fd.append("id",      String(editLog.id));
         fd.append("issueId", String(editLog.issueId));
-        if (formImageFile)        fd.append("file", formImageFile);
+        if (formImageFile)         fd.append("file", formImageFile);
         else if (formImageRemoved) fd.append("removeImage", "true");
         await axios.post("/community-issue-logs/edit", fd);
       } else {
@@ -207,22 +204,25 @@ function CommunityIssueDetailPageContent() {
     }
   };
 
-  // ── issue image helpers (detail card) ─────────────────────────────────────
+  // ── 🛠️ ปรับปรุงระบบประมวลผล FormData ตัวหลัก ป้องกันด่านตรวจ 403 ─────────
   const buildIssueFd = (img?: { file?: File; remove?: boolean }) => {
     if (!issue) return null;
     const fd = new FormData();
     fd.append("id",        String(issue.id));
-    fd.append("area",      issue.area);
-    fd.append("issueType", issue.issueType);
-    fd.append("severity",  String(issue.severity));
-    fd.append("status",    issue.status);
+    fd.append("area",      issue.area || "");
+    fd.append("issueType", issue.issueType || "");
+    fd.append("severity",  String(issue.severity ?? "3"));
+    fd.append("status",    issue.status || "ยังไม่แก้");
     if (issue.householdId)   fd.append("householdId",   String(issue.householdId));
     if (issue.owner)         fd.append("owner",         issue.owner);
     if (issue.impactPeople)  fd.append("impactPeople",  String(issue.impactPeople));
-    if (issue.budgetEstimate)fd.append("budgetEstimate",String(issue.budgetEstimate));
+    if (issue.budgetEstimate)fd.append("budgetEstimate", String(issue.budgetEstimate));
     if (issue.dueDate)       fd.append("dueDate",       issue.dueDate);
     if (issue.remark)        fd.append("remark",        issue.remark);
-    if (villageId)           fd.append("villageId",     String(villageId));
+    
+    const finalVillageId = contextVillageId ?? issue.villageId;
+    if (finalVillageId)      fd.append("villageId",     String(finalVillageId));
+    
     if (img?.file)           fd.append("file",          img.file);
     if (img?.remove)         fd.append("removeImage",   "true");
     return fd;
@@ -246,7 +246,8 @@ function CommunityIssueDetailPageContent() {
 
   const handleDeleteIssueImage = async () => {
     const result = await Swal.fire({
-      icon: "warning", title: "ลบรูปภาพ?",
+      icon: "warning", title: "ลบรูปภาพประกอบปัญหา?",
+      text: "การดำเนินการนี้จะไม่สามารถย้อนกลับได้",
       showCancelButton: true,
       confirmButtonText: "ลบ", cancelButtonText: "ยกเลิก",
       confirmButtonColor: "#dc2626", cancelButtonColor: "#6b7280",
@@ -257,12 +258,12 @@ function CommunityIssueDetailPageContent() {
       if (!fd) return;
       await axios.post("/community-issues/edit", fd);
       await fetchAll();
+      Swal.fire({ icon: "success", title: "ลบรูปภาพสำเร็จ", timer: 1200, showConfirmButton: false });
     } catch {
       Swal.fire({ icon: "error", title: "ลบรูปไม่สำเร็จ" });
     }
   };
 
-  // ── render ─────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
@@ -342,11 +343,11 @@ function CommunityIssueDetailPageContent() {
                 <span className="text-gray-400">รูปภาพ</span>
                 <div className="flex items-center gap-2">
                   {issue.imageUrl && (
-                    <button type="button" onClick={handleDeleteIssueImage} className="text-xs text-red-500 hover:text-red-700">
+                    <button type="button" onClick={handleDeleteIssueImage} className="text-xs text-red-500 hover:text-red-700 font-medium">
                       ลบรูป
                     </button>
                   )}
-                  <button type="button" onClick={() => issueFileRef.current?.click()} className="text-xs text-blue-500 hover:text-blue-700">
+                  <button type="button" onClick={() => issueFileRef.current?.click()} className="text-xs text-blue-500 hover:text-blue-700 font-medium">
                     {issue.imageUrl ? "เปลี่ยนรูป" : "เพิ่มรูป"}
                   </button>
                 </div>
@@ -504,11 +505,10 @@ function CommunityIssueDetailPageContent() {
 
 export default function CommunityIssueDetailPage() {
   return (
-        <PermissionGuard menuUrl="/communityissue">
-<Suspense>
-      <CommunityIssueDetailPageContent />
-    </Suspense>
+    <PermissionGuard menuUrl="/communityissue">
+      <Suspense>
+        <CommunityIssueDetailPageContent />
+      </Suspense>
     </PermissionGuard>
-
   );
 }

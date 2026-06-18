@@ -34,7 +34,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 const DEFAULT_COLOR = { bg: "bg-indigo-100", text: "text-indigo-700" };
 
 export default function VillageResourcePage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [resources, setResources] = useState<VillageResource[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -55,8 +55,9 @@ export default function VillageResourcePage() {
 
   useEffect(() => {
     document.title = "Smart Village | ทรัพยากรชุมชน";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   const allTypes = Array.from(new Set(resources.map((r) => r.resourceType).filter(Boolean)));
 
@@ -65,7 +66,6 @@ export default function VillageResourcePage() {
     const matchSearch = !q ||
       (r.resourceName || "").toLowerCase().includes(q) ||
       (r.resourceType || "").toLowerCase().includes(q) ||
-      (r.villageCode || "").toLowerCase().includes(q) ||
       (r.description || "").toLowerCase().includes(q);
     const matchType = !filterType || r.resourceType === filterType;
     return matchSearch && matchType;
@@ -143,7 +143,6 @@ export default function VillageResourcePage() {
                     </TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ชื่อทรัพยากร</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ประเภท</TableCell>
-                    <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">รหัสหมู่บ้าน</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">รายละเอียด</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">พิกัด GPS</TableCell>
                     <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
@@ -165,7 +164,6 @@ export default function VillageResourcePage() {
                             </span>
                           ) : "-"}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{r.villageCode || "-"}</TableCell>
                         <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400 max-w-[200px] truncate">{r.description || "-"}</TableCell>
                         <TableCell className="px-4 py-3 text-center text-theme-sm">
                           {r.gpsLat != null && r.gpsLng != null ? (

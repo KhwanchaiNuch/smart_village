@@ -8,6 +8,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
 import { usePermission } from "@/context/PermissionContext";
+import { useGeoScope } from "@/context/GeoScopeContext";
 
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur { amphurId: number; provinceId: number; nameTh: string; }
@@ -17,7 +18,13 @@ interface Village { villageId: number; tambonId: number; villageName: string; mo
 export default function VillagePage() {
 	const router = useRouter();
 	const { village: activeVillage, setVillage } = useVillage();
-	const { canAdd, canEdit, canDelete } = usePermission();
+	const { canEdit, canDelete } = usePermission();
+	const { role, selectedProvince, selectedAmphur, selectedTambon, setSelectedVillage } = useGeoScope();
+
+	const isAdmin = role === "ADMIN";
+	const isProvince = role === "PROVINCE";
+	const isAmphur = role === "AMPHUR";
+	const isTambon = role === "TAMBON";
 
 	const [tableData, setData] = useState<Village[]>([]);
 	const [provinces, setProvinces] = useState<Province[]>([]);
@@ -29,10 +36,11 @@ export default function VillagePage() {
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState("");
+	const [userRole, setUserRole] = useState<string | null>(null);
 
 	const fetchData = useCallback(async () => {
 		try {
-			const res = await axios.get<Village[]>("/villages/all");
+			const res = await axios.get<Village[]>("/villages/scoped");
 			setData(res.data);
 			setSelectedIds([]);
 		} catch (error) {
@@ -43,13 +51,28 @@ export default function VillagePage() {
 
 	useEffect(() => {
 		document.title = "Smart Village | หมู่บ้าน";
-		axios.get<Province[]>("/provinces")
-			.then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId)))
-			.catch(() => {});
-		axios.get<Amphur[]>("/amphurs/all").then((r) => setAllAmphurs(r.data)).catch(() => {});
-		axios.get<Tambon[]>("/tambons/all").then((r) => setAllTambons(r.data)).catch(() => {});
+		setUserRole(localStorage.getItem("role"));
+		if (isAdmin) {
+			axios.get<Province[]>("/provinces")
+				.then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId)))
+				.catch(() => {});
+			axios.get<Amphur[]>("/amphurs/all").then((r) => setAllAmphurs(r.data)).catch(() => {});
+			axios.get<Tambon[]>("/tambons/all").then((r) => setAllTambons(r.data)).catch(() => {});
+		} else {
+			axios.get<Amphur[]>("/amphurs/scoped").then((r) => setAllAmphurs(r.data)).catch(() => {});
+			axios.get<Tambon[]>("/tambons/scoped").then((r) => setAllTambons(r.data)).catch(() => {});
+		}
 		fetchData();
-	}, [fetchData]);
+	}, [fetchData, isAdmin]);
+
+	// sync filter จาก GeoScopeContext สำหรับ non-ADMIN
+	useEffect(() => {
+		if (!isAdmin) {
+			if (selectedProvince) setProvinceId(selectedProvince.provinceId);
+			if (selectedAmphur)   setAmphurId(selectedAmphur.amphurId);
+			if (selectedTambon)   setTambonId(selectedTambon.tambonId);
+		}
+	}, [isAdmin, selectedProvince, selectedAmphur, selectedTambon]);
 
 	// lookup maps สำหรับ display + filter
 	const tambonMap = new Map(allTambons.map((t) => [t.tambonId, t]));
@@ -104,7 +127,14 @@ export default function VillagePage() {
 
 	const enterVillage = (v: Village) => {
 		setVillage({ villageId: v.villageId, villageName: v.villageName, moo: v.moo });
+		setSelectedVillage({ villageId: v.villageId, tambonId: v.tambonId, villageName: v.villageName, moo: v.moo });
 		router.push("/");
+	};
+
+	const clearVillage = () => {
+		setVillage(null);
+		setSelectedVillage(null);
+		Swal.fire({ icon: "success", title: "ยกเลิกการเลือกแล้ว", timer: 1000, showConfirmButton: false });
 	};
 
 	// ===== ลบรายการที่เลือก =====
@@ -150,6 +180,14 @@ export default function VillagePage() {
 	};
 
 	const selCls = "h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+	const lockBadge = (label: string) => (
+		<span className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-blue-50 dark:bg-white/10 px-3 h-9 text-sm text-blue-700 dark:text-white/70">
+			<svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+			</svg>
+			{label}
+		</span>
+	);
 
 	return (
 		<>
@@ -159,22 +197,48 @@ export default function VillagePage() {
 						<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
 							หมู่บ้าน (Village)
 						</h3>
-						<select className={selCls} value={provinceId} onChange={(e) => { setProvinceId(e.target.value ? Number(e.target.value) : ""); setAmphurId(""); setTambonId(""); }}>
-							<option value="">-- จังหวัด --</option>
-							{provinces.map((p) => <option key={p.provinceId} value={p.provinceId}>{p.nameTh}</option>)}
-						</select>
-						<select className={selCls} value={amphurId} onChange={(e) => { setAmphurId(e.target.value ? Number(e.target.value) : ""); setTambonId(""); }}>
-							<option value="">-- อำเภอ --</option>
-							{(provinceId !== "" ? allAmphurs.filter((a) => a.provinceId === provinceId) : allAmphurs).map((a) => (
-								<option key={a.amphurId} value={a.amphurId}>{a.nameTh}</option>
-							))}
-						</select>
-						<select className={selCls} value={tambonId} onChange={(e) => setTambonId(e.target.value ? Number(e.target.value) : "")}>
-							<option value="">-- ตำบล --</option>
-							{(amphurId !== "" ? allTambons.filter((t) => t.amphurId === amphurId) : allTambons).map((t) => (
-								<option key={t.tambonId} value={t.tambonId}>{t.nameTh}</option>
-							))}
-						</select>
+
+						{/* จังหวัด */}
+						{isAdmin ? (
+							<select className={selCls} value={provinceId} onChange={(e) => { setProvinceId(e.target.value ? Number(e.target.value) : ""); setAmphurId(""); setTambonId(""); }}>
+								<option value="">-- จังหวัด --</option>
+								{provinces.map((p) => <option key={p.provinceId} value={p.provinceId}>{p.nameTh}</option>)}
+							</select>
+						) : lockBadge(selectedProvince?.nameTh || "จังหวัดของคุณ")}
+
+						{/* อำเภอ */}
+						{isAdmin ? (
+							<select className={selCls} value={amphurId} onChange={(e) => { setAmphurId(e.target.value ? Number(e.target.value) : ""); setTambonId(""); }}>
+								<option value="">-- อำเภอ --</option>
+								{(provinceId !== "" ? allAmphurs.filter((a) => a.provinceId === provinceId) : allAmphurs).map((a) => (
+									<option key={a.amphurId} value={a.amphurId}>{a.nameTh}</option>
+								))}
+							</select>
+						) : isProvince ? (
+							<select className={selCls} value={amphurId} onChange={(e) => { setAmphurId(e.target.value ? Number(e.target.value) : ""); setTambonId(""); }}>
+								<option value="">-- ทุกอำเภอ --</option>
+								{allAmphurs.map((a) => <option key={a.amphurId} value={a.amphurId}>{a.nameTh}</option>)}
+							</select>
+						) : lockBadge(selectedAmphur?.nameTh || "อำเภอของคุณ")}
+
+						{/* ตำบล */}
+						{isAdmin ? (
+							<select className={selCls} value={tambonId} onChange={(e) => setTambonId(e.target.value ? Number(e.target.value) : "")}>
+								<option value="">-- ตำบล --</option>
+								{(amphurId !== "" ? allTambons.filter((t) => t.amphurId === amphurId) : allTambons).map((t) => (
+									<option key={t.tambonId} value={t.tambonId}>{t.nameTh}</option>
+								))}
+							</select>
+						) : isProvince || isAmphur ? (
+							<select className={selCls} value={tambonId} onChange={(e) => setTambonId(e.target.value ? Number(e.target.value) : "")}>
+								<option value="">-- ทุกตำบล --</option>
+								{(amphurId !== "" ? allTambons.filter((t) => t.amphurId === Number(amphurId)) : allTambons).map((t) => (
+									<option key={t.tambonId} value={t.tambonId}>{t.nameTh}</option>
+								))}
+							</select>
+						) : isTambon ? (
+							lockBadge(selectedTambon?.nameTh || "ตำบลของคุณ")
+						) : null}
 					</div>
 
 					<div className="flex items-center gap-2">
@@ -198,7 +262,7 @@ export default function VillagePage() {
 						</button>
 						)}
 
-						{canAdd("/village") && (
+						{(userRole !== "VILLAGE") && (
 						<a
 							href="/village/add"
 							className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
@@ -212,7 +276,7 @@ export default function VillagePage() {
 					</div>
 				</div>
 
-				<p className="text-xs text-gray-500 dark:text-gray-400 mb-2">💡 ดับเบิ้ลคลิกที่แถวเพื่อเข้าใช้งานหมู่บ้านนั้น</p>
+				<p className="text-xs text-gray-500 dark:text-gray-400 mb-2">  คลิก &ldquo;เลือกจัดการ&rdquo; หรือดับเบิ้ลคลิกที่แถว เพื่อเริ่มจัดการข้อมูลหมู่บ้านนั้น</p>
 
 				<div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
 					<div className="max-w-full overflow-x-auto">
@@ -267,14 +331,44 @@ export default function VillagePage() {
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.amphurName}</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.provinceName}</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.zipcode}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<TableCell className="px-4 py-3 text-center">
 													<div className="flex items-center justify-center gap-2">
+														{/* ปุ่มเลือกจัดการ */}
+														{isActive ? (
+															<div className="flex items-center gap-2">
+																<span className="inline-flex items-center gap-1 rounded-full border border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+																	<svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+																		<path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+																	</svg>
+																	กำลังจัดการ
+																</span>
+																<button
+																	onClick={(e) => { e.stopPropagation(); clearVillage(); }}
+																	className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors dark:border-red-700/50 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+																>
+																	<svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+																		<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+																	</svg>
+																	ยกเลิก
+																</button>
+															</div>
+														) : (
+															<button
+																onClick={() => enterVillage(v)}
+																className="inline-flex items-center gap-1 rounded-full border border-blue-500 bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors"
+															>
+																<svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+																	<path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+																</svg>
+																เลือกจัดการ
+															</button>
+														)}
 														{canEdit("/village") && (
 															<a
 																href={`/village/edit?id=${v.villageId}`}
-																className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
+																className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
 															>
-																<svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+																<svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 																	<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
 																</svg>
 															</a>

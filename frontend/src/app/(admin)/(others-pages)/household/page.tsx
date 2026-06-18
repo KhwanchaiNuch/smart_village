@@ -5,6 +5,7 @@ import Checkbox from '@/components/form/input/Checkbox';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
@@ -23,16 +24,24 @@ interface HouseHold {
 
 export default function HouseHold() {
 	const router = useRouter();
-	const { village } = useVillage();
+	const { village, loaded } = useVillage();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const [tableData, setData] = useState<HouseHold[]>([]);
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState("");
+	const [role, setRole] = useState<string | null>(null);
+
+	useEffect(() => {
+		setRole(localStorage.getItem("role"));
+	}, []);
 
 	const fetchData = useCallback(async () => {
 		try {
-			const res = await axios.get<HouseHold[]>(`/households`);
+			// ส่ง villageId ถ้ามี active village → server กรองให้
+			const params: Record<string, number> = {};
+			if (village?.villageId) params.villageId = village.villageId;
+			const res = await axios.get<HouseHold[]>("/households", { params });
 			const sorted = [...res.data].sort((a, b) => a.householdId - b.householdId);
 			setData(sorted);
 			setSelectedIds([]);
@@ -44,16 +53,15 @@ export default function HouseHold() {
 				text: "ไม่สามารถดึงข้อมูลครัวเรือนได้ กรุณาลองใหม่อีกครั้ง",
 			});
 		}
-	}, []);
+	}, [village]);
 
 	useEffect(() => {
 		document.title = "Smart Village | House Hold";
+		if (!loaded) return;
 		fetchData();
-	}, [fetchData]);
+	}, [fetchData, loaded]);
 
-	const scoped = village ? tableData.filter((h) => h.villageId === village.villageId) : tableData;
-
-	const filtered = scoped.filter((h) => {
+	const filtered = tableData.filter((h) => {
 		const q = search.toLowerCase();
 		return (
 			String(h.householdId).includes(q) ||
@@ -79,7 +87,6 @@ export default function HouseHold() {
 
 	// ===== ลบรายการที่เลือก =====
 	const handleDeleteSelected = async () => {
-		// Validate: ต้องเลือกอย่างน้อย 1 รายการ
 		if (selectedIds.length === 0) {
 			Swal.fire({
 				icon: "warning",
@@ -104,16 +111,12 @@ export default function HouseHold() {
 
 		try {
 			setLoading(true);
-
-			// backend มีแค่ลบทีละ id -> ยิงพร้อมกันด้วย Promise.allSettled
 			const responses = await Promise.allSettled(
 				selectedIds.map((id) => axios.delete(`/households/${id}`))
 			);
-
 			const failed = responses.filter((r) => r.status === "rejected").length;
 			const success = selectedIds.length - failed;
-
-			await fetchData(); // โหลดข้อมูลใหม่ + ล้าง selection
+			await fetchData();
 
 			if (failed === 0) {
 				Swal.fire({
@@ -142,14 +145,42 @@ export default function HouseHold() {
 		}
 	};
 
+	// VILLAGE role ไม่ต้องเลือก (JWT scope กำหนดให้แล้ว)
+	const needsVillageSelect = role !== null && role !== "VILLAGE" && !village;
+
 	return (
 		<PermissionGuard menuUrl="/household">
 		<>
 			<ComponentCard title=''>
+				{/* Banner: กรุณาเลือกหมู่บ้านก่อน */}
+				{needsVillageSelect && (
+					<div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-4 py-3">
+						<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+						</svg>
+						<p className="text-sm text-amber-800 dark:text-amber-200">
+							กรุณาเลือกหมู่บ้านที่ต้องการจัดการก่อน
+						</p>
+						<Link
+							href="/village"
+							className="ml-auto flex-shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 transition-colors"
+						>
+							ไปเลือกหมู่บ้าน →
+						</Link>
+					</div>
+				)}
+
 				<div className="flex items-center justify-between mb-4">
-					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-						รหัสครัวเรือน (HouseHold)
-					</h3>
+					<div>
+						<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+							รหัสครัวเรือน (HouseHold)
+						</h3>
+						{village && (
+							<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+								{village.villageName}{village.moo ? ` หมู่ ${village.moo}` : ""}
+							</p>
+						)}
+					</div>
 
 					<div className="flex items-center gap-2">
 						<input
@@ -159,26 +190,14 @@ export default function HouseHold() {
 							onChange={(e) => setSearch(e.target.value)}
 							className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
 						/>
-						{/* ปุ่มลบที่เลือก */}
 						{canDelete("/household") && (
 						<button
 							onClick={handleDeleteSelected}
 							disabled={selectedIds.length === 0 || loading}
 							className="flex items-center gap-2 rounded-full border border-red-600 bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								strokeWidth="1.5"
-								stroke="currentColor"
-								className="size-5"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-								/>
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
+								<path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
 							</svg>
 							ลบที่เลือก{selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
 						</button>
@@ -189,19 +208,8 @@ export default function HouseHold() {
 							href="/household/add"
 							className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								strokeWidth="1.5"
-								stroke="currentColor"
-								className="size-5"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-								/>
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
 							</svg>
 							Add
 						</a>
@@ -215,16 +223,9 @@ export default function HouseHold() {
 							<Table>
 								<TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
 									<TableRow>
-										{/* คอลัมน์ checkbox เลือกทั้งหมด */}
-										<TableCell
-											isHeader
-											className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400"
-										>
+										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">
 											<div className="flex items-center justify-center">
-												<Checkbox
-													checked={isAllSelected}
-													onChange={toggleSelectAll}
-												/>
+												<Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
 											</div>
 										</TableCell>
 										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ID</TableCell>
@@ -246,14 +247,11 @@ export default function HouseHold() {
 												className={`cursor-pointer ${isSelected ? "bg-red-50 dark:bg-red-500/10" : "hover:bg-gray-50 dark:hover:bg-white/[0.03]"}`}
 												onDoubleClick={() => router.push(`/household/detail?id=${order.householdId}`)}
 											>
-												{/* checkbox ของแต่ละแถว */}
 												<TableCell className="px-4 py-3 text-center">
 													<div className="flex items-center justify-center">
 														<Checkbox
 															checked={isSelected}
-															onChange={(checked) =>
-																toggleSelectOne(order.householdId, checked)
-															}
+															onChange={(checked) => toggleSelectOne(order.householdId, checked)}
 														/>
 													</div>
 												</TableCell>
@@ -290,15 +288,15 @@ export default function HouseHold() {
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													{order.remark}
 												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+												<TableCell className="px-4 py-3 text-center">
 													<div className="flex items-center justify-center gap-2">
 														{canEdit("/household") && (
 														<a
 															href={`/household/edit?id=${order.householdId}`}
-															className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
+															className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
 														>
-															<svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
+															<svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+																<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" />
 															</svg>
 														</a>
 														)}
@@ -311,7 +309,7 @@ export default function HouseHold() {
 									{filtered.length === 0 && (
 										<TableRow>
 											<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
-												ไม่มีข้อมูลครัวเรือน
+												ไม่พบข้อมูลครัวเรือน
 											</TableCell>
 										</TableRow>
 									)}
@@ -320,6 +318,7 @@ export default function HouseHold() {
 						</div>
 					</div>
 				</div>
+
 			</ComponentCard>
 		</>
 		</PermissionGuard>

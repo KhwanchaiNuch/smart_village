@@ -11,7 +11,7 @@ import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import DatePicker from "@/components/form/date-picker";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"; 
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { useVillage } from "@/context/VillageContext";
@@ -37,6 +37,7 @@ const sevLabels: Record<string, string> = {
 };
 
 function CommunityIssueEditContent() {
+  const router = useRouter(); 
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const { village, loaded } = useVillage();
@@ -44,12 +45,15 @@ function CommunityIssueEditContent() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
+  
+  // 🛠️ 1. เพิ่ม State สำหรับเก็บ ID หมู่บ้านดั้งเดิมที่ผูกอยู่กับปัญหานี้
+  const [originVillageId, setOriginVillageId] = useState<number | null>(null);
 
   // รูปภาพ
-  const [imageFile, setImageFile]       = useState<File | null>(null);   // ไฟล์ใหม่ (ยังไม่ upload)
-  const [imagePreview, setImagePreview] = useState<string>("");          // URL สำหรับแสดง
-  const [imageRemoved, setImageRemoved] = useState(false);               // user กด ✕ ไปแล้ว
-  const [objectUrl, setObjectUrl]       = useState<string>("");          // track object URL เพื่อ revoke
+  const [imageFile, setImageFile]       = useState<File | null>(null);   
+  const [imagePreview, setImagePreview] = useState<string>("");          
+  const [imageRemoved, setImageRemoved] = useState(false);               
+  const [objectUrl, setObjectUrl]       = useState<string>("");          
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -95,6 +99,9 @@ function CommunityIssueEditContent() {
           dueDate: d.dueDate || "",
           remark: d.remark || "",
         });
+        
+        // 🛠️ 2. จำค่า villageId เดิมของปัญหานี้ไว้ใช้ตอนส่งอัปเดตฟอร์ม
+        if (d.villageId) setOriginVillageId(d.villageId);
         if (d.imageUrl) setImagePreview(imgUrl(d.imageUrl));
       })
       .catch((err: any) =>
@@ -102,7 +109,6 @@ function CommunityIssueEditContent() {
       );
   }, [id, fetchHouseholds]);
 
-  // cleanup object URL เมื่อ unmount
   useEffect(() => () => { if (objectUrl) URL.revokeObjectURL(objectUrl); }, [objectUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -114,20 +120,22 @@ function CommunityIssueEditContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // revoke URL เก่าถ้ามี
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     const url = URL.createObjectURL(file);
     setObjectUrl(url);
     setImageFile(file);
     setImagePreview(url);
-    setImageRemoved(false);
+    setImageRemoved(false); 
   };
 
   const clearImage = () => {
-    if (objectUrl) { URL.revokeObjectURL(objectUrl); setObjectUrl(""); }
+    if (objectUrl) { 
+      URL.revokeObjectURL(objectUrl); 
+      setObjectUrl(""); 
+    }
     setImageFile(null);
-    setImagePreview("");
-    setImageRemoved(true);
+    setImagePreview("");     
+    setImageRemoved(true);   
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -146,7 +154,7 @@ function CommunityIssueEditContent() {
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append("id",        form.id);
+      fd.append("id",         form.id);
       fd.append("area",      form.area);
       fd.append("issueType", form.issueType);
       fd.append("severity",  form.severity);
@@ -157,16 +165,21 @@ function CommunityIssueEditContent() {
       if (form.budgetEstimate)fd.append("budgetEstimate",form.budgetEstimate);
       if (form.dueDate)       fd.append("dueDate",       form.dueDate);
       if (form.remark)        fd.append("remark",        form.remark);
-      // villageId สำหรับ backend สร้าง folder path
-      const vid = village?.villageId;
-      if (vid) fd.append("villageId", String(vid));
-      // ไฟล์ใหม่ หรือ flag ลบรูป
-      if (imageFile)        fd.append("file", imageFile);
-      else if (imageRemoved) fd.append("removeImage", "true");
+      
+      // 🛠️ 3. แก้ไข: เลือกใช้ villageId จาก Context ก่อน ถ้าไม่มีให้สลับไปใช้ค่าเดิมของมัน (ป้องกันสิทธิ์พัง)
+      const finalVillageId = village?.villageId ?? originVillageId;
+      if (finalVillageId) fd.append("villageId", String(finalVillageId));
+      
+      if (imageFile) {
+        fd.append("file", imageFile);
+      } else if (imageRemoved) {
+        fd.append("removeImage", "true"); 
+      }
 
       await axios.post("/community-issues/edit", fd);
       await Swal.fire({ icon: "success", title: "อัปเดตสำเร็จ", timer: 1800, showConfirmButton: false });
-      window.location.href = "/communityissue";
+      
+      router.push("/communityissue");
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "อัปเดตไม่สำเร็จ", text: err?.response?.data?.message || err?.message });
     } finally {
@@ -184,6 +197,12 @@ function CommunityIssueEditContent() {
   return (
     <ComponentCard title="แก้ไขปัญหาชุมชน (Edit Community Issue)">
       <input type="hidden" value={form.id} />
+
+      {(village || originVillageId) && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 px-4 py-2.5 text-xs text-blue-700 dark:text-blue-300 font-medium">
+          📍 ขอบเขตพื้นที่ปัญหาปัจจุบัน: <strong>{village?.villageName || `รหัสหมู่บ้าน #${originVillageId}`} {village?.moo ? `(หมู่ ${village.moo})` : ""}</strong>
+        </div>
+      )}
 
       {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -206,7 +225,7 @@ function CommunityIssueEditContent() {
       </div>
 
       {/* Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
         <div>
           <Label>ระดับความรุนแรง <span className="text-red-500">*</span></Label>
           <select name="severity" value={form.severity} onChange={handleChange} className={selectClass("severity")}>
@@ -234,7 +253,7 @@ function CommunityIssueEditContent() {
       </div>
 
       {/* Row 3 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
         <div>
           <Label>ผู้รับผิดชอบ</Label>
           <Input name="owner" value={form.owner} onChange={handleChange} type="text" placeholder="เช่น อบต., ผู้ใหญ่บ้าน" />
@@ -250,7 +269,7 @@ function CommunityIssueEditContent() {
       </div>
 
       {/* Row 4 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div>
           <Label>กำหนดแก้ไขภายใน</Label>
           <DatePicker id="dueDate" placeholder="เลือกวันกำหนดเสร็จ"
@@ -261,13 +280,13 @@ function CommunityIssueEditContent() {
       </div>
 
       {/* Remark */}
-      <div>
+      <div className="mt-4">
         <Label>หมายเหตุ / รายละเอียดเพิ่มเติม</Label>
         <TextArea value={form.remark} onChange={(v) => setForm((p) => ({ ...p, remark: v }))} rows={3} placeholder="อธิบายปัญหาเพิ่มเติม..." />
       </div>
 
       {/* Image */}
-      <div>
+      <div className="mt-4">
         <Label>รูปภาพประกอบ (ถ้ามี)</Label>
         <div
           className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-6 cursor-pointer hover:border-blue-400 transition-colors"
@@ -298,28 +317,30 @@ function CommunityIssueEditContent() {
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
       </div>
 
-      <div className="flex gap-3 mt-4">
-        <button onClick={handleSubmit} disabled={saving}
-          className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+      <div className="flex gap-3 mt-6">
+        <button type="button" onClick={handleSubmit} disabled={saving}
+          className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
-        <a href="/communityissue" className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 font-medium">
+        <button
+          type="button"
+          onClick={() => router.push("/communityissue")}
+          className="px-5 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 font-medium text-sm"
+        >
           ยกเลิก
-        </a>
+        </button>
       </div>
     </ComponentCard>
   );
-
 }
 
 export default function CommunityIssueEdit() {
   return (
-        <PermissionGuard menuUrl="/communityissue" action="edit">
-<Suspense fallback={<div>Loading...</div>}>
-      <CommunityIssueEditContent />
-    </Suspense>
+    <PermissionGuard menuUrl="/communityissue" action="edit">
+      <Suspense fallback={<div>Loading...</div>}>
+        <CommunityIssueEditContent />
+      </Suspense>
     </PermissionGuard>
-
   );
 }

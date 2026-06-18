@@ -51,7 +51,7 @@ function formatBudget(n: number | null): string {
 }
 
 export default function CommunityIssuePage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [issues, setIssues] = useState<CommunityIssue[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -66,6 +66,9 @@ export default function CommunityIssuePage() {
       const vid = village?.villageId;
       const res = await axios.get<CommunityIssue[]>(vid ? `/community-issues?villageId=${vid}` : "/community-issues");
       const sorted = [...res.data].sort((a, b) => {
+        // primary: severity DESC (สูงก่อน)
+        if (b.severity !== a.severity) return b.severity - a.severity;
+        // secondary: dueDate ASC (กำหนดใกล้ก่อน)
         if (!a.dueDate && !b.dueDate) return 0;
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
@@ -80,8 +83,9 @@ export default function CommunityIssuePage() {
 
   useEffect(() => {
     document.title = "Smart Village | Community Issues";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   // stats
   const total = issues.length;

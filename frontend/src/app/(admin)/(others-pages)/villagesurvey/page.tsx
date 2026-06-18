@@ -32,7 +32,7 @@ const PRIORITY_CONFIG: Record<number, { label: string; bg: string; text: string 
 };
 
 export default function VillageSurveyPage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [surveys, setSurveys] = useState<VillageNeedSurvey[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -62,8 +62,9 @@ export default function VillageSurveyPage() {
 
   useEffect(() => {
     document.title = "Smart Village | ความต้องการชุมชน";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   const personMap = Object.fromEntries(persons.map((p) => [p.personId, `${p.firstName} ${p.lastName}`]));
   const householdMap = Object.fromEntries(households.map((h) => [h.householdId, `บ้านเลขที่ ${h.houseNo || "-"}${h.moo ? ` หมู่ ${h.moo}` : ""}`]));

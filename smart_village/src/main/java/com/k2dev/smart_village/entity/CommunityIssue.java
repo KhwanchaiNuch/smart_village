@@ -1,6 +1,7 @@
 
 package com.k2dev.smart_village.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -40,6 +41,7 @@ public class CommunityIssue {
     @Column(precision = 12, scale = 2)
     private BigDecimal budgetEstimate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
 
     @Column(columnDefinition = "TEXT")

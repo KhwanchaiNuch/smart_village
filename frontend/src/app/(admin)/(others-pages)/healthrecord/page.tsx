@@ -29,7 +29,7 @@ interface Person {
 }
 
 export default function HealthRecordPage() {
-	const { village } = useVillage();
+	const { village, loaded } = useVillage();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const [tableData, setData] = useState<HealthRecord[]>([]);
 	const [personMap, setPersonMap] = useState<Map<number, string>>(new Map());
@@ -44,7 +44,9 @@ export default function HealthRecordPage() {
 				axios.get<HealthRecord[]>(vid ? `/health-records?villageId=${vid}` : "/health-records"),
 				axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
 			]);
-			const sorted = [...recordsRes.data].sort((a, b) => a.id - b.id);
+			const sorted = [...recordsRes.data].sort((a, b) =>
+				new Date(b.checkDate || 0).getTime() - new Date(a.checkDate || 0).getTime()
+			);
 			setData(sorted);
 			setSelectedIds([]);
 			const map = new Map<number, string>();
@@ -64,8 +66,9 @@ export default function HealthRecordPage() {
 
 	useEffect(() => {
 		document.title = "Smart Village | Health Record";
+		if (!loaded) return;
 		fetchData();
-	}, [fetchData]);
+	}, [fetchData, loaded]);
 
 	const filtered = tableData.filter((r) => {
 		const q = search.toLowerCase();

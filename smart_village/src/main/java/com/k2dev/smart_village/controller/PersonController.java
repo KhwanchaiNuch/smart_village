@@ -1,112 +1,51 @@
 package com.k2dev.smart_village.controller;
 
-import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.entity.Person;
-import com.k2dev.smart_village.repository.HouseholdRepository;
-import com.k2dev.smart_village.repository.PersonRepository;
-import com.k2dev.smart_village.security.ScopeUtil;
-import com.k2dev.smart_village.service.GeoScopeService;
+import com.k2dev.smart_village.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/persons")
 public class PersonController {
 
-    @Autowired private PersonRepository repo;
-    @Autowired private HouseholdRepository householdRepo;
-    @Autowired private GeoScopeService geoScope;
-
-    // ─── helper: ตรวจว่า household ของ person อยู่ใน village ของ VILLAGE user ────
-    private boolean householdOwned(Integer householdId) {
-        if (householdId == null) return false;
-        Household hh = householdRepo.findById(householdId).orElse(null);
-        Integer scopeId = ScopeUtil.getScopeId();
-        return hh != null && scopeId != null && scopeId.equals(hh.getVillageId());
-    }
+    @Autowired private PersonService service;
 
     @GetMapping
     public List<Person> list(@RequestParam(required = false) Integer villageId) {
-        if (ScopeUtil.isAdmin()) {
-            if (villageId != null) {
-                List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
-                        .map(Household::getHouseholdId).toList();
-                return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
-            }
-            return repo.findAll();
-        }
-        // hierarchical scope
-        List<Integer> vids = geoScope.getVillageIds();
-        if (vids == null) return repo.findAll();
-        if (vids.isEmpty()) return List.of();
-        List<Integer> hhIds = householdRepo.findByVillageIdIn(vids).stream()
-                .map(Household::getHouseholdId).toList();
-        return hhIds.isEmpty() ? List.of() : repo.findByHouseholdIdIn(hhIds);
+        return service.list(villageId);
     }
 
     @GetMapping("/by-village/{villageId}")
     public List<Person> listByVillage(@PathVariable Integer villageId) {
-        List<Integer> hhIds = householdRepo.findByVillageId(villageId).stream()
-                .map(Household::getHouseholdId).toList();
-        return repo.findByHouseholdIdIn(hhIds);
+        return service.listByVillage(villageId);
     }
 
     @GetMapping("/by-household/{householdId}")
     public List<Person> listByHousehold(@PathVariable Integer householdId) {
-        return repo.findByHouseholdId(householdId);
+        return service.listByHousehold(householdId);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Integer id) {
-        return repo.findById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return service.get(id);
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody Person p) {
-        try {
-            p.setPersonId(null);
-            if (ScopeUtil.isVillageLevel() && !householdOwned(p.getHouseholdId()))
-                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
-            return ResponseEntity.ok(repo.save(p));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการบันทึก"));
-        }
+        return service.add(p);
     }
 
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody Person p) {
-        try {
-            if (p.getPersonId() == null)
-                return ResponseEntity.badRequest().body(Map.of("message", "ต้องระบุ personId"));
-            if (ScopeUtil.isVillageLevel()) {
-                Person existing = repo.findById(p.getPersonId()).orElse(null);
-                if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบบุคคลนี้"));
-                if (!householdOwned(existing.getHouseholdId()))
-                    return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลของหมู่บ้านอื่น"));
-            }
-            return ResponseEntity.ok(repo.save(p));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "เกิดข้อผิดพลาดในการแก้ไข"));
-        }
+        return service.edit(p);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
-        try {
-            Person existing = repo.findById(id).orElse(null);
-            if (existing == null) return ResponseEntity.notFound().build();
-            if (ScopeUtil.isVillageLevel() && !householdOwned(existing.getHouseholdId()))
-                return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
-            repo.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "ลบไม่สำเร็จ อาจมีข้อมูลที่เชื่อมกับบุคคลนี้อยู่"));
-        }
+        return service.delete(id);
     }
 }

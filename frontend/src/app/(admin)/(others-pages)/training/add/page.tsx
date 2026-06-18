@@ -5,8 +5,10 @@ import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import DatePicker from "@/components/form/date-picker";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
+import { useVillage } from "@/context/VillageContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
@@ -16,11 +18,12 @@ interface Village { villageId: number; villageName: string; moo: string | null; 
 const TRAINING_TYPES = ["อาชีพ", "สุขภาพ", "การเงิน", "สิ่งแวดล้อม", "เทคโนโลยี", "อื่น ๆ"];
 
 export default function TrainingAdd() {
+  const router = useRouter();
+  const { village, loaded } = useVillage();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<string | null>(null);
-  const [villages, setVillages] = useState<Village[]>([]);
-  const [adminVillageId, setAdminVillageId] = useState<string>("");
+
   const [form, setForm] = useState({
     trainingName: "",
     trainingType: "",
@@ -35,9 +38,6 @@ export default function TrainingAdd() {
     document.title = "Smart Village | Training Add";
     const r = localStorage.getItem("role");
     setRole(r);
-    if (r !== "VILLAGE") {
-      axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
-    }
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -55,15 +55,31 @@ export default function TrainingAdd() {
     return Object.keys(e).length === 0;
   };
 
+  const resolveVillageId = (): number | null => {
+    if (role === "VILLAGE") {
+      const scopeId = localStorage.getItem("scopeId");
+      return scopeId ? Number(scopeId) : null;
+    }
+    return village ? village.villageId : null;
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
+
+    const targetVillageId = resolveVillageId();
+    if (!targetVillageId) {
+      Swal.fire({ 
+        icon: "warning", 
+        title: "กรุณาเลือกหมู่บ้าน", 
+        text: "ไม่พบข้อมูลขอบเขตหมู่บ้าน โปรดเลือกหมู่บ้านจากเมนูด้านบนก่อนทำรายการ" 
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const scopeId = localStorage.getItem("scopeId");
       await axios.post("/training-events/add", {
-        villageId: role === "VILLAGE"
-          ? (scopeId ? Number(scopeId) : null)
-          : (adminVillageId ? Number(adminVillageId) : null),
+        villageId: targetVillageId,
         trainingName: form.trainingName,
         trainingType: form.trainingType,
         organizer: form.organizer || null,
@@ -72,8 +88,9 @@ export default function TrainingAdd() {
         location: form.location || null,
         description: form.description || null,
       });
+
       await Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1800, showConfirmButton: false });
-      window.location.href = "/training";
+      router.push("/training");
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: err?.response?.data?.message || err?.message });
     } finally {
@@ -81,6 +98,7 @@ export default function TrainingAdd() {
     }
   };
 
+  // 🛠️ ฟังก์ชัน selectClass ที่ระบบต้องการเรียกใช้งาน
   const selectClass = (field: string) =>
     `mt-1 w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-1 bg-white dark:bg-gray-800 dark:text-gray-300 ${
       errors[field]
@@ -92,34 +110,28 @@ export default function TrainingAdd() {
     <PermissionGuard menuUrl="/training" action="add">
     <ComponentCard title="เพิ่มโครงการอบรม (Add Training Event)">
 
-      {/* Village selector */}
       {role === "VILLAGE" ? (
-        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 text-sm text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-blue-400 flex-shrink-0">
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700 flex items-center gap-2 text-sm text-green-700 dark:text-green-400 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-green-500 flex-shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+          </svg>
+          บันทึกโครงการในขอบเขตพื้นที่หมู่บ้านของคุณโดยอัตโนมัติ (ตามสิทธิ์ผู้ใช้งาน)
+        </div>
+      ) : (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-blue-500 flex-shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
           </svg>
-          บันทึกในหมู่บ้านของคุณโดยอัตโนมัติ
-        </div>
-      ) : (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-          <Label>หมู่บ้านที่จัดอบรม</Label>
-          <select
-            value={adminVillageId}
-            onChange={e => setAdminVillageId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">-- ไม่ระบุหมู่บ้าน --</option>
-            {villages.map(v => (
-              <option key={v.villageId} value={v.villageId}>
-                {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
-              </option>
-            ))}
-          </select>
+          {village ? (
+            <span>📍 กำลังเพิ่มโครงการอบรมในขอบเขต: <strong>{village.villageName} {village.moo ? `(หมู่ ${village.moo})` : ""}</strong></span>
+          ) : (
+            <span className="text-red-500">⚠️ กรุณาเลือกหมู่บ้านที่แถบเมนูด้านบนก่อนทำรายการเพิ่มข้อมูล</span>
+          )}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div>
           <Label>ชื่อโครงการ/อบรม <span className="text-red-500">*</span></Label>
           <Input
@@ -143,7 +155,7 @@ export default function TrainingAdd() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div>
           <Label>หน่วยงานที่จัด</Label>
           <Input name="organizer" value={form.organizer} onChange={handleChange} type="text" placeholder="เช่น อบต., พัฒนาชุมชน" />
@@ -154,8 +166,7 @@ export default function TrainingAdd() {
         </div>
       </div>
 
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div>
           <Label>วันเริ่มต้น <span className="text-red-500">*</span></Label>
           <DatePicker
@@ -180,7 +191,7 @@ export default function TrainingAdd() {
         </div>
       </div>
 
-      <div>
+      <div className="mt-4">
         <Label>รายละเอียด</Label>
         <TextArea
           value={form.description}
@@ -190,10 +201,10 @@ export default function TrainingAdd() {
         />
       </div>
 
-      <div className="flex justify-end gap-3 mt-4">
+      <div className="flex justify-end gap-3 mt-6">
         <button
           type="button"
-          onClick={() => window.history.back()}
+          onClick={() => router.push("/training")}
           className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           ยกเลิก
@@ -201,8 +212,8 @@ export default function TrainingAdd() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={saving}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          disabled={saving || (!village && role !== "VILLAGE")}
+          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>

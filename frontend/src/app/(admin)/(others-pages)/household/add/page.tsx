@@ -4,36 +4,37 @@ import Input from '@/components/form/input/InputField';
 import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-import PermissionGuard from "@/components/common/PermissionGuard";
+import { useVillage } from "@/context/VillageContext";
 
 interface Province { provinceId: number; nameTh: string; }
 interface Amphur   { amphurId: number; nameTh: string; provinceId: number; }
 interface Tambon   { tambonId: number; nameTh: string; amphurId: number; zipcode: string | null; }
-interface Village  { villageId: number; villageName: string; moo: string | null; }
+interface VillageOption  { villageId: number; villageName: string; moo: string | null; }
 
 const DDL = "mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500";
 
 export default function HouseHoldAdd() {
   const router = useRouter();
+  const { village: activeVillage } = useVillage();
   const [role, setRole] = useState<string | null>(null);
   const [scopeId, setScopeId] = useState<number | null>(null);
 
-  // cascade state
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [amphurs,   setAmphurs]   = useState<Amphur[]>([]);
   const [tambons,   setTambons]   = useState<Tambon[]>([]);
-  const [villages,  setVillages]  = useState<Village[]>([]);
+  const [villages,  setVillages]  = useState<VillageOption[]>([]);
 
   const [selProvince, setSelProvince] = useState<string>("");
   const [selAmphur,   setSelAmphur]   = useState<string>("");
   const [selTambon,   setSelTambon]   = useState<string>("");
   const [selVillage,  setSelVillage]  = useState<string>("");
-  const [autoMoo,     setAutoMoo]     = useState<string>("");   // auto-filled from village
-  const [autoZipCode, setAutoZipCode] = useState<string>("");  // auto-filled from tambon
+  const [autoMoo,     setAutoMoo]     = useState<string>("");
+  const [autoZipCode, setAutoZipCode] = useState<string>("");
 
   const [form, setForm] = useState({
     house_no: "",
@@ -49,7 +50,6 @@ export default function HouseHoldAdd() {
   });
   const [loading, setLoading] = useState(false);
 
-  // ── initial load ──────────────────────────────────────────────────────
   useEffect(() => {
     document.title = "Smart Village | House Hold Add";
     const r   = localStorage.getItem("role");
@@ -58,38 +58,32 @@ export default function HouseHoldAdd() {
     const sidNum = sid && sid !== "null" && sid !== "" ? Number(sid) : null;
     setScopeId(sidNum);
 
+    if (activeVillage) return;
+
     if (r === "ADMIN") {
-      // ADMIN: load all provinces
       axios.get<Province[]>("/provinces").then(res => setProvinces(res.data)).catch(() => {});
     } else if (r === "PROVINCE" && sidNum) {
-      // PROVINCE: pre-load amphurs for their province
       axios.get<Amphur[]>(`/amphurs?provinceId=${sidNum}`).then(res => setAmphurs(res.data)).catch(() => {});
     } else if (r === "AMPHUR" && sidNum) {
-      // AMPHUR: pre-load tambons for their amphur
       axios.get<Tambon[]>(`/tambons?amphurId=${sidNum}`).then(res => setTambons(res.data)).catch(() => {});
     } else if (r === "TAMBON" && sidNum) {
-      // TAMBON: pre-load villages for their tambon
-      axios.get<Village[]>(`/villages?tambonId=${sidNum}`).then(res => setVillages(res.data)).catch(() => {});
+      axios.get<VillageOption[]>(`/villages?tambonId=${sidNum}`).then(res => setVillages(res.data)).catch(() => {});
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── cascade handlers ──────────────────────────────────────────────────
   const onProvinceChange = (pid: string) => {
     setSelProvince(pid);
     setSelAmphur(""); setSelTambon(""); setSelVillage(""); setAutoMoo(""); setAutoZipCode("");
     setAmphurs([]); setTambons([]); setVillages([]);
-    if (pid) {
-      axios.get<Amphur[]>(`/amphurs?provinceId=${pid}`).then(res => setAmphurs(res.data)).catch(() => {});
-    }
+    if (pid) axios.get<Amphur[]>(`/amphurs?provinceId=${pid}`).then(res => setAmphurs(res.data)).catch(() => {});
   };
 
   const onAmphurChange = (aid: string) => {
     setSelAmphur(aid);
     setSelTambon(""); setSelVillage(""); setAutoMoo(""); setAutoZipCode("");
     setTambons([]); setVillages([]);
-    if (aid) {
-      axios.get<Tambon[]>(`/tambons?amphurId=${aid}`).then(res => setTambons(res.data)).catch(() => {});
-    }
+    if (aid) axios.get<Tambon[]>(`/tambons?amphurId=${aid}`).then(res => setTambons(res.data)).catch(() => {});
   };
 
   const onTambonChange = (tid: string) => {
@@ -98,19 +92,10 @@ export default function HouseHoldAdd() {
     setVillages([]);
     const t = tambons.find(t => String(t.tambonId) === tid);
     setAutoZipCode(t?.zipcode ?? "");
-    if (tid) {
-      axios.get<Village[]>(`/villages?tambonId=${tid}`).then(res => setVillages(res.data)).catch(() => {});
-    }
+    if (tid) axios.get<VillageOption[]>(`/villages?tambonId=${tid}`).then(res => setVillages(res.data)).catch(() => {});
   };
 
   const onVillageChange = (vid: string) => {
-    setSelVillage(vid);
-    const v = villages.find(v => String(v.villageId) === vid);
-    setAutoMoo(v?.moo ?? "");
-  };
-
-  // ── สำหรับ TAMBON ที่ load villages ล่วงหน้าแล้ว ─────────────────────
-  const onTambonVillageChange = (vid: string) => {
     setSelVillage(vid);
     const v = villages.find(v => String(v.villageId) === vid);
     setAutoMoo(v?.moo ?? "");
@@ -125,22 +110,33 @@ export default function HouseHoldAdd() {
     setForm(prev => ({ ...prev, remark: value }));
   };
 
-  // ── validate + submit ─────────────────────────────────────────────────
+  const handleRadioChange = (name: string, value: any) => {
+    const rawValue = (value && value.target) ? value.target.value : value;
+    const boolValue = rawValue === "true" || rawValue === true;
+    setForm(prev => ({ ...prev, [name]: boolValue }));
+  };
+
+  const resolveVillageId = (): number | null => {
+    if (activeVillage)         return activeVillage.villageId;
+    if (role === "VILLAGE")    return scopeId;
+    if (selVillage)            return Number(selVillage);
+    return null;
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
-
-      // non-VILLAGE ต้องเลือก village
-      if (role !== "VILLAGE" && !selVillage) {
+      const villageId = resolveVillageId();
+      if (!villageId) {
         Swal.fire({ icon: "warning", title: "กรุณาเลือกหมู่บ้าน", text: "กรุณาระบุหมู่บ้านสำหรับครัวเรือนนี้" });
         return;
       }
 
       const householdPayload = {
         householdId: null,
-        villageId: role !== "VILLAGE" ? Number(selVillage) : scopeId,
+        villageId,
         houseNo: form.house_no,
-        moo: autoMoo || null,
+        moo: (activeVillage?.moo ?? autoMoo) || null,
         houseRegistrationStatus: form.house_registration_status,
         houseRegistrationType: form.house_registration_type,
         gpsLat: form.gps_lat ? parseFloat(form.gps_lat) : null,
@@ -174,10 +170,25 @@ export default function HouseHoldAdd() {
     }
   };
 
-  // ── helpers ───────────────────────────────────────────────────────────
-  const renderCascade = () => {
+  const renderLocationSection = () => {
+    if (activeVillage) {
+      return (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10 px-4 py-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+          <div className="min-w-0">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">เพิ่มครัวเรือนใน</p>
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+              {activeVillage.villageName}{activeVillage.moo ? ` หมู่ ${activeVillage.moo}` : ""}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (role === "VILLAGE") {
-      // VILLAGE: แสดง banner เท่านั้น
       return scopeId ? (
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
           <p className="text-sm text-green-700 dark:text-green-400">
@@ -188,11 +199,9 @@ export default function HouseHoldAdd() {
     }
 
     return (
-      <PermissionGuard menuUrl="/household" action="add">
       <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700 space-y-3">
         <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">เลือกที่ตั้งครัวเรือน</p>
 
-        {/* Province — ADMIN only */}
         {role === "ADMIN" && (
           <div>
             <Label>จังหวัด <span className="text-red-500">*</span></Label>
@@ -203,62 +212,43 @@ export default function HouseHoldAdd() {
           </div>
         )}
 
-        {/* Amphur — ADMIN + PROVINCE */}
         {(role === "ADMIN" || role === "PROVINCE") && (
           <div>
             <Label>อำเภอ <span className="text-red-500">*</span></Label>
-            <select
-              value={selAmphur}
-              onChange={e => onAmphurChange(e.target.value)}
-              disabled={amphurs.length === 0}
-              className={DDL}
-            >
+            <select value={selAmphur} onChange={e => onAmphurChange(e.target.value)} disabled={amphurs.length === 0} className={DDL}>
               <option value="">-- เลือกอำเภอ --</option>
               {amphurs.map(a => <option key={a.amphurId} value={a.amphurId}>{a.nameTh}</option>)}
             </select>
           </div>
         )}
 
-        {/* Tambon — ADMIN + PROVINCE + AMPHUR */}
         {(role === "ADMIN" || role === "PROVINCE" || role === "AMPHUR") && (
           <div>
             <Label>ตำบล <span className="text-red-500">*</span></Label>
-            <select
-              value={selTambon}
-              onChange={e => onTambonChange(e.target.value)}
-              disabled={tambons.length === 0}
-              className={DDL}
-            >
+            <select value={selTambon} onChange={e => onTambonChange(e.target.value)} disabled={tambons.length === 0} className={DDL}>
               <option value="">-- เลือกตำบล --</option>
               {tambons.map(t => <option key={t.tambonId} value={t.tambonId}>{t.nameTh}</option>)}
             </select>
           </div>
         )}
 
-        {/* Village — all non-VILLAGE */}
-        <div>
-          <Label>หมู่บ้าน <span className="text-red-500">*</span></Label>
-          <select
-            value={selVillage}
-            onChange={e => role === "TAMBON" ? onTambonVillageChange(e.target.value) : onVillageChange(e.target.value)}
-            disabled={villages.length === 0}
-            className={DDL}
-          >
-            <option value="">-- เลือกหมู่บ้าน --</option>
-            {villages.map(v => (
-              <option key={v.villageId} value={v.villageId}>
-                {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        {role !== "VILLAGE" && (
+          <div>
+            <Label>หมู่บ้าน <span className="text-red-500">*</span></Label>
+            <select value={selVillage} onChange={e => onVillageChange(e.target.value)} disabled={villages.length === 0} className={DDL}>
+              <option value="">-- เลือกหมู่บ้าน --</option>
+              {villages.map(v => (
+                <option key={v.villageId} value={v.villageId}>
+                  {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        {/* หมู่ที่ auto-fill */}
         {autoMoo && (
           <p className="text-xs text-blue-600 dark:text-blue-400">หมู่ที่: <strong>{autoMoo}</strong> (ดึงจากหมู่บ้านอัตโนมัติ)</p>
         )}
-
-        {/* รหัสไปรษณีย์ auto-fill จากตำบล */}
         {autoZipCode && (
           <div className="flex items-center gap-2 text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg px-3 py-2">
             <span>📮</span>
@@ -273,15 +263,13 @@ export default function HouseHoldAdd() {
     <>
       <ComponentCard title="รหัสครัวเรือน ( HouseHold )">
 
-        {/* Cascade location selection */}
-        {renderCascade()}
+        {renderLocationSection()}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label>เลขที่บ้าน</Label>
             <Input name="house_no" value={form.house_no} onChange={handleChange} type="text" placeholder="เช่น 123/4" />
           </div>
-          {/* หมู่ที่ถูกลบออก — auto-fill จากหมู่บ้านที่เลือก */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -304,11 +292,11 @@ export default function HouseHoldAdd() {
             <div className="flex gap-6">
               <Radio id="reg-yes" name="house_registration_status" value="true"
                 checked={form.house_registration_status === true}
-                onChange={(value) => setForm(prev => ({ ...prev, house_registration_status: value === "true" }))}
+                onChange={(val) => handleRadioChange("house_registration_status", val)}
                 label="มี ( Yes )" />
               <Radio id="reg-no" name="house_registration_status" value="false"
                 checked={form.house_registration_status === false}
-                onChange={(value) => setForm(prev => ({ ...prev, house_registration_status: value === "true" }))}
+                onChange={(val) => handleRadioChange("house_registration_status", val)}
                 label="ไม่มี ( No )" />
             </div>
           </ComponentCard>
@@ -332,11 +320,11 @@ export default function HouseHoldAdd() {
             <div className="flex gap-6">
               <Radio id="reg-yes-internet" name="internet_access" value="true"
                 checked={form.internet_access === true}
-                onChange={(value) => setForm(prev => ({ ...prev, internet_access: value === "true" }))}
+                onChange={(val) => handleRadioChange("internet_access", val)}
                 label="มี ( Yes )" />
               <Radio id="reg-no-internet" name="internet_access" value="false"
                 checked={form.internet_access === false}
-                onChange={(value) => setForm(prev => ({ ...prev, internet_access: value === "true" }))}
+                onChange={(val) => handleRadioChange("internet_access", val)}
                 label="ไม่มี ( No )" />
             </div>
           </ComponentCard>
@@ -345,11 +333,11 @@ export default function HouseHoldAdd() {
             <div className="flex gap-6">
               <Radio id="reg-yes-electricity" name="electricity_access" value="true"
                 checked={form.electricity_access === true}
-                onChange={(value) => setForm(prev => ({ ...prev, electricity_access: value === "true" }))}
+                onChange={(val) => handleRadioChange("electricity_access", val)}
                 label="มี ( Yes )" />
               <Radio id="reg-no-electricity" name="electricity_access" value="false"
                 checked={form.electricity_access === false}
-                onChange={(value) => setForm(prev => ({ ...prev, electricity_access: value === "true" }))}
+                onChange={(val) => handleRadioChange("electricity_access", val)}
                 label="ไม่มี ( No )" />
             </div>
           </ComponentCard>
@@ -379,6 +367,5 @@ export default function HouseHoldAdd() {
         </div>
       </ComponentCard>
     </>
-  </PermissionGuard>
   );
 }

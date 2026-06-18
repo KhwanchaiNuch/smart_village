@@ -163,11 +163,11 @@ function PersonEditContent() {
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					<div>
-						<Label>รหัสบุคคล (PK)</Label>
+						<Label>รหัสบุคคล</Label>
 						<Input name="person_id" value={form.person_id} onChange={handleChange} disabled />
 					</div>
 					<div>
-						<Label>รหัสครัวเรือน (FK)</Label>
+						<Label>รหัสครัวเรือน</Label>
 						<Input name="household_id" value={form.household_id} onChange={handleChange} disabled />
 					</div>
 					<div>

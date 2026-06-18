@@ -32,7 +32,7 @@ const LEVEL_CONFIG: Record<string, { bg: string; text: string }> = {
 };
 
 export default function PersonSkillPage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [skills, setSkills] = useState<PersonSkill[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -59,8 +59,9 @@ export default function PersonSkillPage() {
 
   useEffect(() => {
     document.title = "Smart Village | ทักษะบุคคล";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   const personMap = Object.fromEntries(persons.map((p) => [p.personId, `${p.firstName} ${p.lastName}`]));
 

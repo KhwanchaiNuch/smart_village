@@ -22,17 +22,17 @@ interface Person {
 }
 
 export default function Person() {
-	const { village } = useVillage();
+	const { village, loaded } = useVillage();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const [tableData, setData] = useState<Person[]>([]);
-	const [villageHouseholdIds, setVillageHouseholdIds] = useState<number[] | null>(null);
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState("");
 
 	const fetchData = useCallback(async () => {
 		try {
-			const res = await axios.get<Person[]>(`/persons`);
+			const url = village?.villageId ? `/persons?villageId=${village.villageId}` : "/persons";
+			const res = await axios.get<Person[]>(url);
 			const sorted = [...res.data].sort((a, b) => a.personId - b.personId);
 			setData(sorted);
 			setSelectedIds([]);
@@ -44,28 +44,14 @@ export default function Person() {
 				text: "ไม่สามารถดึงข้อมูลบุคคลได้ กรุณาลองใหม่อีกครั้ง",
 			});
 		}
-	}, []);
+	}, [village]);
 
 	useEffect(() => {
 		document.title = "Smart Village | Person";
+		if (!loaded) return;
 		fetchData();
-	}, [fetchData]);
-
-	// โหลดรายการ household_id ของหมู่บ้านที่ใช้งาน เพื่อกรองบุคคล
-	useEffect(() => {
-		if (!village) { setVillageHouseholdIds(null); return; }
-		axios.get<{ householdId: number; villageId: number }[]>(`/households`)
-			.then((res) => setVillageHouseholdIds(
-				res.data.filter((h) => h.villageId === village.villageId).map((h) => h.householdId)
-			))
-			.catch(() => setVillageHouseholdIds([]));
-	}, [village]);
-
-	const scoped = villageHouseholdIds
-		? tableData.filter((p) => villageHouseholdIds.includes(p.householdId))
-		: tableData;
-
-	const filtered = scoped.filter((p) => {
+	}, [fetchData, loaded]);
+	const filtered = tableData.filter((p) => {
 		const q = search.toLowerCase();
 		return (
 			String(p.personId).includes(q) ||

@@ -7,6 +7,12 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * DashboardService — ทุก method รับ List<Integer> villageIds
+ * null   = ไม่ระบุ (ADMIN ไม่เลือก)     → caller return empty
+ * empty  = ไม่มีหมู่บ้านในขอบเขต         → caller return empty
+ * [id,…] = รายการ villageId ที่อยู่ใน scope → query ด้วย IN clause
+ */
 @Service
 public class DashboardService {
 
@@ -14,9 +20,23 @@ public class DashboardService {
     private JdbcTemplate jdbc;
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /population  — scalar counts + population by year + age groups
+    // helper — สร้าง IN clause string จาก List<Integer>
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getPopulation(Integer villageId) {
+    private String in(List<Integer> ids) {
+        return ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+    }
+
+    private boolean empty(List<Integer> villageIds) {
+        return villageIds == null || villageIds.isEmpty();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // /population
+    // ─────────────────────────────────────────────────────────────────────────
+    public Map<String, Object> getPopulation(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyPopulation();
+        String inC = in(villageIds);
+
         String sqlCounts = """
                 SELECT
                   COUNT(*)                                                     AS total_persons,
@@ -29,9 +49,9 @@ public class DashboardService {
                     ) BETWEEN 0 AND 3)                                         AS children03
                 FROM person p
                 JOIN household h ON p.household_id = h.household_id
-                WHERE h.village_id = ?
-                """;
-        Map<String, Object> counts = jdbc.queryForMap(sqlCounts, villageId);
+                WHERE h.village_id IN (%s)
+                """.formatted(inC);
+        Map<String, Object> counts = jdbc.queryForMap(sqlCounts);
 
         String sqlPopByYear = """
                 WITH years AS (
@@ -47,7 +67,7 @@ public class DashboardService {
                              EXTRACT(YEAR FROM NOW())::int) AS reg_year
                   FROM person p
                   JOIN household h ON p.household_id = h.household_id
-                  WHERE h.village_id = ?
+                  WHERE h.village_id IN (%s)
                 )
                 SELECT
                   y.yr::text AS year,
@@ -55,8 +75,8 @@ public class DashboardService {
                   SUM(CASE WHEN pd.gender = 'หญิง' AND pd.reg_year <= y.yr THEN 1 ELSE 0 END) AS female
                 FROM years y CROSS JOIN pd
                 GROUP BY y.yr ORDER BY y.yr
-                """;
-        List<Map<String, Object>> popByYear = jdbc.queryForList(sqlPopByYear, villageId);
+                """.formatted(inC);
+        List<Map<String, Object>> popByYear = jdbc.queryForList(sqlPopByYear);
 
         String sqlAgeGroups = """
                 WITH ages AS (
@@ -66,7 +86,7 @@ public class DashboardService {
                     ) AS age
                   FROM person p
                   JOIN household h ON p.household_id = h.household_id
-                  WHERE h.village_id = ?
+                  WHERE h.village_id IN (%s)
                 )
                 SELECT
                   CASE
@@ -82,8 +102,8 @@ public class DashboardService {
                 FROM ages
                 WHERE age IS NOT NULL AND age BETWEEN 0 AND 120
                 GROUP BY label ORDER BY MIN(age)
-                """;
-        List<Map<String, Object>> ageGroups = jdbc.queryForList(sqlAgeGroups, villageId);
+                """.formatted(inC);
+        List<Map<String, Object>> ageGroups = jdbc.queryForList(sqlAgeGroups);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalPersons",   counts.get("total_persons"));
@@ -107,13 +127,23 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /village-index  — composite score via PostgreSQL CTE
+    // /village-index — ดัชนีหมู่บ้าน
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getVillageIndex(Integer villageId) {
+    public Map<String, Object> getVillageIndex(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyVillageIndex();
+        String inC = in(villageIds);
+
+        // 🛠️ แก้ไข: ตรวจสอบจำนวนครัวเรือนก่อน ถ้าไม่มีเลยให้แสดง 0 (ดักบัค Fallback 50-100 แต้ม)
+        String checkSql = "SELECT COUNT(*) FROM household WHERE village_id IN (" + inC + ")";
+        Integer count = jdbc.queryForObject(checkSql, Integer.class);
+        if (count == null || count == 0) {
+            return emptyVillageIndex();
+        }
+
         String sql = """
                 WITH hh AS (
                   SELECT household_id, house_condition, internet_access, electricity_access, water_system
-                  FROM household WHERE village_id = ?
+                  FROM household WHERE village_id IN (%s)
                 ),
                 ps AS (
                   SELECT p.age, p.income_per_month, p.occupation,
@@ -122,14 +152,14 @@ public class DashboardService {
                 ),
                 income_s AS (
                   SELECT CASE
-                    WHEN COUNT(*) FILTER (WHERE income_per_month IS NOT NULL AND income_per_month > 0) = 0 THEN 50.0
+                    WHEN COUNT(*) FILTER (WHERE income_per_month IS NOT NULL AND income_per_month > 0) = 0 THEN 0.0
                     ELSE LEAST(100.0, AVG(income_per_month)
                            FILTER (WHERE income_per_month IS NOT NULL AND income_per_month > 0) / 150.0)
                   END AS score FROM ps
                 ),
                 employ_s AS (
                   SELECT CASE
-                    WHEN COUNT(*) FILTER (WHERE age BETWEEN 18 AND 60) = 0 THEN 100.0
+                    WHEN COUNT(*) FILTER (WHERE age BETWEEN 18 AND 60) = 0 THEN 0.0
                     ELSE COUNT(*) FILTER (WHERE age BETWEEN 18 AND 60
                          AND occupation IS NOT NULL AND TRIM(occupation) NOT IN ('','—','-'))::numeric * 100.0
                          / NULLIF(COUNT(*) FILTER (WHERE age BETWEEN 18 AND 60), 0)
@@ -138,23 +168,23 @@ public class DashboardService {
                 house_s AS (
                   SELECT COALESCE(AVG(
                     CASE
-                      WHEN house_condition ILIKE '%ดี%' OR house_condition ILIKE '%มั่นคง%' THEN 100.0
-                      WHEN house_condition ILIKE '%ปานกลาง%' THEN 60.0
-                      WHEN house_condition ILIKE '%ทรุดโทรม%' THEN 20.0
-                      ELSE 50.0
+                      WHEN house_condition ILIKE '%%ดี%%' OR house_condition ILIKE '%%มั่นคง%%' THEN 100.0
+                      WHEN house_condition ILIKE '%%ปานกลาง%%' THEN 60.0
+                      WHEN house_condition ILIKE '%%ทรุดโทรม%%' THEN 20.0
+                      ELSE 0.0
                     END
-                  ), 50.0) AS score FROM hh
+                  ), 0.0) AS score FROM hh
                 ),
                 elder_s AS (
                   SELECT CASE
-                    WHEN COUNT(*) FILTER (WHERE is_elderly = true) = 0 THEN 100.0
+                    WHEN COUNT(*) FILTER (WHERE is_elderly = true) = 0 THEN 0.0
                     ELSE 100.0 - (COUNT(*) FILTER (WHERE is_elderly = true AND living_alone = true)::numeric * 100.0
                                   / NULLIF(COUNT(*) FILTER (WHERE is_elderly = true), 0))
                   END AS score FROM ps
                 ),
                 health_s AS (
                   SELECT CASE
-                    WHEN COUNT(*) = 0 THEN 100.0
+                    WHEN COUNT(*) = 0 THEN 0.0
                     ELSE GREATEST(0.0, 100.0 - (
                       (COUNT(*) FILTER (WHERE is_sick      = true) * 10 +
                        COUNT(*) FILTER (WHERE is_bedridden = true) * 30 +
@@ -165,14 +195,14 @@ public class DashboardService {
                 ),
                 util_s AS (
                   SELECT (
-                    COALESCE(COUNT(*) FILTER (WHERE internet_access    = true)::numeric * 100.0 / NULLIF(COUNT(*), 0), 50.0) +
+                    COALESCE(COUNT(*) FILTER (WHERE internet_access    = true)::numeric * 100.0 / NULLIF(COUNT(*), 0), 0.0) +
                     COALESCE(AVG(CASE
-                      WHEN water_system ILIKE '%ประปา%' THEN 100.0
-                      WHEN water_system ILIKE '%บาดาล%' THEN 70.0
-                      WHEN water_system ILIKE '%ฝน%'    THEN 40.0
-                      ELSE 50.0
-                    END), 50.0) +
-                    COALESCE(COUNT(*) FILTER (WHERE electricity_access = true)::numeric * 100.0 / NULLIF(COUNT(*), 0), 50.0)
+                      WHEN water_system ILIKE '%%ประปา%%' THEN 100.0
+                      WHEN water_system ILIKE '%%บาดาล%%' THEN 70.0
+                      WHEN water_system ILIKE '%%ฝน%%'    THEN 40.0
+                      ELSE 0.0
+                    END), 0.0) +
+                    COALESCE(COUNT(*) FILTER (WHERE electricity_access = true)::numeric * 100.0 / NULLIF(COUNT(*), 0), 0.0)
                   ) / 3.0 AS score FROM hh
                 )
                 SELECT
@@ -187,9 +217,9 @@ public class DashboardService {
                   ROUND(hl.score)::int AS health_score,
                   ROUND(u.score)::int  AS utilities_score
                 FROM income_s i, employ_s e, house_s h, elder_s el, health_s hl, util_s u
-                """;
+                """.formatted(inC);
         try {
-            Map<String, Object> row = jdbc.queryForMap(sql, villageId);
+            Map<String, Object> row = jdbc.queryForMap(sql);
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("total",            row.get("total"));
             result.put("incomeScore",       row.get("income_score"));
@@ -213,9 +243,12 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /actionable  — overdue home visits + stalled community issues
+    // /actionable
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getActionable(Integer villageId) {
+    public Map<String, Object> getActionable(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyActionable();
+        String inC = in(villageIds);
+
         String sqlHH = """
                 WITH target_hh AS (
                   SELECT
@@ -224,7 +257,7 @@ public class DashboardService {
                     BOOL_OR(p.is_elderly = true AND p.living_alone = true) AS has_elderly_alone
                   FROM household h
                   JOIN person p ON p.household_id = h.household_id
-                  WHERE h.village_id = ?
+                  WHERE h.village_id IN (%s)
                     AND (p.is_bedridden = true OR (p.is_elderly = true AND p.living_alone = true))
                   GROUP BY h.household_id, h.house_no, h.moo
                 ),
@@ -245,8 +278,11 @@ public class DashboardService {
                    OR lv.last_visit_date < CURRENT_DATE - INTERVAL '30 days'
                 ORDER BY days_since_visit DESC NULLS FIRST
                 LIMIT 10
-                """;
-        List<Map<String, Object>> overdueHouseholds = jdbc.queryForList(sqlHH, villageId)
+                """.formatted(inC);
+        
+        List<Map<String, Object>> overdueHouseholds = List.of();
+        try {
+            overdueHouseholds = jdbc.queryForList(sqlHH)
                 .stream().map(row -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("householdId",     row.get("household_id"));
@@ -258,6 +294,7 @@ public class DashboardService {
                     m.put("daysSinceVisit",  row.get("days_since_visit"));
                     return m;
                 }).collect(Collectors.toList());
+        } catch(Exception e) { /* safe fallback */ }
 
         String sqlIssues = """
                 WITH last_log AS (
@@ -273,17 +310,17 @@ public class DashboardService {
                   END AS days_stalled
                 FROM community_issue ci
                 LEFT JOIN last_log ll ON ll.issue_id = ci.id
-                WHERE ci.village_id = ?
+                WHERE ci.village_id IN (%s)
                   AND LOWER(TRIM(COALESCE(ci.status, '')))
-                      NOT IN ('แก้ไขแล้ว','resolved','closed','done','completed')
+                      NOT IN ('แก้แล้ว','resolved','closed','done','completed')
                   AND (
                     (ll.last_log_at IS NULL AND ci.created_at < NOW() - INTERVAL '30 days')
                     OR (ll.last_log_at IS NOT NULL AND ll.last_log_at < NOW() - INTERVAL '30 days')
                   )
                 ORDER BY days_stalled DESC NULLS FIRST
                 LIMIT 10
-                """;
-        List<Map<String, Object>> stalledIssues = jdbc.queryForList(sqlIssues, villageId)
+                """.formatted(inC);
+        List<Map<String, Object>> stalledIssues = jdbc.queryForList(sqlIssues)
                 .stream().map(row -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id",          row.get("id"));
@@ -309,9 +346,12 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /issues-summary  — issue counts + pending list (NEW)
+    // /issues-summary
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getIssuesSummary(Integer villageId) {
+    public Map<String, Object> getIssuesSummary(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyIssuesSummary();
+        String inC = in(villageIds);
+
         String sqlCounts = """
                 SELECT
                   COUNT(*) FILTER (WHERE LOWER(REGEXP_REPLACE(COALESCE(status,''), '[\\s_\\-]', '', 'g'))
@@ -322,9 +362,9 @@ public class DashboardService {
                     IN ('resolved','แก้ไขแล้ว','closed','done','completed','แก้แล้ว','เสร็จแล้ว')) AS resolved_count,
                   COUNT(*)                                                                AS total_count
                 FROM community_issue
-                WHERE village_id = ?
-                """;
-        Map<String, Object> counts = jdbc.queryForMap(sqlCounts, villageId);
+                WHERE village_id IN (%s)
+                """.formatted(inC);
+        Map<String, Object> counts = jdbc.queryForMap(sqlCounts);
 
         long openCount       = toLong(counts.get("open_count"));
         long inProgressCount = toLong(counts.get("in_progress_count"));
@@ -335,13 +375,13 @@ public class DashboardService {
         String sqlPending = """
                 SELECT id, issue_type, status, severity, area, created_at
                 FROM community_issue
-                WHERE village_id = ?
+                WHERE village_id IN (%s)
                   AND LOWER(REGEXP_REPLACE(COALESCE(status,''), '[\\s_\\-]', '', 'g'))
                       NOT IN ('resolved','แก้ไขแล้ว','closed','done','completed','แก้แล้ว','เสร็จแล้ว')
                 ORDER BY severity DESC NULLS LAST, created_at ASC
                 LIMIT 5
-                """;
-        List<Map<String, Object>> pendingList = jdbc.queryForList(sqlPending, villageId)
+                """.formatted(inC);
+        List<Map<String, Object>> pendingList = jdbc.queryForList(sqlPending)
                 .stream().map(row -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id",        row.get("id"));
@@ -372,47 +412,44 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /visit-stats  — visits this month + recent list (NEW)
+    // /visit-stats
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getVisitStats(Integer villageId) {
+    public Map<String, Object> getVisitStats(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyVisitStats();
+        String inC = in(villageIds);
+
         String sqlThisMonth = """
                 SELECT COUNT(*)::int AS cnt
                 FROM visit_log v
                 JOIN household h ON h.household_id = v.household_id::int
-                WHERE h.village_id = ?
+                WHERE h.village_id IN (%s)
                   AND v.visit_date IS NOT NULL
                   AND DATE_TRUNC('month', v.visit_date) = DATE_TRUNC('month', CURRENT_DATE)
-                """;
+                """.formatted(inC);
         Map<String, Object> thisMonth;
-        try {
-            thisMonth = jdbc.queryForMap(sqlThisMonth, villageId);
-        } catch (Exception e) {
-            thisMonth = Map.of("cnt", 0);
-        }
+        try { thisMonth = jdbc.queryForMap(sqlThisMonth); }
+        catch (Exception e) { thisMonth = Map.of("cnt", 0); }
 
         String sqlRecent = """
                 SELECT v.id, v.visit_reason, v.visitor, v.visit_date
                 FROM visit_log v
                 JOIN household h ON h.household_id = v.household_id::int
-                WHERE h.village_id = ?
+                WHERE h.village_id IN (%s)
                   AND v.visit_date IS NOT NULL
                 ORDER BY v.visit_date DESC
                 LIMIT 5
-                """;
+                """.formatted(inC);
         List<Map<String, Object>> recentVisits;
         try {
-            recentVisits = jdbc.queryForList(sqlRecent, villageId)
-                    .stream().map(row -> {
-                        Map<String, Object> m = new LinkedHashMap<>();
-                        m.put("id",          row.get("id"));
-                        m.put("visitReason", row.get("visit_reason"));
-                        m.put("visitor",     row.get("visitor"));
-                        m.put("visitDate",   row.get("visit_date"));
-                        return m;
-                    }).collect(Collectors.toList());
-        } catch (Exception e) {
-            recentVisits = List.of();
-        }
+            recentVisits = jdbc.queryForList(sqlRecent).stream().map(row -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id",          row.get("id"));
+                m.put("visitReason", row.get("visit_reason"));
+                m.put("visitor",     row.get("visitor"));
+                m.put("visitDate",   row.get("visit_date"));
+                return m;
+            }).collect(Collectors.toList());
+        } catch (Exception e) { recentVisits = List.of(); }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("visitsThisMonth", ((Number) thisMonth.get("cnt")).intValue());
@@ -428,40 +465,36 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // /income-summary  — totalPoor + income history by year (NEW)
+    // /income-summary
     // ─────────────────────────────────────────────────────────────────────────
-    public Map<String, Object> getIncomeSummary(Integer villageId) {
+    public Map<String, Object> getIncomeSummary(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyIncomeSummary();
+        String inC = in(villageIds);
+
         String sqlPoor = """
                 SELECT COUNT(*)::int AS total_poor
                 FROM household_economic he
                 JOIN household h ON h.household_id = he.household_id::int
-                WHERE h.village_id = ?
+                WHERE h.village_id IN (%s)
                   AND he.income_total_per_month IS NOT NULL
                   AND he.income_total_per_month < 3000
-                """;
+                """.formatted(inC);
         Map<String, Object> poor;
-        try {
-            poor = jdbc.queryForMap(sqlPoor, villageId);
-        } catch (Exception e) {
-            poor = Map.of("total_poor", 0);
-        }
-
+        try { poor = jdbc.queryForMap(sqlPoor); }
+        catch (Exception e) { poor = Map.of("total_poor", 0); }
         String sqlIncome = """
                 SELECT EXTRACT(YEAR FROM he.record_date)::text AS year,
                   SUM(he.income_total_per_month) AS total
                 FROM household_economic he
                 JOIN household h ON h.household_id = he.household_id::int
-                WHERE h.village_id = ?
+                WHERE h.village_id IN (%s)
                   AND he.record_date IS NOT NULL
                   AND he.income_total_per_month IS NOT NULL
                 GROUP BY year ORDER BY year
-                """;
+                """.formatted(inC);
         List<Map<String, Object>> incomeHistory;
-        try {
-            incomeHistory = jdbc.queryForList(sqlIncome, villageId);
-        } catch (Exception e) {
-            incomeHistory = List.of();
-        }
+        try { incomeHistory = jdbc.queryForList(sqlIncome); }
+        catch (Exception e) { incomeHistory = List.of(); }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalPoor",     ((Number) poor.get("total_poor")).intValue());
@@ -477,8 +510,115 @@ public class DashboardService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // helpers
+    // /health-index  — ดัชนีสุขภาพ
     // ─────────────────────────────────────────────────────────────────────────
+    public Map<String, Object> getHealthIndex(List<Integer> villageIds) {
+        if (empty(villageIds)) return emptyHealthIndex();
+        String inC = in(villageIds);
+
+        // total persons
+        String sqlTotal = """
+                SELECT COUNT(*)::int AS total
+                FROM person p
+                JOIN household h ON h.household_id = p.household_id
+                WHERE h.village_id IN (%s)
+                """.formatted(inC);
+        int totalPersons;
+        try { totalPersons = ((Number) jdbc.queryForMap(sqlTotal).get("total")).intValue(); }
+        catch (Exception e) { totalPersons = 0; }
+
+        // 🛠️ แก้ไข: ขยับด่านตรวจขึ้นมาบนสุด หากประชากรเป็น 0 ให้เคลียร์คะแนนเป็น 0 ทันที
+        if (totalPersons == 0) return emptyHealthIndex();
+
+        // sick / bedridden count
+        String sqlSick = """
+                SELECT COUNT(*)::int AS cnt
+                FROM person p
+                JOIN household h ON h.household_id = p.household_id
+                WHERE h.village_id IN (%s)
+                  AND p.is_bedridden = true
+                """.formatted(inC);
+        int sickCount;
+        try { sickCount = ((Number) jdbc.queryForMap(sqlSick).get("cnt")).intValue(); }
+        catch (Exception e) { sickCount = 0; }
+
+        // health record coverage
+        String sqlRecord = """
+                SELECT COUNT(DISTINCT p.person_id)::int AS cnt
+                FROM health_record hr
+                JOIN person p ON p.person_id = hr.person_id
+                JOIN household h ON h.household_id = p.household_id
+                WHERE h.village_id IN (%s)
+                """.formatted(inC);
+        int hrCoveredCount;
+        try { hrCoveredCount = ((Number) jdbc.queryForMap(sqlRecord).get("cnt")).intValue(); }
+        catch (Exception e) { hrCoveredCount = 0; }
+
+        // at-risk persons (elderly, bedridden, or disabled)
+        String sqlAtRisk = """
+                SELECT COUNT(*)::int AS cnt
+                FROM person p
+                JOIN household h ON h.household_id = p.household_id
+                WHERE h.village_id IN (%s)
+                  AND (p.is_bedridden = true OR p.is_disabled = true
+                       OR (p.birth_date IS NOT NULL
+                           AND EXTRACT(YEAR FROM AGE(p.birth_date)) >= 60))
+                """.formatted(inC);
+        int atRiskCount;
+        try { atRiskCount = ((Number) jdbc.queryForMap(sqlAtRisk).get("cnt")).intValue(); }
+        catch (Exception e) { atRiskCount = 0; }
+
+        // visited at-risk persons (at least 1 visit this year)
+        String sqlVisited = """
+                SELECT COUNT(DISTINCT vl.person_id)::int AS cnt
+                FROM visit_log vl
+                JOIN person p ON p.person_id = vl.person_id
+                JOIN household h ON h.household_id = p.household_id
+                WHERE h.village_id IN (%s)
+                  AND EXTRACT(YEAR FROM vl.visit_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+                  AND (p.is_bedridden = true OR p.is_disabled = true
+                       OR (p.birth_date IS NOT NULL
+                           AND EXTRACT(YEAR FROM AGE(p.birth_date)) >= 60))
+                """.formatted(inC);
+        int visitedCount;
+        try { visitedCount = ((Number) jdbc.queryForMap(sqlVisited).get("cnt")).intValue(); }
+        catch (Exception e) { visitedCount = 0; }
+
+        // ── Score components ─────────────────────────────────────────────────
+        double healthyRatio = totalPersons > 0 ? (double)(totalPersons - sickCount) / totalPersons : 1.0;
+        int sickScore   = (int) Math.round(healthyRatio * 40);
+
+        double recordRatio = totalPersons > 0 ? (double) hrCoveredCount / totalPersons : 0.0;
+        int recordScore = (int) Math.round(Math.min(recordRatio, 1.0) * 40);
+
+        double visitRatio = atRiskCount > 0 ? (double) visitedCount / atRiskCount : 0.0; // 🛠️ ปรับเป็น 0 หากไม่มีผู้เสี่ยง
+        int visitScore  = (int) Math.round(Math.min(visitRatio, 1.0) * 20);
+
+        int total = sickScore + recordScore + visitScore;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("total",        total);
+        result.put("sickScore",    sickScore);
+        result.put("recordScore",  recordScore);
+        result.put("visitScore",   visitScore);
+        result.put("totalPersons", totalPersons);
+        result.put("sickCount",    sickCount);
+        result.put("atRiskCount",  atRiskCount);
+        result.put("visitedCount", visitedCount);
+        result.put("hrCoveredCount", hrCoveredCount);
+        return result;
+    }
+
+    public Map<String, Object> emptyHealthIndex() {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("total", 0); r.put("sickScore", 0);
+        r.put("recordScore", 0); r.put("visitScore", 0);
+        r.put("totalPersons", 0); r.put("sickCount", 0);
+        r.put("atRiskCount", 0); r.put("visitedCount", 0);
+        r.put("hrCoveredCount", 0);
+        return r;
+    }
+
     private long toLong(Object v) {
         if (v == null) return 0L;
         return ((Number) v).longValue();

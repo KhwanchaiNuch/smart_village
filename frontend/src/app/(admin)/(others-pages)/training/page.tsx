@@ -26,7 +26,7 @@ interface TrainingParticipant {
 }
 
 export default function TrainingPage() {
-  const { village } = useVillage();
+  const { village, loaded } = useVillage();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [events, setEvents] = useState<TrainingEvent[]>([]);
   const [countMap, setCountMap] = useState<Map<number, number>>(new Map());
@@ -57,8 +57,9 @@ export default function TrainingPage() {
 
   useEffect(() => {
     document.title = "Smart Village | Training";
+    if (!loaded) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, loaded]);
 
   const filtered = events.filter((e) => {
     const q = search.toLowerCase();

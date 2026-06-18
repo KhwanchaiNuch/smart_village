@@ -30,10 +30,13 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const role    = localStorage.getItem("role");
     const scopeId = localStorage.getItem("scopeId");
 
-    // PROVINCE / AMPHUR / TAMBON → ไม่ต้องเลือกหมู่บ้าน backend จัดการ scope เอง
+    // PROVINCE / AMPHUR / TAMBON → restore activeVillage จาก localStorage ถ้ามี
     const higherRoles = ["PROVINCE", "AMPHUR", "TAMBON"];
     if (role && higherRoles.includes(role)) {
-      localStorage.removeItem("activeVillage");
+      const raw = localStorage.getItem("activeVillage");
+      if (raw) {
+        try { setVillageState(JSON.parse(raw)); } catch { /* ignore */ }
+      }
       setLoaded(true);
       return;
     }

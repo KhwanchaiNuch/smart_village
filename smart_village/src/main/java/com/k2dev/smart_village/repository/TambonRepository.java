@@ -1,4 +1,3 @@
-
 package com.k2dev.smart_village.repository;
 
 import com.k2dev.smart_village.entity.Tambon;
