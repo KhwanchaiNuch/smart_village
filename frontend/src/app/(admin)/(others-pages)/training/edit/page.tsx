@@ -43,7 +43,7 @@ function TrainingEditContent() {
     // VILLAGE → ใช้ scopeId เป็น villageId เลย ไม่ต้องโหลด dropdown
     // ADMIN/PROVINCE/AMPHUR/TAMBON → โหลดรายการหมู่บ้านให้เลือก
     if (r !== "VILLAGE") {
-      axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
+      axios.get<Village[]>("/villages/scoped").then(res => setVillages(res.data)).catch(() => {});
     }
     if (!id) return;
     axios.get(`/training-events/${id}`)

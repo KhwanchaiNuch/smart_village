@@ -9,6 +9,7 @@ import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface TrainingEvent {
   id: number;
+  villageId?: number;
   trainingName: string;
   trainingType: string;
   organizer: string;
@@ -81,18 +82,22 @@ function TrainingDetailContent() {
   useEffect(() => {
     document.title = "Smart Village | Training Detail";
     if (!id) return;
-    Promise.all([
-      axios.get<TrainingEvent>(`/training-events/${id}`),
-      axios.get<Person[]>("/persons"),
-      axios.get<Participant[]>(`/training-participants/by-training/${id}`),
-    ])
-      .then(([evRes, personsRes, partRes]) => {
-        setEvent(evRes.data);
-        setPersons(personsRes.data);
-        setParticipants(partRes.data);
-        const map = new Map<number, Person>();
-        personsRes.data.forEach((p) => map.set(p.personId, p));
-        setPersonMap(map);
+    // ดึง event ก่อนเพื่อรู้ villageId แล้วค่อย filter persons ตาม village นั้น
+    axios.get<TrainingEvent>(`/training-events/${id}`)
+      .then((evRes) => {
+        const ev = evRes.data;
+        setEvent(ev);
+        const villageFilter = ev.villageId ? `?villageId=${ev.villageId}` : "";
+        return Promise.all([
+          axios.get<Person[]>(`/persons${villageFilter}`),
+          axios.get<Participant[]>(`/training-participants/by-training/${id}`),
+        ]).then(([personsRes, partRes]) => {
+          setPersons(personsRes.data);
+          setParticipants(partRes.data);
+          const map = new Map<number, Person>();
+          personsRes.data.forEach((p) => map.set(p.personId, p));
+          setPersonMap(map);
+        });
       })
       .catch((err: any) => Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message }));
   }, [id, fetchParticipants]);

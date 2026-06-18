@@ -7,7 +7,7 @@ import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
-import { useVillage } from "@/context/VillageContext";
+import { useGeoScope } from "@/context/GeoScopeContext";
 
 interface VillageResource {
   resourceId: number;
@@ -34,7 +34,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 const DEFAULT_COLOR = { bg: "bg-indigo-100", text: "text-indigo-700" };
 
 export default function VillageResourcePage() {
-  const { village, loaded } = useVillage();
+  const { selectedVillage } = useGeoScope();
   const { canAdd, canEdit, canDelete } = usePermission();
   const [resources, setResources] = useState<VillageResource[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -44,20 +44,19 @@ export default function VillageResourcePage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const vid = village?.villageId;
+      const vid = selectedVillage?.villageId;
       const res = await axios.get<VillageResource[]>(vid ? `/village-resources?villageId=${vid}` : "/village-resources");
       setResources(res.data);
       setSelectedIds([]);
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     }
-  }, [village]);
+  }, [selectedVillage]);
 
   useEffect(() => {
     document.title = "Smart Village | ทรัพยากรชุมชน";
-    if (!loaded) return;
     fetchData();
-  }, [fetchData, loaded]);
+  }, [fetchData]);
 
   const allTypes = Array.from(new Set(resources.map((r) => r.resourceType).filter(Boolean)));
 

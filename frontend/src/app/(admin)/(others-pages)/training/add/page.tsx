@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-import { useVillage } from "@/context/VillageContext";
+import { useGeoScope } from "@/context/GeoScopeContext";
 import PermissionGuard from "@/components/common/PermissionGuard";
 
 type FormErrors = Partial<Record<string, string>>;
@@ -19,7 +19,7 @@ const TRAINING_TYPES = ["อาชีพ", "สุขภาพ", "การเ�
 
 export default function TrainingAdd() {
   const router = useRouter();
-  const { village, loaded } = useVillage();
+  const { selectedVillage } = useGeoScope();
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<string | null>(null);
@@ -60,7 +60,7 @@ export default function TrainingAdd() {
       const scopeId = localStorage.getItem("scopeId");
       return scopeId ? Number(scopeId) : null;
     }
-    return village ? village.villageId : null;
+    return selectedVillage ? selectedVillage.villageId : null;
   };
 
   const handleSubmit = async () => {
@@ -123,8 +123,8 @@ export default function TrainingAdd() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
           </svg>
-          {village ? (
-            <span>📍 กำลังเพิ่มโครงการอบรมในขอบเขต: <strong>{village.villageName} {village.moo ? `(หมู่ ${village.moo})` : ""}</strong></span>
+          {selectedVillage ? (
+            <span>📍 กำลังเพิ่มโครงการอบรมในขอบเขต: <strong>{selectedVillage.villageName} {selectedVillage.moo ? `(หมู่ ${selectedVillage.moo})` : ""}</strong></span>
           ) : (
             <span className="text-red-500">⚠️ กรุณาเลือกหมู่บ้านที่แถบเมนูด้านบนก่อนทำรายการเพิ่มข้อมูล</span>
           )}
@@ -212,7 +212,7 @@ export default function TrainingAdd() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={saving || (!village && role !== "VILLAGE")}
+          disabled={saving || (!selectedVillage && role !== "VILLAGE")}
           className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}

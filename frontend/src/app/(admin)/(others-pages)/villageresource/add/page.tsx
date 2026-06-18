@@ -22,7 +22,7 @@ export default function VillageResourceAdd() {
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [villages, setVillages] = useState<Village[]>([]);
-  const [adminVillageId, setAdminVillageId] = useState<string>("");
+  const [selectedVillageId, setSelectedVillageId] = useState<string>("");
   const [form, setForm] = useState({
     villageCode: "", resourceType: "", resourceName: "",
     description: "", gpsLat: "", gpsLng: "",
@@ -32,8 +32,8 @@ export default function VillageResourceAdd() {
     document.title = "Smart Village | เพิ่มทรัพยากรชุมชน";
     const r = localStorage.getItem("role");
     setRole(r);
-    if (r === "ADMIN") {
-      axios.get<Village[]>("/villages/all").then(res => setVillages(res.data)).catch(() => {});
+    if (r !== "VILLAGE") {
+      axios.get<Village[]>("/villages/scoped").then(res => setVillages(res.data)).catch(() => {});
     }
   }, []);
 
@@ -58,7 +58,7 @@ export default function VillageResourceAdd() {
     setSaving(true);
     try {
       await axios.post("/village-resources/add", {
-        villageId: role === "ADMIN" && adminVillageId ? Number(adminVillageId) : null,
+        villageId: role !== "VILLAGE" && selectedVillageId ? Number(selectedVillageId) : null,
         villageCode: form.villageCode || null,
         resourceType: form.resourceType,
         resourceName: form.resourceName,
@@ -86,16 +86,16 @@ export default function VillageResourceAdd() {
     <PermissionGuard menuUrl="/villageresource" action="add">
     <ComponentCard title="เพิ่มทรัพยากรชุมชน">
 
-      {/* Admin: เลือกหมู่บ้าน */}
-      {role === "ADMIN" && (
+      {/* non-VILLAGE: เลือกหมู่บ้าน */}
+      {role !== "VILLAGE" && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-          <Label>หมู่บ้านที่ทรัพยากรนี้อยู่ (ถ้าไม่ระบุจะเป็นข้อมูลระดับ Admin)</Label>
+          <Label>หมู่บ้านที่ทรัพยากรนี้อยู่ <span className="text-red-500">*</span></Label>
           <select
-            value={adminVillageId}
-            onChange={e => setAdminVillageId(e.target.value)}
+            value={selectedVillageId}
+            onChange={e => setSelectedVillageId(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">-- ไม่ระบุหมู่บ้าน --</option>
+            <option value="">-- เลือกหมู่บ้าน --</option>
             {villages.map(v => (
               <option key={v.villageId} value={v.villageId}>
                 {v.villageName}{v.moo ? ` (หมู่ ${v.moo})` : ""}
