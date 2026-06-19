@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useCurrentUser, resolveAvatarSrc } from "@/context/CurrentUserContext";
+import { useCurrentUser } from "@/context/CurrentUserContext";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 
 const ROLE_LABEL: Record<string, string> = {
 	ADMIN:    "ผู้ดูแลระบบ",
@@ -21,8 +22,8 @@ export default function UserDropdown() {
 
 	const displayName = user?.fullName || user?.username || "ผู้ใช้งาน";
 	const firstName   = displayName.split(" ")[0];
-	const avatarSrc   = resolveAvatarSrc(user?.avatarUrl);
 	const roleLabel   = user ? (ROLE_LABEL[user.roleLevel] || user.roleLevel) : "";
+	const { src: avatarSrc } = useImageBase64(user?.avatarUrl, "/images/user/owner.jpg");
 
 	function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 		e.stopPropagation();

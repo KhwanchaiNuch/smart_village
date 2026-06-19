@@ -8,6 +8,7 @@ import com.k2dev.smart_village.repository.ProvinceRepository;
 import com.k2dev.smart_village.repository.TambonRepository;
 import com.k2dev.smart_village.repository.VillageRepository;
 import com.k2dev.smart_village.security.UserPrincipal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,13 @@ public class ProfileService {
 
     private static final long MAX_AVATAR_BYTES = 2L * 1024 * 1024;
     private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
-    private static final Path AVATAR_DIR = Paths.get("uploads", "avatars");
+
+    @Value("${app.upload.dir:/opt/smart_village/uploads}")
+    private String uploadDir;
+
+    private Path avatarDir() {
+        return Paths.get(uploadDir, "avatars");
+    }
 
     private final AppUserRepository userRepo;
     private final PasswordEncoder encoder;
@@ -132,10 +139,11 @@ public class ProfileService {
             return ResponseEntity.badRequest().body(Map.of("message", "นามสกุลที่อนุญาต: " + String.join(", ", ALLOWED_EXT)));
 
         String filename = u.getUserId() + "-" + UUID.randomUUID() + "." + ext;
+        Path avatarDir = avatarDir();
         try {
-            Files.createDirectories(AVATAR_DIR);
+            Files.createDirectories(avatarDir);
             deleteOldAvatar(u.getAvatarUrl());
-            Files.copy(file.getInputStream(), AVATAR_DIR.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), avatarDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             return ResponseEntity.status(500).body(Map.of("message", "อัปโหลดล้มเหลว: " + e.getMessage()));
         }
@@ -151,7 +159,7 @@ public class ProfileService {
         int slash = pathPart.lastIndexOf('/');
         String basename = slash >= 0 ? pathPart.substring(slash + 1) : pathPart;
         if (basename.isBlank() || basename.contains("..") || basename.contains("/") || basename.contains("\\")) return;
-        try { Files.deleteIfExists(AVATAR_DIR.resolve(basename)); } catch (Exception ignored) {}
+        try { Files.deleteIfExists(avatarDir().resolve(basename)); } catch (Exception ignored) {}
     }
 
     private String extractExtension(String filename, String contentType) {

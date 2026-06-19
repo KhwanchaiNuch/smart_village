@@ -616,10 +616,11 @@ export default function Dashboard() {
                   const st = (issue.status || "").toLowerCase().replace(/[\s_-]/g, "");
                   const isOpen = ["open", "เปิด", "pending", "new"].includes(st);
                   const badge = isOpen ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600";
+                  const _apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api";
                   const thumbUrl = issue.imageUrl
                     ? issue.imageUrl.startsWith("http")
                       ? issue.imageUrl
-                      : (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "") + issue.imageUrl
+                      : `${_apiBase}/image/${issue.imageUrl.replace(/^\.?\/uploads\//, "")}`
                     : null;
                   return (
                     <a key={issue.id} href={`/communityissue/detail?id=${issue.id}`} className="flex items-start gap-3 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">

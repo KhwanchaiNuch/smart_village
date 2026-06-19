@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-//import "leaflet/dist/leaflet.css";
+import "leaflet/dist/leaflet.css";
 import type { HouseholdMarker } from "./VillageMap";
 import { tierColor, tierLabel } from "./VillageMap";
 
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api";
 function resolveImg(url?: string): string | null {
   if (!url) return null;
-  return url.startsWith("http") ? url : API_ORIGIN + url;
+  if (url.startsWith("http")) return url;
+  const rel = url.replace(/^\.?\/uploads\//, "");
+  return `${API_BASE}/image/${rel}`;
 }
 
 // ── Fix default icon path ที่ webpack break ──────────────────────────────────

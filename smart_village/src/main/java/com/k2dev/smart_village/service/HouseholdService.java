@@ -5,6 +5,7 @@ import com.k2dev.smart_village.entity.Household;
 import com.k2dev.smart_village.entity.Person;
 import com.k2dev.smart_village.entity.Tambon;
 import com.k2dev.smart_village.entity.Village;
+import com.k2dev.smart_village.config.UploadProperties;
 import com.k2dev.smart_village.repository.*;
 import com.k2dev.smart_village.security.ScopeUtil;
 import jakarta.annotation.PostConstruct;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class HouseholdService {
 
     @Autowired private HouseholdRepository repo;
+    @Autowired private UploadProperties uploadProperties;
     @Autowired private GeoScopeService geoScope;
     @Autowired private HouseholdEconomicRepository economicRepo;
     @Autowired private PersonRepository personRepo;
@@ -43,7 +45,7 @@ public class HouseholdService {
     @PostConstruct
     public void initUploadDir() {
         try {
-            Files.createDirectories(Paths.get("./uploads/household").toAbsolutePath());
+            Files.createDirectories(uploadProperties.resolve("household"));
         } catch (Exception e) {
             System.err.println("[HouseholdService] Could not create uploads dir: " + e.getMessage());
         }
@@ -213,7 +215,7 @@ public class HouseholdService {
             return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์แก้ไขข้อมูลนี้"));
         if (h.getHouseImageUrl() != null) {
             try {
-                Path file = Paths.get("." + h.getHouseImageUrl()).toAbsolutePath().normalize();
+                Path file = uploadProperties.fromUrl(h.getHouseImageUrl());
                 Files.deleteIfExists(file);
             } catch (IOException ignored) {}
             h.setHouseImageUrl(null);

@@ -61,10 +61,12 @@ export const CurrentUserProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 };
 
-// ── helper: แปลง avatarUrl เป็น absolute URL (path → full url) ──
-const API_BASE_HOST = (process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080") + "/smart_village";
+// ── helper: แปลง avatarUrl → /api/image/xxx (serve ผ่าน backend) ──
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api";
 export function resolveAvatarSrc(avatarUrl: string | null | undefined): string {
   if (!avatarUrl) return "/images/user/owner.jpg";
   if (avatarUrl.startsWith("http")) return avatarUrl;
-  return API_BASE_HOST + avatarUrl;
+  // /uploads/avatars/xxx.jpg  →  {API_BASE}/image/avatars/xxx.jpg
+  const rel = avatarUrl.replace(/^\.?\/uploads\//, "");
+  return `${API_BASE}/image/${rel}`;
 }

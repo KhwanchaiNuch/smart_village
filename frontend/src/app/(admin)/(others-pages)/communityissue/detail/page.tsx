@@ -4,13 +4,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
-function imgUrl(url: string | null): string | null {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  return API_BASE + url;
-}
 import { useVillage } from "@/context/VillageContext";
+import Base64Image from "@/components/common/Base64Image";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 import PermissionGuard from "@/components/common/PermissionGuard";
 
 interface CommunityIssue {
@@ -106,12 +102,14 @@ function CommunityIssueDetailPageContent() {
   const [formStatus, setFormStatus] = useState("");
 
   const [formImageFile,    setFormImageFile]    = useState<File | null>(null);
-  const [formImagePreview, setFormImagePreview] = useState("");
+  const [formImagePreview, setFormImagePreview] = useState("");       // blob URL (ตอนเลือกไฟล์ใหม่)
+  const [formExistingImageUrl, setFormExistingImageUrl] = useState<string | null>(null); // url จาก server
   const [formImageRemoved, setFormImageRemoved] = useState(false);
   const [formObjectUrl,    setFormObjectUrl]    = useState("");
   const logFileRef = useRef<HTMLInputElement>(null);
 
   const issueFileRef = useRef<HTMLInputElement>(null);
+  const { src: formExistingImgSrc } = useImageBase64(formExistingImageUrl);
 
   useEffect(() => () => { if (formObjectUrl) URL.revokeObjectURL(formObjectUrl); }, [formObjectUrl]);
 
@@ -152,7 +150,8 @@ function CommunityIssueDetailPageContent() {
     setFormStatus(log.status || "");
     setFormImageFile(null);
     setFormObjectUrl("");
-    setFormImagePreview(log.imageUrl ? imgUrl(log.imageUrl) || "" : "");
+    setFormExistingImageUrl(log.imageUrl || null);
+    setFormImagePreview("");
     setFormImageRemoved(false);
     setShowPopup(true);
   };
@@ -172,6 +171,7 @@ function CommunityIssueDetailPageContent() {
     if (formObjectUrl) { URL.revokeObjectURL(formObjectUrl); setFormObjectUrl(""); }
     setFormImageFile(null);
     setFormImagePreview("");
+    setFormExistingImageUrl(null);
     setFormImageRemoved(true);
     if (logFileRef.current) logFileRef.current.value = "";
   };
@@ -379,8 +379,8 @@ function CommunityIssueDetailPageContent() {
                 </div>
               </div>
               {issue.imageUrl ? (
-                <div onClick={() => setLightboxUrl(imgUrl(issue.imageUrl))} className="block cursor-zoom-in">
-                  <img src={imgUrl(issue.imageUrl)!} alt="รูปภาพปัญหา" className="w-full rounded-xl object-cover max-h-48 border border-gray-200 hover:opacity-90 transition-opacity" />
+                <div className="block cursor-zoom-in">
+                  <Base64Image src={issue.imageUrl} alt="รูปภาพปัญหา" className="w-full rounded-xl object-cover max-h-48 border border-gray-200 hover:opacity-90 transition-opacity" />
                 </div>
               ) : (
                 <div onClick={() => issueFileRef.current?.click()} className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:border-blue-400 transition-colors">
@@ -427,8 +427,8 @@ function CommunityIssueDetailPageContent() {
                   <p className="text-sm font-semibold text-gray-800 dark:text-white">{log.title}</p>
                   {log.detail && <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">{log.detail}</p>}
                   {log.imageUrl && (
-                    <div onClick={() => setLightboxUrl(imgUrl(log.imageUrl))} className="block mt-3 cursor-zoom-in">
-                      <img src={imgUrl(log.imageUrl)!} alt="รูปภาพบันทึก" className="rounded-xl object-cover max-h-48 w-auto border border-gray-200 hover:opacity-90 transition-opacity" />
+                    <div className="block mt-3 cursor-zoom-in">
+                      <Base64Image src={log.imageUrl} alt="รูปภาพบันทึก" className="rounded-xl object-cover max-h-48 w-auto border border-gray-200 hover:opacity-90 transition-opacity" />
                     </div>
                   )}
                 </div>
@@ -560,9 +560,9 @@ function CommunityIssueDetailPageContent() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">รูปภาพ (ถ้ามี)</label>
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 cursor-pointer hover:border-blue-400 transition-colors"
                   onClick={() => logFileRef.current?.click()}>
-                  {formImagePreview ? (
+                  {(formImagePreview || formExistingImgSrc) ? (
                     <div className="relative w-full">
-                      <img src={formImagePreview} alt="preview" className="w-full rounded-lg object-contain max-h-36" />
+                      <img src={formImagePreview || formExistingImgSrc} alt="preview" className="w-full rounded-lg object-contain max-h-36" />
                       <button type="button"
                         onClick={(e) => { e.stopPropagation(); clearLogImage(); }}
                         className="absolute -top-2 -right-2 rounded-full bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600">X</button>

@@ -1,16 +1,11 @@
 "use client"
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
-function imgUrl(url: string | null): string {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return API_BASE + url;
-}
 import ComponentCard from "@/components/common/ComponentCard";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import DatePicker from "@/components/form/date-picker";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 import { useSearchParams, useRouter } from "next/navigation"; 
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
@@ -50,10 +45,12 @@ function CommunityIssueEditContent() {
   const [originVillageId, setOriginVillageId] = useState<number | null>(null);
 
   // รูปภาพ
-  const [imageFile, setImageFile]       = useState<File | null>(null);   
-  const [imagePreview, setImagePreview] = useState<string>("");          
-  const [imageRemoved, setImageRemoved] = useState(false);               
-  const [objectUrl, setObjectUrl]       = useState<string>("");          
+  const [imageFile, setImageFile]       = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null); // url จาก server
+  const [imagePreview, setImagePreview] = useState<string>("");          // local blob (ตอนเลือกไฟล์ใหม่)
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const [objectUrl, setObjectUrl]       = useState<string>("");
+  const { src: existingImgSrc } = useImageBase64(existingImageUrl);          
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -102,7 +99,7 @@ function CommunityIssueEditContent() {
         
         // 🛠️ 2. จำค่า villageId เดิมของปัญหานี้ไว้ใช้ตอนส่งอัปเดตฟอร์ม
         if (d.villageId) setOriginVillageId(d.villageId);
-        if (d.imageUrl) setImagePreview(imgUrl(d.imageUrl));
+        if (d.imageUrl) setExistingImageUrl(d.imageUrl);
       })
       .catch((err: any) =>
         Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message })
@@ -129,13 +126,14 @@ function CommunityIssueEditContent() {
   };
 
   const clearImage = () => {
-    if (objectUrl) { 
-      URL.revokeObjectURL(objectUrl); 
-      setObjectUrl(""); 
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      setObjectUrl("");
     }
     setImageFile(null);
-    setImagePreview("");     
-    setImageRemoved(true);   
+    setImagePreview("");
+    setExistingImageUrl(null);
+    setImageRemoved(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -292,9 +290,9 @@ function CommunityIssueEditContent() {
           className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-6 cursor-pointer hover:border-blue-400 transition-colors"
           onClick={() => fileInputRef.current?.click()}
         >
-          {imagePreview ? (
+          {(imagePreview || existingImgSrc) ? (
             <div className="relative w-full max-w-xs">
-              <img src={imagePreview} alt="preview" className="w-full rounded-lg object-contain max-h-48" />
+              <img src={imagePreview || existingImgSrc} alt="preview" className="w-full rounded-lg object-contain max-h-48" />
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); clearImage(); }}

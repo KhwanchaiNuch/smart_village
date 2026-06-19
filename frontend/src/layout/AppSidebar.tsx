@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useVillage } from "../context/VillageContext";
 import { usePermission } from "../context/PermissionContext";
-import { useCurrentUser, resolveAvatarSrc } from "../context/CurrentUserContext";
+import { useCurrentUser } from "../context/CurrentUserContext";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 import { useGeoScope } from "../context/GeoScopeContext";
 import {
 	BoxCubeIcon,
@@ -137,6 +138,7 @@ const AppSidebar: React.FC = () => {
 
 	const { village } = useVillage();
 	const { user: currentUser } = useCurrentUser();
+	const { src: sidebarAvatarSrc } = useImageBase64(currentUser?.avatarUrl, "/images/user/owner.jpg");
 	const { role } = useGeoScope();
 
 	// PROVINCE/AMPHUR/TAMBON ไม่ต้องเลือกหมู่บ้าน → เห็น sub-items ทั้งหมดทันที
@@ -466,8 +468,8 @@ const AppSidebar: React.FC = () => {
 				<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0">
 					{/* eslint-disable-next-line @next/next/no-img-element */}
 					<img
-						key={resolveAvatarSrc(currentUser?.avatarUrl)}
-						src={resolveAvatarSrc(currentUser?.avatarUrl)}
+						key={sidebarAvatarSrc}
+						src={sidebarAvatarSrc}
 						alt={currentUser?.fullName || currentUser?.username || "User"}
 						className="w-full h-full object-cover"
 					/>

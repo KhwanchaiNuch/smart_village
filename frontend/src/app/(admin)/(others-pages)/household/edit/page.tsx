@@ -5,12 +5,12 @@ import Radio from '@/components/form/input/Radio';
 import TextArea from '@/components/form/input/TextArea';
 import Label from '@/components/form/Label';
 import { Suspense, useEffect, useState } from "react";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import PermissionGuard from "@/components/common/PermissionGuard";
 
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api").replace(/\/api$/, "");
 
 function HouseHoldEditContent() {
 	const router = useRouter();
@@ -35,6 +35,7 @@ function HouseHoldEditContent() {
 	const [loading, setLoading] = useState(false);
 	const [houseImageUrl, setHouseImageUrl] = useState<string | null>(null);
 	const [imageLoading, setImageLoading] = useState(false);
+	const { src: houseImgSrc } = useImageBase64(houseImageUrl);
 
 	useEffect(() => {
 		document.title = "Smart Village | House Hold Edit";
@@ -335,7 +336,7 @@ function HouseHoldEditContent() {
 						<div className="w-48 h-36 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
 							{houseImageUrl ? (
 								<img
-									src={houseImageUrl.startsWith("http") ? houseImageUrl : API_ORIGIN + houseImageUrl}
+									src={houseImgSrc}
 									alt="รูปบ้าน"
 									className="w-full h-full object-cover"
 								/>

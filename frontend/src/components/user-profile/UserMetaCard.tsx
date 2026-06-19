@@ -3,7 +3,8 @@ import React, { useRef, useState } from "react";
 import Image from "next/image";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
-import { resolveAvatarSrc, type CurrentUser } from "@/context/CurrentUserContext";
+import { type CurrentUser } from "@/context/CurrentUserContext";
+import { useImageBase64 } from "@/hooks/useImageBase64";
 
 interface Props {
   profile: CurrentUser;
@@ -44,7 +45,7 @@ export default function UserMetaCard({ profile, onReload }: Props) {
     color: "bg-gray-100 text-gray-700",
   };
 
-  const avatarSrc = resolveAvatarSrc(profile.avatarUrl);
+  const { src: avatarSrc } = useImageBase64(profile.avatarUrl, "/images/user/owner.jpg");
 
   const handlePick = () => fileRef.current?.click();
 

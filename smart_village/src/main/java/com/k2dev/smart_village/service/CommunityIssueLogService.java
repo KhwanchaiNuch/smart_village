@@ -5,6 +5,7 @@ import com.k2dev.smart_village.entity.CommunityIssue;
 import com.k2dev.smart_village.entity.CommunityIssueLog;
 import com.k2dev.smart_village.entity.Tambon;
 import com.k2dev.smart_village.entity.Village;
+import com.k2dev.smart_village.config.UploadProperties;
 import com.k2dev.smart_village.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class CommunityIssueLogService {
 
     @Autowired private CommunityIssueLogRepository repo;
+    @Autowired private UploadProperties uploadProperties;
     @Autowired private CommunityIssueRepository issueRepo;
     @Autowired private VillageRepository villageRepo;
     @Autowired private TambonRepository tambonRepo;
@@ -51,7 +53,7 @@ public class CommunityIssueLogService {
         } else {
             subPath = "misc/" + issueId;
         }
-        Path uploadDir = Paths.get("./uploads/" + subPath).toAbsolutePath().normalize();
+        Path uploadDir = uploadProperties.resolve(subPath);
         Files.createDirectories(uploadDir);
         String originalName = file.getOriginalFilename();
         String ext = (originalName != null && originalName.contains("."))
@@ -110,7 +112,7 @@ public class CommunityIssueLogService {
             if (file != null && !file.isEmpty()) {
                 if (existing.getImageUrl() != null) {
                     try {
-                        Path oldPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                        Path oldPath = uploadProperties.fromUrl(existing.getImageUrl());
                         Files.deleteIfExists(oldPath);
                     } catch (Exception ignored) {}
                 }
@@ -118,7 +120,7 @@ public class CommunityIssueLogService {
             } else if (removeImage) {
                 if (existing.getImageUrl() != null) {
                     try {
-                        Path oldPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                        Path oldPath = uploadProperties.fromUrl(existing.getImageUrl());
                         Files.deleteIfExists(oldPath);
                     } catch (Exception ignored) {}
                 }
@@ -141,7 +143,7 @@ public class CommunityIssueLogService {
             // 🛠️ แก้ไข: ตามไปทำลายไฟล์รูปของ Log บนดิสก์ทิ้งด้วยเมื่อกดสั่งลบทั้ง Record
             if (existing.getImageUrl() != null) {
                 try {
-                    Path imgPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                    Path imgPath = uploadProperties.fromUrl(existing.getImageUrl());
                     Files.deleteIfExists(imgPath);
                 } catch (Exception ignored) {}
             }

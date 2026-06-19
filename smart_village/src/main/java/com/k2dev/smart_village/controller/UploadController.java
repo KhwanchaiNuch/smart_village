@@ -1,6 +1,8 @@
 package com.k2dev.smart_village.controller;
 
+import com.k2dev.smart_village.config.UploadProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.UUID;
@@ -17,13 +18,13 @@ import java.util.UUID;
 @RequestMapping("/api/upload")
 public class UploadController {
 
-    private static final String UPLOAD_DIR = "./uploads/";
+    @Autowired
+    private UploadProperties uploadProperties;
 
     @DeleteMapping("/{filename}")
     public ResponseEntity<?> delete(@PathVariable String filename) {
         try {
-            // ป้องกัน path traversal
-            Path uploadDir = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path uploadDir = uploadProperties.root();
             Path filePath  = uploadDir.resolve(filename).normalize();
             if (!filePath.startsWith(uploadDir)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Invalid filename"));
@@ -42,13 +43,9 @@ public class UploadController {
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) {
         try {
-            // สร้างโฟลเดอร์ถ้ายังไม่มี
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            Path uploadPath = uploadProperties.root();
+            Files.createDirectories(uploadPath);
 
-            // ตั้งชื่อไฟล์ให้ unique ด้วย UUID
             String originalName = file.getOriginalFilename();
             String ext = "";
             if (originalName != null && originalName.contains(".")) {
@@ -56,11 +53,8 @@ public class UploadController {
             }
             String filename = UUID.randomUUID().toString() + ext;
 
-            // บันทึกไฟล์
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-            // สร้าง URL กลับไป (ใช้ base จาก request จริง)
             String baseUrl = request.getScheme() + "://"
                     + request.getServerName() + ":" + request.getServerPort()
                     + request.getContextPath();

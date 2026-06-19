@@ -9,6 +9,7 @@ import com.k2dev.smart_village.entity.PersonSkill;
 import com.k2dev.smart_village.entity.Tambon;
 import com.k2dev.smart_village.entity.Village;
 import com.k2dev.smart_village.entity.VillageResource;
+import com.k2dev.smart_village.config.UploadProperties;
 import com.k2dev.smart_village.repository.*;
 import com.k2dev.smart_village.security.ScopeUtil;
 import jakarta.annotation.PostConstruct;
@@ -37,6 +38,7 @@ public class CommunityIssueService {
     @Autowired private CommunityIssueRepository repo;
     @Autowired private HouseholdRepository householdRepo;
     @Autowired private GeoScopeService geoScope;
+    @Autowired private UploadProperties uploadProperties;
     @Autowired private VillageRepository villageRepo;
     @Autowired private TambonRepository tambonRepo;
     @Autowired private AmphurRepository amphurRepo;
@@ -47,7 +49,7 @@ public class CommunityIssueService {
     @PostConstruct
     public void initUploadDir() {
         try {
-            Files.createDirectories(Paths.get("./uploads").toAbsolutePath());
+            Files.createDirectories(uploadProperties.root());
         } catch (Exception e) {
             System.err.println("[CommunityIssueService] Could not create uploads dir: " + e.getMessage());
         }
@@ -82,7 +84,7 @@ public class CommunityIssueService {
         } else {
             subPath = "misc/" + issueId;
         }
-        Path uploadDir = Paths.get("./uploads/" + subPath).toAbsolutePath().normalize();
+        Path uploadDir = uploadProperties.resolve(subPath);
         Files.createDirectories(uploadDir);
         String originalName = file.getOriginalFilename();
         String ext = (originalName != null && originalName.contains("."))
@@ -223,7 +225,7 @@ public class CommunityIssueService {
                 Integer vid = existing.getVillageId();
                 if (existing.getImageUrl() != null) {
                     try {
-                        Path oldPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                        Path oldPath = uploadProperties.fromUrl(existing.getImageUrl());
                         Files.deleteIfExists(oldPath);
                     } catch (Exception ignored) {}
                 }
@@ -231,7 +233,7 @@ public class CommunityIssueService {
             } else if (removeImage) {
                 if (existing.getImageUrl() != null) {
                     try {
-                        Path oldPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                        Path oldPath = uploadProperties.fromUrl(existing.getImageUrl());
                         Files.deleteIfExists(oldPath);
                     } catch (Exception ignored) {}
                 }
@@ -396,7 +398,7 @@ public class CommunityIssueService {
 
             if (existing.getImageUrl() != null) {
                 try {
-                    Path imgPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
+                    Path imgPath = uploadProperties.fromUrl(existing.getImageUrl());
                     Files.deleteIfExists(imgPath);
                 } catch (Exception ignored) {}
             }
