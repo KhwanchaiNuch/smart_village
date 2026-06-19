@@ -373,7 +373,7 @@ public class DashboardService {
         long otherCount      = Math.max(0, totalCount - openCount - inProgressCount - resolvedCount);
 
         String sqlPending = """
-                SELECT id, issue_type, status, severity, area, created_at
+                SELECT id, issue_type, status, severity, area, created_at, image_url
                 FROM community_issue
                 WHERE village_id IN (%s)
                   AND LOWER(REGEXP_REPLACE(COALESCE(status,''), '[\\s_\\-]', '', 'g'))
@@ -390,6 +390,7 @@ public class DashboardService {
                     m.put("severity",  row.get("severity"));
                     m.put("area",      row.get("area"));
                     m.put("createdAt", row.get("created_at"));
+                    m.put("imageUrl",  row.get("image_url"));
                     return m;
                 }).collect(Collectors.toList());
 
@@ -620,7 +621,8 @@ public class DashboardService {
     }
 
     private long toLong(Object v) {
-        if (v == null) return 0L;
-        return ((Number) v).longValue();
+        if(v == null) return 0L;
+        if (v instanceof Number) return ((Number) v).longValue();
+        try { return Long.parseLong(v.toString()); } catch (Exception e) { return 0L; }
     }
 }

@@ -129,9 +129,14 @@ export default function CommunityIssuePage() {
     if (!result.isConfirmed) return;
     setLoading(true);
     try {
-      await Promise.allSettled(selectedIds.map((id) => axios.delete(`/community-issues/${id}`)));
+      const results = await Promise.allSettled(selectedIds.map((id) => axios.delete(`/community-issues/${id}`)));
+      const failed = results.filter((r) => r.status === "rejected").length;
       await fetchData();
-      Swal.fire({ icon: "success", title: "ลบสำเร็จ", timer: 1500, showConfirmButton: false });
+      if (failed > 0) {
+        Swal.fire({ icon: "warning", title: `ลบสำเร็จ ${selectedIds.length - failed} รายการ, ล้มเหลว ${failed} รายการ` });
+      } else {
+        Swal.fire({ icon: "success", title: "ลบสำเร็จ", timer: 1500, showConfirmButton: false });
+      }
     } catch {
       Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด" });
     } finally {

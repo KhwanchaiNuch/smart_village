@@ -47,6 +47,9 @@ public class Household {
     @Column(name = "remark")
     private String remark;
 
+    @Column(name = "house_image_url", columnDefinition = "TEXT")
+    private String houseImageUrl;
+
     public Integer getHouseholdId() { return householdId; }
     public void setHouseholdId(Integer householdId) { this.householdId = householdId; }
 
@@ -85,4 +88,7 @@ public class Household {
 
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+
+    public String getHouseImageUrl() { return houseImageUrl; }
+    public void setHouseImageUrl(String houseImageUrl) { this.houseImageUrl = houseImageUrl; }
 }

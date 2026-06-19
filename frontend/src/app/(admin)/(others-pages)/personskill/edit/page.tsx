@@ -24,6 +24,7 @@ function PersonSkillEditContent() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [persons, setPersons] = useState<Person[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [form, setForm] = useState({
     skillId: "",
     personId: "",
@@ -53,6 +54,9 @@ function PersonSkillEditContent() {
           skillLevel: d.skillLevel || "",
           certificateFlag: d.certificateFlag ? "true" : "false",
         });
+        if (d.skillCategories) {
+          setSelectedCategories(d.skillCategories.split(",").map((c: string) => c.trim()).filter(Boolean));
+        }
       })
       .catch((err: any) => Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message }));
   }, [id, fetchPersons]);
@@ -61,6 +65,12 @@ function PersonSkillEditContent() {
     const { name, value } = e.target;
     setForm((p) => ({ ...p, [name]: value }));
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+  };
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
   };
 
   const validate = (): boolean => {
@@ -81,6 +91,7 @@ function PersonSkillEditContent() {
         skillName: form.skillName,
         skillLevel: form.skillLevel || null,
         certificateFlag: form.certificateFlag === "true",
+        skillCategories: selectedCategories.length > 0 ? selectedCategories.join(",") : null,
       });
       await Swal.fire({ icon: "success", title: "อัปเดตสำเร็จ", timer: 1800, showConfirmButton: false });
       window.location.href = "/personskill";
@@ -115,13 +126,13 @@ function PersonSkillEditContent() {
         <div>
           <Label>ชื่อทักษะ <span className="text-red-500">*</span></Label>
           <Input name="skillName" value={form.skillName} onChange={handleChange}
-            type="text" placeholder="เช่น การทำเกษตร, ช่างไม้, ทักษะคอมพิวเตอร์"
+            type="text" placeholder="เช่น ดูแลผู้สูงอายุ, ช่างไม้, สอนหนังสือ"
             className={errors.skillName ? "border-red-400" : ""} />
           {errors.skillName && <p className="mt-1 text-xs text-red-500">{errors.skillName}</p>}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div>
           <Label>ระดับทักษะ</Label>
           <select name="skillLevel" value={form.skillLevel} onChange={handleChange} className={selectClass("skillLevel")}>
@@ -138,7 +149,32 @@ function PersonSkillEditContent() {
         </div>
       </div>
 
-      <div className="flex gap-3 mt-4">
+      <div className="mt-5">
+        <Label>หมวดปัญหาชุมชนที่ทักษะนี้ช่วยได้</Label>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          เลือกประเภทปัญหาที่บุคคลนี้สามารถช่วยเหลือได้ — ระบบจะนำไปแนะนำเมื่อมีปัญหาประเภทนั้น
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {["โครงสร้างพื้นฐาน","สิ่งแวดล้อม","สังคม/ความปลอดภัย","สุขภาพ","เศรษฐกิจ","การศึกษา","อื่น ๆ"].map((cat) => {
+            const checked = selectedCategories.includes(cat);
+            return (
+              <button key={cat} type="button" onClick={() => toggleCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  checked
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-blue-400 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+                }`}>
+                {checked && <span className="mr-1">✓</span>}{cat}
+              </button>
+            );
+          })}
+        </div>
+        {selectedCategories.length > 0 && (
+          <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">เลือกแล้ว: {selectedCategories.join(", ")}</p>
+        )}
+      </div>
+
+      <div className="flex gap-3 mt-6">
         <button onClick={handleSubmit} disabled={saving}
           className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium">
           {saving ? "กำลังบันทึก..." : "บันทึก"}
@@ -153,11 +189,10 @@ function PersonSkillEditContent() {
 
 export default function PersonSkillEdit() {
   return (
-        <PermissionGuard menuUrl="/personskill" action="edit">
-<Suspense fallback={<div>Loading...</div>}>
-      <PersonSkillEditContent />
-    </Suspense>
+    <PermissionGuard menuUrl="/personskill" action="edit">
+      <Suspense fallback={<div>Loading...</div>}>
+        <PersonSkillEditContent />
+      </Suspense>
     </PermissionGuard>
-
   );
 }

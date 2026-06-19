@@ -5,8 +5,10 @@ import com.k2dev.smart_village.service.HouseholdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/households")
@@ -41,6 +43,15 @@ public class HouseholdController {
     @PostMapping("/edit")
     public ResponseEntity<?> edit(@RequestBody Household h) {
         return service.edit(h);
+    }
+
+    @GetMapping("/map-markers")
+    public List<java.util.Map<String, Object>> mapMarkers(
+            @RequestParam(required = false) Integer villageId,
+            @RequestParam(required = false) Integer tambonId,
+            @RequestParam(required = false) Integer amphurId,
+            @RequestParam(required = false) Integer provinceId) {
+        return service.mapMarkers(villageId, tambonId, amphurId, provinceId);
     }
 
     @DeleteMapping("/{id}")

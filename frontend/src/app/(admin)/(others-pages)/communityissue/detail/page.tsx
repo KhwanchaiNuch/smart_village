@@ -30,6 +30,29 @@ interface CommunityIssue {
   villageId?: number | null; // 👈 เพิ่ม Type รองรับ VillageId
 }
 
+interface MatchedPerson {
+  personId: number;
+  fullName: string;
+  age: number | null;
+  occupation: string | null;
+  matchedSkill: string;
+  skillLevel: string | null;
+  householdId: number | null;
+  houseNo: string | null;
+}
+
+interface MatchedResource {
+  resourceId: number;
+  resourceName: string;
+  resourceType: string | null;
+  description: string | null;
+}
+
+interface Recommendations {
+  matchedPeople: MatchedPerson[];
+  matchedResources: MatchedResource[];
+}
+
 interface IssueLog {
   id: number;
   issueId: number;
@@ -71,6 +94,7 @@ function CommunityIssueDetailPageContent() {
 
   const [issue,     setIssue]     = useState<CommunityIssue | null>(null);
   const [logs,       setLogs]      = useState<IssueLog[]>([]);
+  const [recs,       setRecs]      = useState<Recommendations | null>(null);
   const [loading,   setLoading]   = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [editLog,   setEditLog]   = useState<IssueLog | null>(null);
@@ -94,12 +118,14 @@ function CommunityIssueDetailPageContent() {
   const fetchAll = useCallback(async () => {
     if (!id) return;
     try {
-      const [issueRes, logRes] = await Promise.all([
+      const [issueRes, logRes, recsRes] = await Promise.all([
         axios.get<CommunityIssue>(`/community-issues/${id}`),
         axios.get<IssueLog[]>(`/community-issue-logs?issueId=${id}`),
+        axios.get<Recommendations>(`/community-issues/${id}/recommendations`).catch(() => ({ data: null })),
       ]);
       setIssue(issueRes.data);
       setLogs(logRes.data);
+      setRecs(recsRes.data);
     } catch (err: any) {
       Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
     } finally {
@@ -182,7 +208,7 @@ function CommunityIssueDetailPageContent() {
       await fetchAll();
       Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1200, showConfirmButton: false });
     } catch (err: any) {
-      Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: err?.response?.data?.message || "กรุณาลองใหม่" });
+      Swal.fire({ icon: "error", title: "บันทึกไม่สำเร็จ", text: err?.response?.data?.message || err?.message || "กรุณาลองใหม่" });
     } finally {
       setSaving(false);
     }
@@ -213,11 +239,11 @@ function CommunityIssueDetailPageContent() {
     fd.append("issueType", issue.issueType || "");
     fd.append("severity",  String(issue.severity ?? "3"));
     fd.append("status",    issue.status || "ยังไม่แก้");
-    if (issue.householdId)   fd.append("householdId",   String(issue.householdId));
-    if (issue.owner)         fd.append("owner",         issue.owner);
-    if (issue.impactPeople)  fd.append("impactPeople",  String(issue.impactPeople));
-    if (issue.budgetEstimate)fd.append("budgetEstimate", String(issue.budgetEstimate));
-    if (issue.dueDate)       fd.append("dueDate",       issue.dueDate);
+    if (issue.householdId != null) fd.append("householdId",   String(issue.householdId));
+    if (issue.owner)               fd.append("owner",         issue.owner);
+    if (issue.impactPeople != null) fd.append("impactPeople", String(issue.impactPeople));
+    if (issue.budgetEstimate != null) fd.append("budgetEstimate", String(issue.budgetEstimate));
+    if (issue.dueDate)             fd.append("dueDate",       issue.dueDate);
     if (issue.remark)        fd.append("remark",        issue.remark);
     
     const finalVillageId = contextVillageId ?? issue.villageId;
@@ -237,8 +263,8 @@ function CommunityIssueDetailPageContent() {
       await axios.post("/community-issues/edit", fd);
       await fetchAll();
       Swal.fire({ icon: "success", title: "อัปโหลดรูปสำเร็จ", timer: 1200, showConfirmButton: false });
-    } catch {
-      Swal.fire({ icon: "error", title: "อัปโหลดรูปไม่สำเร็จ" });
+    } catch (err: any) {
+      Swal.fire({ icon: "error", title: "อัปโหลดรูปไม่สำเร็จ", text: err?.response?.data?.message || err?.message || "กรุณาลองใหม่" });
     } finally {
       if (issueFileRef.current) issueFileRef.current.value = "";
     }
@@ -259,8 +285,8 @@ function CommunityIssueDetailPageContent() {
       await axios.post("/community-issues/edit", fd);
       await fetchAll();
       Swal.fire({ icon: "success", title: "ลบรูปภาพสำเร็จ", timer: 1200, showConfirmButton: false });
-    } catch {
-      Swal.fire({ icon: "error", title: "ลบรูปไม่สำเร็จ" });
+    } catch (err: any) {
+      Swal.fire({ icon: "error", title: "ลบรูปไม่สำเร็จ", text: err?.response?.data?.message || err?.message || "กรุณาลองใหม่" });
     }
   };
 
@@ -412,6 +438,79 @@ function CommunityIssueDetailPageContent() {
         </div>
       </div>
 
+      {/* Recommendations */}
+      {recs && (recs.matchedPeople.length > 0 || recs.matchedResources.length > 0) && (
+        <div className="rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 p-5 shadow-sm space-y-5">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🤝</span>
+            <h2 className="text-base font-semibold text-gray-800 dark:text-white">แนะนำกำลังคนและทรัพยากรช่วยเหลือ</h2>
+          </div>
+
+          {/* Matched People */}
+          {recs.matchedPeople.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3 flex items-center gap-1.5">
+                <span>👷</span> ช่างฝีมือและบุคคลที่มีทักษะตรงกัน ({recs.matchedPeople.length} คน)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {recs.matchedPeople.map((p) => (
+                  <div key={p.personId} className="rounded-xl border border-white/80 dark:border-white/10 bg-white dark:bg-gray-900/60 shadow-sm p-4 flex flex-col gap-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm text-gray-800 dark:text-white leading-snug">{p.fullName.trim() || "—"}</span>
+                      {p.skillLevel && (
+                        <span className="flex-shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-medium">
+                          {p.skillLevel}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      <span>🔧</span>
+                      <span>{p.matchedSkill}</span>
+                    </div>
+                    {p.occupation && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500">อาชีพ: {p.occupation}</p>
+                    )}
+                    <div className="text-xs text-gray-400 dark:text-gray-500 flex flex-wrap gap-x-3">
+                      {p.age != null && <span>อายุ {p.age} ปี</span>}
+                      {p.houseNo && (
+                        <a href={p.householdId ? `/household/detail?id=${p.householdId}` : undefined}
+                          className="text-blue-400 hover:text-blue-600 hover:underline">
+                          บ้านเลขที่ {p.houseNo}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Matched Resources */}
+          {recs.matchedResources.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3 flex items-center gap-1.5">
+                <span>📦</span> ทรัพยากรชุมชนที่พร้อมใช้งาน ({recs.matchedResources.length} รายการ)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {recs.matchedResources.map((r) => (
+                  <div key={r.resourceId} className="rounded-xl border border-white/80 dark:border-white/10 bg-white dark:bg-gray-900/60 shadow-sm p-4 flex flex-col gap-1">
+                    <span className="font-semibold text-sm text-gray-800 dark:text-white">{r.resourceName || "—"}</span>
+                    {r.resourceType && (
+                      <span className="text-[11px] w-fit px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 font-medium">
+                        {r.resourceType}
+                      </span>
+                    )}
+                    {r.description && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5 line-clamp-2">{r.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Lightbox */}
       {lightboxUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4" onClick={() => setLightboxUrl(null)}>
@@ -434,7 +533,6 @@ function CommunityIssueDetailPageContent() {
             </div>
 
             <div className="space-y-3">
-              {/* หัวข้อ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">หัวข้อ <span className="text-red-500">*</span></label>
                 <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
@@ -442,17 +540,15 @@ function CommunityIssueDetailPageContent() {
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none" />
               </div>
 
-              {/* สถานะ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">อัปเดตสถานะ (ถ้ามี)</label>
                 <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none">
-                  <option value="">— ไม่เปลี่ยนสถานะ —</option>
+                  <option value="">ไม่เปลี่ยนสถานะ</option>
                   {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
-              {/* รายละเอียด */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">รายละเอียด</label>
                 <textarea rows={3} value={formDetail} onChange={(e) => setFormDetail(e.target.value)}
@@ -460,7 +556,6 @@ function CommunityIssueDetailPageContent() {
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:outline-none resize-none" />
               </div>
 
-              {/* รูปภาพ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">รูปภาพ (ถ้ามี)</label>
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 cursor-pointer hover:border-blue-400 transition-colors"
@@ -470,7 +565,7 @@ function CommunityIssueDetailPageContent() {
                       <img src={formImagePreview} alt="preview" className="w-full rounded-lg object-contain max-h-36" />
                       <button type="button"
                         onClick={(e) => { e.stopPropagation(); clearLogImage(); }}
-                        className="absolute -top-2 -right-2 rounded-full bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600">✕</button>
+                        className="absolute -top-2 -right-2 rounded-full bg-red-500 text-white w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600">X</button>
                       {formImageFile && (
                         <p className="mt-1 text-center text-xs text-gray-400">{formImageFile.name} ({(formImageFile.size / 1024).toFixed(0)} KB)</p>
                       )}

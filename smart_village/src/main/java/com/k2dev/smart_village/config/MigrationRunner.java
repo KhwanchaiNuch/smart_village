@@ -29,14 +29,8 @@ public class MigrationRunner implements ApplicationRunner {
     }
 
     private void runMigrations() {
-        // ── community_issue + village_need_survey: เพิ่ม village_id ────
-        String[] villageScopeCols = {
-            "ALTER TABLE community_issue ADD COLUMN IF NOT EXISTS village_id INTEGER",
-            "ALTER TABLE village_need_survey ADD COLUMN IF NOT EXISTS village_id INTEGER",
-        };
-        for (String sql : villageScopeCols) {
-            try { jdbc.execute(sql); } catch (Exception ignored) {}
-        }
+        // ── village_need_survey: เพิ่ม village_id ────
+        try { jdbc.execute("ALTER TABLE village_need_survey ADD COLUMN IF NOT EXISTS village_id INTEGER"); } catch (Exception ignored) {}
 
         // ── person: เพิ่มคอลัมน์ที่อาจขาด ────────────────────────────
         String[] personCols = {
@@ -128,10 +122,9 @@ public class MigrationRunner implements ApplicationRunner {
                 updated_at TIMESTAMP DEFAULT NOW()
             )""");
 
-        // ── community_issue + log: เพิ่ม image_url ──────────────────
-        try {
-            jdbc.execute("ALTER TABLE community_issue ADD COLUMN IF NOT EXISTS image_url TEXT");
-        } catch (Exception ignored) {}
+        // ── community_issue: เพิ่ม village_id และ image_url ─────────
+        try { jdbc.execute("ALTER TABLE community_issue ADD COLUMN IF NOT EXISTS village_id INTEGER"); } catch (Exception ignored) {}
+        try { jdbc.execute("ALTER TABLE community_issue ADD COLUMN IF NOT EXISTS image_url TEXT"); } catch (Exception ignored) {}
         try {
             jdbc.execute("CREATE TABLE IF NOT EXISTS community_issue_log (" +
                 "id BIGSERIAL PRIMARY KEY, issue_id BIGINT NOT NULL, title VARCHAR(255) NOT NULL," +

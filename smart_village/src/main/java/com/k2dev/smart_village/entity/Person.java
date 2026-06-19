@@ -64,6 +64,7 @@ public class Person {
     private Boolean isElderly;
     private Boolean livingAlone;
 
+    @Column(length = 100)
     private Boolean welfareCard;
 
     @Column(columnDefinition = "TEXT")

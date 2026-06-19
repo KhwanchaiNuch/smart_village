@@ -2,7 +2,7 @@
 import ComponentCard from '@/components/common/ComponentCard';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PermissionGuard from "@/components/common/PermissionGuard";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
@@ -28,9 +28,10 @@ interface Person {
 	age: number;
 	occupation: string;
 	cid: string;
+	educationLevel?: string;
 }
 
-export default function HouseholdDetail() {
+function HouseholdDetailContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { canAdd, canEdit, canDelete } = usePermission();
@@ -146,7 +147,7 @@ export default function HouseholdDetail() {
 						</h3>
 						{canAdd("/person") && (
 							<a
-								href={`/person/add?householdId=${householdId}`}
+								href={`/person/add?householdId=${householdId}&returnUrl=${encodeURIComponent(`/household/detail?id=${householdId}`)}`}
 								className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
 							>
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
@@ -167,6 +168,7 @@ export default function HouseholdDetail() {
 											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ชื่อ-นามสกุล</TableCell>
 											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">เพศ</TableCell>
 											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อายุ</TableCell>
+											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ระดับการศึกษา</TableCell>
 											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อาชีพ</TableCell>
 											<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
 										</TableRow>
@@ -186,6 +188,9 @@ export default function HouseholdDetail() {
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													{p.age ?? "-"}
+												</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+													{p.educationLevel || "-"}
 												</TableCell>
 												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
 													{p.occupation || "-"}
@@ -219,8 +224,8 @@ export default function HouseholdDetail() {
 
 										{!loading && persons.length === 0 && (
 											<TableRow>
-												<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
-													ไม่มีข้อมูลบุคคลในครัวเรือนนี้
+																							<TableCell colSpan={5} className="text-center py-8 text-gray-400 text-sm">
+													ไม่มีข้อมูลสมาชิก
 												</TableCell>
 											</TableRow>
 										)}
@@ -232,5 +237,17 @@ export default function HouseholdDetail() {
 				</ComponentCard>
 			</>
 		</PermissionGuard>
+	);
+}
+
+export default function HouseholdDetail() {
+	return (
+		<Suspense fallback={
+			<div className="p-6 text-center text-gray-500 dark:text-gray-400">
+				<p className="animate-pulse">กำลังโหลด...</p>
+			</div>
+		}>
+			<HouseholdDetailContent />
+		</Suspense>
 	);
 }

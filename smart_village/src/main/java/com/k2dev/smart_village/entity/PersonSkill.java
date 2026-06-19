@@ -22,6 +22,10 @@ public class PersonSkill {
 
     private Boolean certificateFlag;
 
+    /** comma-separated issue types ที่ทักษะนี้ช่วยได้ เช่น "สุขภาพ,สังคม/ความปลอดภัย" */
+    @Column(name = "skill_categories", columnDefinition = "TEXT")
+    private String skillCategories;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -44,6 +48,9 @@ public class PersonSkill {
 
     public Boolean getCertificateFlag() { return certificateFlag; }
     public void setCertificateFlag(Boolean certificateFlag) { this.certificateFlag = certificateFlag; }
+
+    public String getSkillCategories() { return skillCategories; }
+    public void setSkillCategories(String skillCategories) { this.skillCategories = skillCategories; }
 
     public java.time.LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }

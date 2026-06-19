@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +20,13 @@ public class PersonService {
     @Autowired private PersonRepository repo;
     @Autowired private HouseholdRepository householdRepo;
     @Autowired private GeoScopeService geoScope;
+
+    /** คำนวณอายุจาก birthDate ถ้ามี — ทับค่า age ที่ส่งมาเสมอ */
+    private void recalcAge(Person p) {
+        if (p.getBirthDate() != null) {
+            p.setAge(Period.between(p.getBirthDate(), LocalDate.now()).getYears());
+        }
+    }
 
     private boolean householdOwned(Integer householdId) {
         if (householdId == null) return false;
@@ -63,6 +72,7 @@ public class PersonService {
     public ResponseEntity<?> add(Person p) {
         try {
             p.setPersonId(null);
+            recalcAge(p);
             if (ScopeUtil.isVillageLevel() && !householdOwned(p.getHouseholdId()))
                 return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์เพิ่มข้อมูลในหมู่บ้านอื่น"));
             return ResponseEntity.ok(repo.save(p));
@@ -75,6 +85,7 @@ public class PersonService {
         try {
             if (p.getPersonId() == null)
                 return ResponseEntity.badRequest().body(Map.of("message", "ต้องระบุ personId"));
+            recalcAge(p);
             if (ScopeUtil.isVillageLevel()) {
                 Person existing = repo.findById(p.getPersonId()).orElse(null);
                 if (existing == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบบุคคลนี้"));

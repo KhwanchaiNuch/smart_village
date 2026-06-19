@@ -102,13 +102,18 @@ public class PermissionInterceptor implements HandlerInterceptor {
         RoleMenu perm   = permOpt.get();
         String   method = request.getMethod().toUpperCase();
 
-        boolean allowed = switch (method) {
-            case "GET"               -> Boolean.TRUE.equals(perm.getCanView());
-            case "POST"              -> Boolean.TRUE.equals(perm.getCanAdd());
-            case "PUT", "PATCH"      -> Boolean.TRUE.equals(perm.getCanEdit());
-            case "DELETE"            -> Boolean.TRUE.equals(perm.getCanDelete());
-            default                  -> true;
-        };
+        boolean allowed;
+        if ("POST".equals(method) && path.endsWith("/edit")) {
+            allowed = Boolean.TRUE.equals(perm.getCanEdit());
+        } else {
+            allowed = switch (method) {
+                case "GET"               -> Boolean.TRUE.equals(perm.getCanView());
+                case "POST"              -> Boolean.TRUE.equals(perm.getCanAdd());
+                case "PUT", "PATCH"      -> Boolean.TRUE.equals(perm.getCanEdit());
+                case "DELETE"            -> Boolean.TRUE.equals(perm.getCanDelete());
+                default                  -> true;
+            };
+        }
 
         if (!allowed) {
             response.sendError(403, "ไม่มีสิทธิ์ดำเนินการนี้");

@@ -12,6 +12,7 @@ export interface CurrentUser {
   avatarUrl: string | null;
   isActive: boolean;
   createdAt: string | null;
+  role : string;
 }
 
 interface CurrentUserContextType {

@@ -1,10 +1,14 @@
 package com.k2dev.smart_village.service;
 
 import com.k2dev.smart_village.entity.Amphur;
+import com.k2dev.smart_village.dto.IssueRecommendationDTO;
 import com.k2dev.smart_village.entity.CommunityIssue;
 import com.k2dev.smart_village.entity.Household;
+import com.k2dev.smart_village.entity.Person;
+import com.k2dev.smart_village.entity.PersonSkill;
 import com.k2dev.smart_village.entity.Tambon;
 import com.k2dev.smart_village.entity.Village;
+import com.k2dev.smart_village.entity.VillageResource;
 import com.k2dev.smart_village.repository.*;
 import com.k2dev.smart_village.security.ScopeUtil;
 import jakarta.annotation.PostConstruct;
@@ -20,9 +24,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CommunityIssueService {
@@ -33,6 +40,9 @@ public class CommunityIssueService {
     @Autowired private VillageRepository villageRepo;
     @Autowired private TambonRepository tambonRepo;
     @Autowired private AmphurRepository amphurRepo;
+    @Autowired private PersonRepository personRepo;
+    @Autowired private PersonSkillRepository personSkillRepo;
+    @Autowired private VillageResourceRepository villageResourceRepo;
 
     @PostConstruct
     public void initUploadDir() {
@@ -235,6 +245,144 @@ public class CommunityIssueService {
         }
     }
 
+    // ── keyword map: issueType → skill/resource keywords ─────────────────────
+    private static final Map<String, List<String>> SKILL_KEYWORDS = Map.ofEntries(
+        Map.entry("โครงสร้างพื้นฐาน", List.of(
+            "ช่าง", "ก่อสร้าง", "ประปา", "ไฟฟ้า", "ซ่อม", "งานไม้", "เชื่อม", "โยธา",
+            "ช่างยนต์", "ช่างปูน", "ช่างทาสี", "ช่างฝีมือ", "ช่างกระเบื้อง", "อิเล็กทรอนิกส์",
+            "ก่อ", "สร้าง", "ปรับปรุง", "ถนน", "สะพาน", "ขุด", "ท่อ")),
+        Map.entry("สิ่งแวดล้อม", List.of(
+            "เกษตร", "ปลูก", "ต้นไม้", "ป่า", "สวน", "ทำนา", "เลี้ยงสัตว์", "ชลประทาน",
+            "ปศุสัตว์", "ประมง", "ขยะ", "รีไซเคิล", "สิ่งแวดล้อม", "ดิน", "น้ำ",
+            "ปลูกป่า", "บำบัด", "เลี้ยง", "พืช", "ผัก", "ไร่", "สวนผลไม้")),
+        Map.entry("สุขภาพ", List.of(
+            "พยาบาล", "สาธารณสุข", "อสม", "แพทย์", "ดูแล", "เภสัช",
+            "ผู้สูงอายุ", "ผู้ป่วย", "ปฐมพยาบาล", "กายภาพ", "จิตวิทยา", "ทำแผล",
+            "หมอ", "สุขภาพ", "สุขาภิบาล", "โภชนาการ", "นวด", "แพทย์แผนไทย",
+            "ฟื้นฟู", "บำบัด", "ดูแลผู้ป่วย", "ดูแลผู้สูงอายุ", "ติดเตียง", "พิการ")),
+        Map.entry("เศรษฐกิจ", List.of(
+            "บัญชี", "การเงิน", "ธุรกิจ", "ค้าขาย", "การตลาด", "ออมทรัพย์",
+            "กลุ่มอาชีพ", "แปรรูป", "หัตถกรรม", "ทอผ้า", "วิสาหกิจ", "สหกรณ์",
+            "ขาย", "ผลิต", "ออนไลน์", "ตลาด", "พาณิชย์", "ลงทุน", "ประกอบอาชีพ")),
+        Map.entry("การศึกษา", List.of(
+            "ครู", "สอน", "การศึกษา", "อบรม", "วิชาการ", "ฝึกอาชีพ",
+            "ติวเตอร์", "คอมพิวเตอร์", "ดนตรี", "กีฬา", "ศิลปะ", "ดูแลเด็ก",
+            "ภาษา", "สอนหนังสือ", "วิทยาศาสตร์", "คณิต", "ภาษาอังกฤษ", "เด็ก")),
+        Map.entry("สังคม/ความปลอดภัย", List.of(
+            "รปภ", "อาสา", "จิตอาสา", "กฎหมาย", "ป้องกัน", "ชุมชน",
+            "ตำรวจ", "ทหาร", "ไกล่เกลี่ย", "ผู้นำ", "ปกครอง", "ยาเสพติด",
+            "ดูแล", "สังคม", "ประสานงาน", "สวัสดิการ", "เฝ้าระวัง", "อาสาสมัคร")),
+        Map.entry("อื่น ๆ", List.of(
+            "อาสา", "จิตอาสา", "ช่วยเหลือ", "ประสานงาน", "ดูแล", "ชุมชน"))
+    );
+
+    private static final Map<String, List<String>> RESOURCE_KEYWORDS = Map.ofEntries(
+        Map.entry("โครงสร้างพื้นฐาน", List.of(
+            "เครื่องมือ", "วัสดุ", "รถ", "เครื่องจักร", "ปั๊ม", "ไฟฟ้า", "ท่อ",
+            "ปูน", "เหล็ก", "อิฐ", "ทราย", "หิน", "ไม้", "สี", "สายไฟ", "เครน")),
+        Map.entry("สิ่งแวดล้อม", List.of(
+            "ที่ดิน", "น้ำ", "ปุ๋ย", "เมล็ด", "สวน", "เกษตร", "ป่า",
+            "เครื่องสูบน้ำ", "รถไถ", "ถังขยะ", "พันธุ์พืช", "พันธุ์สัตว์", "แปลงผัก")),
+        Map.entry("สุขภาพ", List.of(
+            "ยา", "อุปกรณ์การแพทย์", "รถพยาบาล", "สาธารณสุข", "สุขภาพ",
+            "เปล", "รถเข็น", "ไม้เท้า", "ออกซิเจน", "ชุดปฐมพยาบาล", "เครื่องวัด",
+            "ยาสามัญ", "อุปกรณ์ฟื้นฟู", "ที่นอนผู้ป่วย")),
+        Map.entry("เศรษฐกิจ", List.of(
+            "กองทุน", "เงิน", "ทุน", "สินค้า", "วัตถุดิบ", "อุปกรณ์",
+            "เงินกู้", "สหกรณ์", "ตลาด", "โรงเรือน", "เครื่องแปรรูป", "บรรจุภัณฑ์")),
+        Map.entry("การศึกษา", List.of(
+            "หนังสือ", "อุปกรณ์การเรียน", "ห้องสมุด", "คอมพิวเตอร์", "ศูนย์",
+            "โต๊ะ", "เก้าอี้", "กระดาน", "โปรเจคเตอร์", "อินเทอร์เน็ต", "แท็บเล็ต")),
+        Map.entry("สังคม/ความปลอดภัย", List.of(
+            "กล้อง", "ไฟ", "อุปกรณ์", "รถ", "ศาลา", "ชุมชน",
+            "วิทยุสื่อสาร", "ไฟฉาย", "สัญญาณเตือน", "รั้ว", "ประตู", "ไฟส่องสว่าง")),
+        Map.entry("อื่น ๆ", List.of(
+            "ยานพาหนะ", "รถ", "อุปกรณ์", "ศาลา", "ชุมชน"))
+    );
+
+    public ResponseEntity<?> getRecommendations(Long issueId) {
+        CommunityIssue issue = repo.findById(issueId).orElse(null);
+        if (issue == null) return ResponseEntity.status(404).body(Map.of("message", "ไม่พบข้อมูล"));
+
+        Integer villageId = issue.getVillageId();
+        if (villageId == null && issue.getHouseholdId() != null) {
+            Household hh = householdRepo.findById(issue.getHouseholdId().intValue()).orElse(null);
+            if (hh != null) villageId = hh.getVillageId();
+        }
+
+        String issueType = issue.getIssueType() != null ? issue.getIssueType().trim() : "";
+
+        // ── กำลังคน: match ผ่าน skillCategories ──────────────────────────────────
+        List<IssueRecommendationDTO.MatchedPerson> matchedPeople = new ArrayList<>();
+        if (!issueType.isEmpty() && villageId != null) {
+            List<Integer> hhIds = householdRepo.findByVillageId(villageId)
+                    .stream().map(Household::getHouseholdId).collect(Collectors.toList());
+
+            if (!hhIds.isEmpty()) {
+                List<Person> persons = personRepo.findByHouseholdIdIn(hhIds);
+                List<Integer> personIds = persons.stream().map(Person::getPersonId).collect(Collectors.toList());
+                List<PersonSkill> allSkills = personIds.isEmpty() ? List.of()
+                        : personSkillRepo.findByPersonIdIn(personIds);
+
+                Map<Integer, Household> hhById = householdRepo.findByVillageId(villageId)
+                        .stream().collect(Collectors.toMap(Household::getHouseholdId, h -> h));
+                Map<Integer, Household> personHousehold = new java.util.HashMap<>();
+                for (Person p : persons) {
+                    if (p.getHouseholdId() != null) {
+                        Household hh = hhById.get(p.getHouseholdId());
+                        if (hh != null) personHousehold.put(p.getPersonId(), hh);
+                    }
+                }
+
+                Set<Integer> added = new java.util.HashSet<>();
+                for (PersonSkill skill : allSkills) {
+                    // match ผ่าน skillCategories (structured tag)
+                    String cats = skill.getSkillCategories();
+                    if (cats == null || cats.isBlank()) continue;
+                    boolean catMatch = java.util.Arrays.stream(cats.split(","))
+                            .map(String::trim)
+                            .anyMatch(c -> c.equals(issueType));
+                    if (!catMatch || !added.add(skill.getPersonId())) continue;
+
+                    Person p = persons.stream()
+                            .filter(x -> x.getPersonId().equals(skill.getPersonId()))
+                            .findFirst().orElse(null);
+                    if (p == null) continue;
+
+                    Household hh = personHousehold.get(p.getPersonId());
+                    String fullName = ((p.getFirstName() != null ? p.getFirstName() : "") + " "
+                            + (p.getLastName() != null ? p.getLastName() : "")).trim();
+                    matchedPeople.add(new IssueRecommendationDTO.MatchedPerson(
+                            p.getPersonId(), fullName, p.getAge(), p.getOccupation(),
+                            skill.getSkillName(), skill.getSkillLevel(),
+                            hh != null ? hh.getHouseholdId() : null,
+                            hh != null ? hh.getHouseNo() : null
+                    ));
+                }
+            }
+        }
+
+        // ── ทรัพยากร: match ผ่าน resourceCategories ──────────────────────────────
+        List<IssueRecommendationDTO.MatchedResource> matchedResources = new ArrayList<>();
+        if (!issueType.isEmpty() && villageId != null) {
+            List<VillageResource> resources = villageResourceRepo.findByVillageId(villageId);
+            for (VillageResource r : resources) {
+                String cats = r.getResourceCategories();
+                if (cats == null || cats.isBlank()) continue;
+                boolean catMatch = java.util.Arrays.stream(cats.split(","))
+                        .map(String::trim)
+                        .anyMatch(c -> c.equals(issueType));
+                if (catMatch) {
+                    matchedResources.add(new IssueRecommendationDTO.MatchedResource(
+                            r.getResourceId(), r.getResourceName(), r.getResourceType(), r.getDescription()
+                    ));
+                }
+            }
+        }
+
+        return ResponseEntity.ok(new IssueRecommendationDTO(matchedPeople, matchedResources));
+    }
+
     public ResponseEntity<?> delete(Long id) {
         try {
             CommunityIssue existing = repo.findById(id).orElse(null);
@@ -245,14 +393,14 @@ public class CommunityIssueService {
                 if (!byVillage && !householdOwned(existing.getHouseholdId()))
                     return ResponseEntity.status(403).body(Map.of("message", "ไม่มีสิทธิ์ลบข้อมูลของหมู่บ้านอื่น"));
             }
-            
+
             if (existing.getImageUrl() != null) {
                 try {
                     Path imgPath = Paths.get("." + existing.getImageUrl()).toAbsolutePath().normalize();
                     Files.deleteIfExists(imgPath);
                 } catch (Exception ignored) {}
             }
-            
+
             repo.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "ลบสำเร็จ"));
         } catch (Exception e) {

@@ -45,13 +45,21 @@ const PinIcon = (
 	</svg>
 );
 
+const MapIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+		<path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+	</svg>
+);
+
 const adminNavItems: NavItem[] = [
 	{ icon: <GridIcon />, name: "Dashboard", path: "/" },
+	{ icon: MapIcon, name: "แผนที่หมู่บ้าน", path: "/villagemap" },
 	{
 		icon: (
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
-				<path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
 			</svg>
+
 		),
 		name: "ข้อมูลพื้นที่",
 		subItems: [
@@ -61,24 +69,27 @@ const adminNavItems: NavItem[] = [
 			{ icon: PinIcon, name: "หมู่บ้าน", path: "/village" },
 		],
 	},
+
 	{
 		icon: (
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
 				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
 			</svg>
 		),
+
 		name: "จัดการหมู่บ้าน",
 		subItems: [
-			{ icon: <CalenderIcon/>, name: "รหัสครัวเรือน", path: "/household" },
-			{ icon: <UserCircleIcon/>, name: "บุคคล", path: "/person" },
-			{ icon: <HeartIcon/>, name: "บันทึกสุขภาพ", path: "/healthrecord" },
-			{ icon: <TimeIcon/>, name: "เยี่ยมบ้าน", path: "/visitlog" },
-			{ icon: <TrainingIcon/>, name: "อบรมพัฒนา", path: "/training" },
-			{ icon: <CommunityIssueIcon/>, name: "ปัญหาชุมชน", path: "/communityissue" },
-			{ icon: <HouseholdEconomicIcon/>, name: "เศรษฐกิจครัวเรือน", path: "/householdeconomic" },
-			{ icon: <PersonSkillIcon/>, name: "ทักษะบุคคล", path: "/personskill" },
-			{ icon: <VillageSurveyIcon/>, name: "ความต้องการชุมชน", path: "/villagesurvey" },
-			{ icon: <VillageResourceIcon/>, name: "ทรัพยากรชุมชน", path: "/villageresource" },
+			{ icon: <CalenderIcon />, name: "รหัสครัวเรือน", path: "/household" },
+			{ icon: <UserCircleIcon />, name: "บุคคล", path: "/person" },
+			{ icon: <HeartIcon />, name: "บันทึกสุขภาพ", path: "/healthrecord" },
+			{ icon: <TimeIcon />, name: "เยี่ยมบ้าน", path: "/visitlog" },
+			{ icon: <TrainingIcon />, name: "อบรมพัฒนา", path: "/training" },
+			{ icon: <CommunityIssueIcon />, name: "ปัญหาชุมชน", path: "/communityissue" },
+			{ icon: <HouseholdEconomicIcon />, name: "เศรษฐกิจครัวเรือน", path: "/householdeconomic" },
+			{ icon: <PersonSkillIcon />, name: "ทักษะบุคคล", path: "/personskill" },
+			{ icon: <VillageSurveyIcon />, name: "ความต้องการชุมชน", path: "/villagesurvey" },
+			{ icon: <VillageResourceIcon />, name: "ทรัพยากรชุมชน", path: "/villageresource" },
+			{ icon: <PageIcon />, name: "ออกรายงานสรุป", path: "/report" },
 		],
 	},
 ];
@@ -134,10 +145,10 @@ const AppSidebar: React.FC = () => {
 
 	// subItems ที่แต่ละ role ควรเห็นใน "ข้อมูลพื้นที่"
 	const areaSubPathsByRole: Record<string, string[]> = {
-		ADMIN:    ["/province", "/amphur", "/tambon", "/village"],
+		ADMIN: ["/province", "/amphur", "/tambon", "/village"],
 		PROVINCE: ["/amphur", "/tambon", "/village"],
-		AMPHUR:   ["/tambon", "/village"],
-		TAMBON:   ["/village"],
+		AMPHUR: ["/tambon", "/village"],
+		TAMBON: ["/village"],
 	};
 
 	// gate: ยังไม่เลือกหมู่บ้าน → "จัดการหมู่บ้าน" เป็นลิงก์ตรงไปหน้าเลือกพื้นที่
@@ -159,7 +170,7 @@ const AppSidebar: React.FC = () => {
 					: { icon: item.icon, name: item.name, path: "/village" };
 			}
 			return item;
-	});
+		});
 
 	const computedAdminNavItems: NavItem[] = [
 		...villageGatedNavItems,
@@ -193,10 +204,10 @@ const AppSidebar: React.FC = () => {
 	const filteredNavItems = permLoading
 		? computedAdminNavItems
 		: computedAdminNavItems.filter((item) => {
-				if (item.subItems) return true; // submenu group (admin-only ถูกจัดการแล้วข้างบน)
-				if (!item.path) return true;
-				return canView(item.path);
-		  });
+			if (item.subItems) return true; // submenu group (admin-only ถูกจัดการแล้วข้างบน)
+			if (!item.path) return true;
+			return canView(item.path);
+		});
 	const activeNavItems = filteredNavItems;
 
 	const [openSubmenu, setOpenSubmenu] = useState<{
@@ -307,11 +318,10 @@ const AppSidebar: React.FC = () => {
 										<li key={subItem.name}>
 											<Link
 												href={subItem.path}
-												className={`menu-dropdown-item flex items-center gap-2 ${
-													isActive(subItem.path)
+												className={`menu-dropdown-item flex items-center gap-2 ${isActive(subItem.path)
 														? "menu-dropdown-item-active"
 														: "menu-dropdown-item-inactive"
-												}`}
+													}`}
 											>
 												{subItem.icon && (
 													<span className="flex items-center justify-center w-5 h-5 flex-shrink-0 [&>svg]:!w-5 [&>svg]:!h-5">
@@ -345,71 +355,66 @@ const AppSidebar: React.FC = () => {
 
 	return (
 		<aside
-			className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 border-[#2050bb] text-white h-screen transition-all duration-300 ease-in-out z-50 border-r overflow-hidden
+			className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 border-[#ca8a04] border-r-2 text-white h-screen transition-all duration-300 ease-in-out z-50 overflow-hidden
         ${isExpanded || isMobileOpen ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
 		>
 			{/* Sidebar background SVG */}
-			<svg className="pointer-events-none absolute inset-0 w-full h-full" style={{zIndex: 0}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 911" preserveAspectRatio="none">
+			<svg className="pointer-events-none absolute inset-0 w-full h-full" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 911" preserveAspectRatio="none">
 				<defs>
 					<linearGradient id="cyberBg" x1="0%" y1="0%" x2="0%" y2="100%">
-						<stop offset="0%" stopColor="#021754"/>
-						<stop offset="40%" stopColor="#0B42BD"/>
-						<stop offset="75%" stopColor="#2D82F7"/>
-						<stop offset="100%" stopColor="#55A9FC"/>
+						<stop offset="0%" stopColor="#052e16" />
+						<stop offset="45%" stopColor="#14532d" />
+						<stop offset="80%" stopColor="#15803d" />
+						<stop offset="100%" stopColor="#16a34a" />
 					</linearGradient>
 					<linearGradient id="layerGrad1" x1="100%" y1="100%" x2="0%" y2="0%">
-						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.22"/>
-						<stop offset="80%" stopColor="#ffffff" stopOpacity="0.0"/>
+						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.22" />
+						<stop offset="80%" stopColor="#ffffff" stopOpacity="0.0" />
 					</linearGradient>
 					<linearGradient id="layerGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.0"/>
-						<stop offset="50%" stopColor="#ffffff" stopOpacity="0.12"/>
-						<stop offset="100%" stopColor="#ffffff" stopOpacity="0.28"/>
+						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.0" />
+						<stop offset="50%" stopColor="#ffffff" stopOpacity="0.12" />
+						<stop offset="100%" stopColor="#ffffff" stopOpacity="0.28" />
 					</linearGradient>
 					<linearGradient id="layerGrad3" x1="100%" y1="100%" x2="0%" y2="0%">
-						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.05"/>
-						<stop offset="100%" stopColor="#ffffff" stopOpacity="0.18"/>
+						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.05" />
+						<stop offset="100%" stopColor="#ffffff" stopOpacity="0.18" />
 					</linearGradient>
 					<radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
-						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.85"/>
-						<stop offset="40%" stopColor="#AEE5FF" stopOpacity="0.35"/>
-						<stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+						<stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+						<stop offset="40%" stopColor="#fde68a" stopOpacity="0.35" />
+						<stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
 					</radialGradient>
 				</defs>
-				<rect width="360" height="911" fill="url(#cyberBg)"/>
-				<polygon points="360,550 0,280 0,911 360,911" fill="url(#layerGrad3)" opacity="0.4"/>
-				<polygon points="360,720 0,420 0,650 360,880" fill="url(#layerGrad1)" opacity="0.65"/>
-				<polygon points="380,830 -20,480 -20,930 380,930" fill="url(#layerGrad2)"/>
-				<polygon points="360,760 140,911 360,911" fill="url(#layerGrad1)" opacity="0.5"/>
-				<line x1="-10" y1="280" x2="370" y2="550" stroke="#ffffff" strokeWidth="1.2" opacity="0.15"/>
-				<line x1="-10" y1="420" x2="370" y2="720" stroke="#ffffff" strokeWidth="2" opacity="0.25"/>
-				<line x1="-10" y1="480" x2="370" y2="830" stroke="#ffffff" strokeWidth="2.5" opacity="0.3"/>
-				<line x1="-10" y1="520" x2="370" y2="880" stroke="#ffffff" strokeWidth="1" opacity="0.15"/>
-				<line x1="360" y1="620" x2="80" y2="911" stroke="#ffffff" strokeWidth="1" opacity="0.08"/>
-				<circle cx="110" cy="360" r="7" fill="url(#orbGlow)"/>
-				<circle cx="290" cy="490" r="5" fill="url(#orbGlow)" opacity="0.6"/>
-				<circle cx="70" cy="580" r="9" fill="url(#orbGlow)" opacity="0.5"/>
-				<circle cx="210" cy="710" r="6" fill="url(#orbGlow)"/>
-				<circle cx="130" cy="800" r="8" fill="url(#orbGlow)" opacity="0.7"/>
-				<circle cx="280" cy="830" r="5" fill="url(#orbGlow)" opacity="0.5"/>
+				<rect width="360" height="911" fill="url(#cyberBg)" />
+				<polygon points="360,550 0,280 0,911 360,911" fill="url(#layerGrad3)" opacity="0.4" />
+				<polygon points="360,720 0,420 0,650 360,880" fill="url(#layerGrad1)" opacity="0.65" />
+				<polygon points="380,830 -20,480 -20,930 380,930" fill="url(#layerGrad2)" />
+				<polygon points="360,760 140,911 360,911" fill="url(#layerGrad1)" opacity="0.5" />
+				<line x1="-10" y1="280" x2="370" y2="550" stroke="#ffffff" strokeWidth="1.2" opacity="0.15" />
+				<line x1="-10" y1="420" x2="370" y2="720" stroke="#ffffff" strokeWidth="2" opacity="0.25" />
+				<line x1="-10" y1="480" x2="370" y2="830" stroke="#ffffff" strokeWidth="2.5" opacity="0.3" />
+				<line x1="-10" y1="520" x2="370" y2="880" stroke="#ffffff" strokeWidth="1" opacity="0.15" />
+				<line x1="360" y1="620" x2="80" y2="911" stroke="#ffffff" strokeWidth="1" opacity="0.08" />
+				<circle cx="110" cy="360" r="7" fill="url(#orbGlow)" />
+				<circle cx="290" cy="490" r="5" fill="url(#orbGlow)" opacity="0.6" />
+				<circle cx="70" cy="580" r="9" fill="url(#orbGlow)" opacity="0.5" />
+				<circle cx="210" cy="710" r="6" fill="url(#orbGlow)" />
+				<circle cx="130" cy="800" r="8" fill="url(#orbGlow)" opacity="0.7" />
+				<circle cx="280" cy="830" r="5" fill="url(#orbGlow)" opacity="0.5" />
 			</svg>
 
-			<div
-				className={`relative z-10 py-8 flex  ${!isExpanded ? "lg:justify-center" : "justify-start"}`}
-			>
-				<Link href={role === "VILLAGE" ? "/villager" : "/"} className="flex items-center gap-3">
-					<img
-						src="/images/logo/smart-village-logo.png"
-						alt="Smart Village"
-						className="flex-shrink-0 w-12 h-9 object-contain"
-					/>
-					{(isExpanded || isMobileOpen) && (
-						<span className="text-xl font-bold text-white tracking-wide">Smart Village</span>
-					)}
-				</Link>
-			</div>
+				<div
+					className={`relative z-10 py-8 flex  ${!isExpanded ? "lg:justify-center" : "justify-start"}`}
+				>
+					<Link href={role === "VILLAGE" ? "/" : "/"} className="flex items-center gap-3">
+						{(isExpanded || isMobileOpen) && (
+							<span className="text-4xl font-bold text-white tracking-wide">Smart <span className="text-[#fcd34d]">Village</span></span>
+						)}
+					</Link>
+				</div>
 			{/* Village indicator chip */}
 			{role !== "VILLAGE" && (isExpanded || isMobileOpen) && (
 				<div className="relative z-10 mb-3 rounded-xl bg-white/10 border border-white/20 px-3 py-2.5">
@@ -468,18 +473,17 @@ const AppSidebar: React.FC = () => {
 					/>
 				</div>
 				{(isExpanded || isMobileOpen) && (
-					<div className="text-center">
-						<p className="text-white text-sm font-medium leading-tight truncate max-w-[200px]">
-							{currentUser?.fullName || currentUser?.username || (role === "VILLAGE" ? "ลูกบ้าน" : "ผู้ดูแลระบบ")}
+					<div className="text-center min-w-0 px-1">
+						<p className="text-sm font-semibold text-white truncate max-w-[140px]">
+							{currentUser?.fullName || currentUser?.username || "ผู้ใช้งาน"}
 						</p>
-						<p className="text-white/60 text-xs mt-0.5">
-							{role === "VILLAGE" ? "Village" : role === "ADMIN" ? "Admin" : role || ""}
+						<p className="text-xs text-white/60 truncate max-w-[140px]">
+							{currentUser?.role || ""}
 						</p>
 					</div>
 				)}
 			</div>
 		</aside>
 	);
-};
-
+}
 export default AppSidebar;

@@ -159,12 +159,12 @@ function CommunityIssueEditContent() {
       fd.append("issueType", form.issueType);
       fd.append("severity",  form.severity);
       fd.append("status",    form.status);
-      if (form.householdId)   fd.append("householdId",   form.householdId);
-      if (form.owner)         fd.append("owner",         form.owner);
-      if (form.impactPeople)  fd.append("impactPeople",  form.impactPeople);
-      if (form.budgetEstimate)fd.append("budgetEstimate",form.budgetEstimate);
-      if (form.dueDate)       fd.append("dueDate",       form.dueDate);
-      if (form.remark)        fd.append("remark",        form.remark);
+      if (form.householdId)         fd.append("householdId",    form.householdId);
+      if (form.owner)               fd.append("owner",          form.owner);
+      if (form.impactPeople !== "")  fd.append("impactPeople",   form.impactPeople);
+      if (form.budgetEstimate !== "") fd.append("budgetEstimate", form.budgetEstimate);
+      if (form.dueDate)             fd.append("dueDate",        form.dueDate);
+      if (form.remark)              fd.append("remark",         form.remark);
       
       // 🛠️ 3. แก้ไข: เลือกใช้ villageId จาก Context ก่อน ถ้าไม่มีให้สลับไปใช้ค่าเดิมของมัน (ป้องกันสิทธิ์พัง)
       const finalVillageId = village?.villageId ?? originVillageId;
@@ -340,7 +340,7 @@ export default function CommunityIssueEdit() {
     <PermissionGuard menuUrl="/communityissue" action="edit">
       <Suspense fallback={<div>Loading...</div>}>
         <CommunityIssueEditContent />
-      </Suspense>
+        </Suspense>
     </PermissionGuard>
   );
 }

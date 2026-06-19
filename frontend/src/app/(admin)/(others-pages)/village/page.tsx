@@ -327,10 +327,10 @@ export default function VillagePage() {
 														</span>
 													)}
 												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.tambonName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.amphurName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.provinceName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.zipcode}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.tambonName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.amphurName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.provinceName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.zipcode}</TableCell>
 												<TableCell className="px-4 py-3 text-center">
 													<div className="flex items-center justify-center gap-2">
 														{/* ปุ่มเลือกจัดการ */}
@@ -363,35 +363,46 @@ export default function VillagePage() {
 																เลือกจัดการ
 															</button>
 														)}
+														<a
+															href={`/report?villageId=${v.villageId}`}
+															title="ดูรายงานสรุปประจำหมู่บ้าน"
+															className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-black dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+														>
+															<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+																<path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.821V21m0 0H18m-11.28 0h3.96m0 0V13.821m0 0h4.86M18 10.179V21m0 0H18m0 0h1.8M18 21h-2.1m0 0V10.179M3 10.179h18M6.72 6.72h10.56M12 3v3.72" />
+															</svg>
+														</a>
 														{canEdit("/village") && (
 															<a
 																href={`/village/edit?id=${v.villageId}`}
 																className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
 															>
 																<svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-																	<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
+																	<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206Z" />
 																</svg>
 															</a>
+														)}
+														{canEdit("/village") && (
+															<button
+																onClick={() => handleDelete(v.villageId)}
+																className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500 bg-red-500 text-white shadow-theme-xs hover:bg-red-600 hover:border-red-600"
+															>
+																<svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+																	<path fillRule="evenodd" clipRule="evenodd" d="M8.75 1.25C8.08696 1.25 7.45107 1.51339 6.98223 1.98223C6.51339 2.45107 6.25 3.08696 6.25 3.75V4.375H3.125C2.77982 4.375 2.5 4.65482 2.5 5C2.5 5.34518 2.77982 5.625 3.125 5.625H3.75V16.25C3.75 17.2855 4.58947 18.125 5.625 18.125H14.375C15.4105 18.125 16.25 17.2855 16.25 16.25V5.625H16.875C17.2202 5.625 17.5 5.34518 17.5 5C17.5 4.65482 17.2202 4.375 16.875 4.375H13.75V3.75C13.75 3.08696 13.4866 2.45107 13.0178 1.98223C12.5489 1.51339 11.913 1.25 11.25 1.25H8.75Z" />
+																</svg>
+															</button>
 														)}
 													</div>
 												</TableCell>
 											</TableRow>
 										);
 									})}
-
-									{filtered.length === 0 && (
-										<TableRow>
-											<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
-												ไม่พบหมู่บ้าน
-											</TableCell>
-										</TableRow>
-									)}
-								</TableBody>
-							</Table>
+									</TableBody>
+								</Table>
+							</div>
 						</div>
 					</div>
-				</div>
-			</ComponentCard>
-		</>
+				</ComponentCard>
+			</>
 	);
 }

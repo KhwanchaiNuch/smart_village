@@ -73,15 +73,28 @@ export default function DashboardView({ households, persons, loading, scopeBanne
     .filter((h) => h.gpsLat && h.gpsLng)
     .map((h) => {
       const members = persons.filter((p) => p.householdId === h.householdId);
+      const hasBedridden = members.some((p) => p.isBedridden === true);
+      const hasDisabled  = members.some((p) => p.isDisabled  === true);
+      const hasSick      = members.some((p) => p.isSick      === true);
+      const hasElderly   = members.some((p) => p.isElderly   === true);
+
+      let healthTier = 0;
+      if (hasBedridden) healthTier = 4;
+      else if (hasDisabled) healthTier = 3;
+      else if (hasSick) healthTier = 2;
+      else if (hasElderly) healthTier = 1;
+
       return {
         householdId: h.householdId,
         houseNo: h.houseNo,
         moo: h.moo,
         lat: h.gpsLat!,
         lng: h.gpsLng!,
-        hasBedridden: members.some((p) => p.isBedridden === true),
-        hasDisabled:  members.some((p) => p.isDisabled  === true),
-        hasElderly:   members.some((p) => p.isElderly   === true),
+        healthTier,
+        hasBedridden,
+        hasDisabled,
+        hasElderly,
+        villageId: h.villageId,
       };
     });
 
@@ -128,17 +141,11 @@ export default function DashboardView({ households, persons, loading, scopeBanne
                 ) : (
                   <p className={`text-2xl font-bold ${c.text}`}>{card.value.toLocaleString()}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{card.sub}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{card.label}</p>
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Map */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">แผนที่หมู่บ้าน</h2>
-        <VillageMap markers={mapMarkers} />
       </div>
     </div>
   );

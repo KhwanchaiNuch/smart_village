@@ -82,6 +82,11 @@ public class CommunityIssueController {
                 budgetEstimate, dueDate, remark, villageId, file, removeImage);
     }
 
+    @GetMapping("/{id}/recommendations")
+    public ResponseEntity<?> recommendations(@PathVariable Long id) {
+        return service.getRecommendations(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         return service.delete(id);

@@ -28,6 +28,10 @@ public class VillageResource {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    /** comma-separated issue types เช่น "สุขภาพ,สังคม/ความปลอดภัย" */
+    @Column(name = "resource_categories", columnDefinition = "TEXT")
+    private String resourceCategories;
+
     @Column(precision = 10, scale = 6)
     private BigDecimal gpsLat;
 
@@ -65,6 +69,9 @@ public class VillageResource {
 
     public java.math.BigDecimal getGpsLng() { return gpsLng; }
     public void setGpsLng(java.math.BigDecimal gpsLng) { this.gpsLng = gpsLng; }
+
+    public String getResourceCategories() { return resourceCategories; }
+    public void setResourceCategories(String resourceCategories) { this.resourceCategories = resourceCategories; }
 
     public java.time.LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
