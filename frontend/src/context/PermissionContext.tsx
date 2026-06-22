@@ -52,6 +52,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
   const [permissions, setPermissions] = useState<MenuPermission[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [isAdmin,     setIsAdmin]     = useState(false);
+  const [isViewer,    setIsViewer]    = useState(false);
 
   const refreshPerms = useCallback(async () => {
     try {
@@ -59,6 +60,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       if (!role) { setLoading(false); return; }
 
       setIsAdmin(role === "ADMIN");
+      setIsViewer(role === "VIEWER");
 
       const res = await axios.get<MenuPermission[]>("/role-menus/my-permissions");
       setPermissions(res.data);
@@ -76,7 +78,10 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     const cached = loadCached();
     const role   = localStorage.getItem("role");
     if (cached.length > 0) setPermissions(cached);
-    if (role) setIsAdmin(role === "ADMIN");
+    if (role) {
+      setIsAdmin(role === "ADMIN");
+      setIsViewer(role === "VIEWER");
+    }
 
     // fetch ใหม่ใน background
     refreshPerms();
@@ -88,10 +93,10 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
 
   // canView: ถ้าไม่อยู่ใน DB → อนุญาต (หน้าไม่ได้ลงทะเบียน = ไม่มี restriction เช่น dashboard /)
   // canAdd/Edit/Delete: ถ้าไม่อยู่ใน DB → ปฏิเสธ (ต้องมี permission ชัดเจนจึงทำได้)
-  const canView   = (menuUrl: string) => isAdmin || (find(menuUrl)?.canView   ?? true);
-  const canAdd    = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canAdd    ?? false));
-  const canEdit   = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canEdit   ?? false));
-  const canDelete = (menuUrl: string) => isAdmin || (loading ? true : (find(menuUrl)?.canDelete ?? false));
+  const canView   = (menuUrl: string) => isAdmin || isViewer || (find(menuUrl)?.canView   ?? true);
+  const canAdd    = (menuUrl: string) => isAdmin || isViewer || (loading ? true : (find(menuUrl)?.canAdd    ?? false));
+  const canEdit   = (menuUrl: string) => isAdmin || isViewer || (loading ? true : (find(menuUrl)?.canEdit   ?? false));
+  const canDelete = (menuUrl: string) => isAdmin || isViewer || (loading ? true : (find(menuUrl)?.canDelete ?? false));
 
   return (
     <PermissionContext.Provider value={{ permissions, loading, refreshPerms, isAdmin, canView, canAdd, canEdit, canDelete }}>

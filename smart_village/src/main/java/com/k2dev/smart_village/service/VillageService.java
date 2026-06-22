@@ -57,8 +57,8 @@ public class VillageService {
         String role = ScopeUtil.currentUser() != null ? ScopeUtil.currentUser().getRole() : null;
         Integer scopeId = ScopeUtil.getScopeId();
 
-        if ("VILLAGE".equals(role)) {
-            return ResponseEntity.status(403).body(Map.of("message", "ผู้ใช้ระดับหมู่บ้านไม่สามารถเพิ่มหมู่บ้านได้"));
+        if ("VILLAGE".equals(role) || "VIEWER".equals(role)) {
+            return ResponseEntity.status(403).body(Map.of("message", "ผู้รับชมหรือผู้ใช้ระดับหมู่บ้านไม่สามารถเพิ่มหมู่บ้านได้"));
         }
 
         if (!"ADMIN".equals(role) && v.getTambonId() != null) {

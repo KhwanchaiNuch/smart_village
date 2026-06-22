@@ -40,6 +40,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/provinces/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/amphurs/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tambons/**").permitAll()
                 .requestMatchers(
                     "/error",
                     "/swagger-ui/**",

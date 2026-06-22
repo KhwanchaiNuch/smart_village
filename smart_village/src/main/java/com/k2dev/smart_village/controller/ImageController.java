@@ -41,11 +41,18 @@ public class ImageController {
     @GetMapping("/**")
     public ResponseEntity<?> getImage(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        String prefix = request.getContextPath() + "/api/image/";
-        if (!uri.startsWith(prefix)) {
+        // ปรับการตัด prefix ให้ตัดส่วนที่เป็น contextPath ออกด้วยเสมอ
+        String contextPath = request.getContextPath(); // "/smart_village"
+        String prefix = "/api/image/";
+        
+        String relativePath;
+        if (uri.startsWith(contextPath + prefix)) {
+            relativePath = uri.substring((contextPath + prefix).length());
+        } else if (uri.startsWith(prefix)) {
+            relativePath = uri.substring(prefix.length());
+        } else {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid path"));
         }
-        String relativePath = uri.substring(prefix.length());
 
         if (relativePath.contains("..")) {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid path"));

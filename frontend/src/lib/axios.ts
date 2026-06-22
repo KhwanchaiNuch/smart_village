@@ -41,6 +41,11 @@ apiClient.interceptors.response.use(
 		const originalRequest = error.config;
 
 		if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+			const token = localStorage.getItem("token");
+			if (!token) {
+				// ไม่มี token ในระบบอยู่แล้ว (เช่น หน้า signin/signup) ไม่ต้องพยายาม refresh
+				return Promise.reject(error);
+			}
 			originalRequest._retry = true;
 
 			// ถ้ากำลัง refresh อยู่ → ใส่ request นี้เข้า queue แล้วรอ

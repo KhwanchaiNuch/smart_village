@@ -5,6 +5,7 @@ import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 
@@ -105,6 +106,18 @@ export default function SignInForm() {
             </Button>
           </div>
         </form>
+
+        <div className="mt-5 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            ยังไม่มีบัญชีผู้ใช้?{" "}
+            <Link
+              href="/signup"
+              className="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-semibold"
+            >
+              ลงทะเบียนเข้าชมระบบ
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

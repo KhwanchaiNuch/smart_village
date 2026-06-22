@@ -121,7 +121,7 @@ export default function HouseHold() {
 		}
 	};
 
-	const needsVillageSelect = role !== null && role !== "VILLAGE" && !village;
+	const needsVillageSelect = role !== null && role !== "VILLAGE" && role !== "VIEWER" && !village;
 
 	const columns: DtColumn<HouseHold>[] = [
 		{

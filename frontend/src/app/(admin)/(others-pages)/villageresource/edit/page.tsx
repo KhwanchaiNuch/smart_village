@@ -34,7 +34,7 @@ function VillageResourceEditContent() {
     document.title = "Smart Village | แก้ไขทรัพยากรชุมชน";
     const r = localStorage.getItem("role");
     setRole(r);
-    if (r !== "VILLAGE") {
+    if (r !== "VILLAGE" && r !== "VIEWER") {
       axios.get<Village[]>("/villages/scoped").then(res => setVillages(res.data)).catch(() => {});
     }
     if (!id) return;

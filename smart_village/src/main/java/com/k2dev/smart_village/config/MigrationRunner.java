@@ -158,6 +158,15 @@ public class MigrationRunner implements ApplicationRunner {
             try { jdbc.execute(sql); } catch (Exception ignored) {}
         }
 
+        // ── app_user: update role_level CHECK constraint to allow VIEWER ──
+        try {
+            jdbc.execute("ALTER TABLE app_user DROP CONSTRAINT IF EXISTS app_user_role_level_check");
+            jdbc.execute("ALTER TABLE app_user ADD CONSTRAINT app_user_role_level_check CHECK (role_level IN ('ADMIN', 'PROVINCE', 'AMPHUR', 'TAMBON', 'VILLAGE', 'VIEWER'))");
+            System.out.println("[MigrationRunner] Updated app_user role_level CHECK constraint");
+        } catch (Exception e) {
+            System.err.println("[MigrationRunner] Failed to update CHECK constraint: " + e.getMessage());
+        }
+
         // ── ให้ village.tambon_id เป็น nullable (กัน NOT NULL constraint) ──
         try {
             jdbc.execute("ALTER TABLE village ALTER COLUMN tambon_id DROP NOT NULL");
@@ -265,7 +274,7 @@ public class MigrationRunner implements ApplicationRunner {
      * ให้ ADMIN กำหนดสิทธิ์ผ่านหน้า Permission Matrix ได้
      */
     private void seedSystemRoles() {
-        String[] systemRoles = {"ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE"};
+        String[] systemRoles = {"ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE", "VIEWER"};
         for (String roleName : systemRoles) {
             try {
                 Integer cnt = jdbc.queryForObject(
@@ -279,6 +288,37 @@ public class MigrationRunner implements ApplicationRunner {
             }
         }
         System.out.println("[MigrationRunner] ✅ System roles ensured");
+        seedViewerPermissions();
+    }
+
+    private void seedViewerPermissions() {
+        try {
+            Long viewerRoleId = jdbc.queryForObject(
+                "SELECT id FROM \"role\" WHERE name = 'VIEWER'", Long.class);
+            if (viewerRoleId == null) return;
+
+            java.util.List<java.util.Map<String, Object>> menus = jdbc.queryForList("SELECT id, url FROM menu");
+            for (java.util.Map<String, Object> menu : menus) {
+                Long menuId = ((Number) menu.get("id")).longValue();
+                String url = (String) menu.get("url");
+
+                Integer cnt = jdbc.queryForObject(
+                    "SELECT COUNT(*) FROM role_menu WHERE role_id = ? AND menu_id = ?",
+                    Integer.class, viewerRoleId, menuId);
+                
+                if (cnt == null || cnt == 0) {
+                    boolean canView = !"/manageusers".equals(url);
+                    jdbc.update(
+                        "INSERT INTO role_menu (role_id, menu_id, can_view, can_add, can_edit, can_delete) " +
+                        "VALUES (?, ?, ?, false, false, false)",
+                        viewerRoleId, menuId, canView);
+                    System.out.println("[MigrationRunner] Created role_menu for VIEWER and menuId: " + menuId + " (canView=" + canView + ")");
+                }
+            }
+            System.out.println("[MigrationRunner] ✅ VIEWER role permissions ensured");
+        } catch (Exception e) {
+            System.err.println("[MigrationRunner] seedViewerPermissions error: " + e.getMessage());
+        }
     }
 
     /** welfare_card: ถ้า DB มีเป็น VARCHAR → แปลงเป็น BOOLEAN */

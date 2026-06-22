@@ -87,7 +87,7 @@ export const GeoScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ──── load provinces (always needed for ADMIN / PROVINCE) ────
   useEffect(() => {
     if (!role) return;
-    if (role === "VILLAGE") return; // VILLAGE ไม่ต้องโหลด geo list
+    if (role === "VILLAGE" || role === "VIEWER") return; // VILLAGE / VIEWER ไม่ต้องโหลด geo list
     axios.get<GeoProvince[]>("/provinces").then(r => setProvinces(r.data)).catch(() => {});
   }, [role]);
 
@@ -159,6 +159,36 @@ export const GeoScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 }
               }).catch(() => {});
           }).catch(() => {});
+      }
+    } else if (role === "VILLAGE" || role === "VIEWER") {
+      // VILLAGE / VIEWER role — ล็อคตรงที่ village จาก scopeId
+      if (cache.village?.villageId === scopeId) {
+        setSelectedVillageState(cache.village);
+      } else {
+        axios.get<GeoVillage[]>(`/villages/all`)
+          .then(r => {
+            const v = r.data.find(x => x.villageId === scopeId);
+            if (v) {
+              setSelectedVillageState(v);
+              localStorage.setItem("activeVillage", JSON.stringify({
+                villageId: v.villageId,
+                villageName: v.villageName,
+                moo: v.moo,
+              }));
+              saveCache({ village: v });
+            }
+          })
+          .catch(() => {
+            // fallback: ถ้าไม่มี /villages/all ให้ตั้งค่าตรง ๆ
+            const fallback: GeoVillage = { villageId: scopeId, tambonId: 0, villageName: "หมู่บ้าน A", moo: "1" };
+            setSelectedVillageState(fallback);
+            localStorage.setItem("activeVillage", JSON.stringify({
+              villageId: fallback.villageId,
+              villageName: fallback.villageName,
+              moo: fallback.moo,
+            }));
+            saveCache({ village: fallback });
+          });
       }
     }
     // ADMIN → restore from cache only (no scopeId lock)

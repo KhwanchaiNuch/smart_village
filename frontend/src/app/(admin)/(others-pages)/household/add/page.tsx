@@ -151,7 +151,7 @@ export default function HouseHoldAdd() {
 
   const resolveVillageId = (): number | null => {
     if (activeVillage)         return activeVillage.villageId;
-    if (role === "VILLAGE")    return scopeId;
+    if (role === "VILLAGE" || role === "VIEWER")    return scopeId;
     if (selVillage)            return Number(selVillage);
     return null;
   };
@@ -222,7 +222,7 @@ export default function HouseHoldAdd() {
       );
     }
 
-    if (role === "VILLAGE") {
+    if (role === "VILLAGE" || role === "VIEWER") {
       return scopeId ? (
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
           <p className="text-sm text-green-700 dark:text-green-400">
@@ -266,7 +266,7 @@ export default function HouseHoldAdd() {
           </div>
         )}
 
-        {role !== "VILLAGE" && (
+        {role !== "VILLAGE" && role !== "VIEWER" && (
           <div>
             <Label>หมู่บ้าน <span className="text-red-500">*</span></Label>
             <select value={selVillage} onChange={e => onVillageChange(e.target.value)} disabled={villages.length === 0} className={DDL}>

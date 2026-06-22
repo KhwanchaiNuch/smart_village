@@ -42,7 +42,7 @@ function TrainingEditContent() {
     setRole(r);
     // VILLAGE → ใช้ scopeId เป็น villageId เลย ไม่ต้องโหลด dropdown
     // ADMIN/PROVINCE/AMPHUR/TAMBON → โหลดรายการหมู่บ้านให้เลือก
-    if (r !== "VILLAGE") {
+    if (r !== "VILLAGE" && r !== "VIEWER") {
       axios.get<Village[]>("/villages/scoped").then(res => setVillages(res.data)).catch(() => {});
     }
     if (!id) return;
@@ -52,7 +52,7 @@ function TrainingEditContent() {
         setForm({
           id: d.id?.toString() || "",
           // VILLAGE user → ใช้ scopeId ของตัวเองเสมอ (ไม่สนข้อมูลใน record)
-          villageId: r === "VILLAGE" ? (scopeId ?? "") : (d.villageId != null ? String(d.villageId) : ""),
+          villageId: (r === "VILLAGE" || r === "VIEWER") ? (scopeId ?? "") : (d.villageId != null ? String(d.villageId) : ""),
           trainingName: d.trainingName || "",
           trainingType: d.trainingType || "",
           organizer: d.organizer || "",
@@ -116,7 +116,7 @@ function TrainingEditContent() {
       <input type="hidden" value={form.id} />
 
       {/* Village selector: ซ่อนถ้าเป็น VILLAGE user */}
-      {role === "VILLAGE" ? (
+      {role === "VILLAGE" || role === "VIEWER" ? (
         <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 text-sm text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-blue-400 flex-shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />

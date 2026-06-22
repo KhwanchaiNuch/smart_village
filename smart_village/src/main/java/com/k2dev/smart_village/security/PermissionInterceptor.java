@@ -40,6 +40,11 @@ public class PermissionInterceptor implements HandlerInterceptor {
         "/api/roles/",
         "/api/menus/",
         "/api/villages/ensure/",   // VillageContext auto-init — ต้องให้ทุก user เข้าได้
+        "/api/villages/all",       // VILLAGE role auto-load ตอน login
+        "/api/villages",           // village list by tambonId
+        "/api/provinces",
+        "/api/amphurs",
+        "/api/tambons",
         "/swagger-ui",
         "/v3/api-docs",
         "/error"
@@ -73,14 +78,10 @@ public class PermissionInterceptor implements HandlerInterceptor {
         if (ScopeUtil.isAdmin()) return true;
 
         // 3. หา Menu ที่ตรงกับ path
-        //    Menu.url = "/training" → API prefix = "/api/training"
-        //    ตรวจว่า path == "/api/training" หรือ path.startsWith("/api/training/")
         List<Menu> allMenus = menuRepo.findAll();
         Menu matchedMenu = null;
         for (Menu m : allMenus) {
-            if (m.getUrl() == null || m.getUrl().isBlank()) continue;
-            String apiPrefix = "/api" + m.getUrl();
-            if (path.equals(apiPrefix) || path.startsWith(apiPrefix + "/")) {
+            if (isPathMatchingMenu(path, m.getUrl())) {
                 matchedMenu = m;
                 break;
             }
@@ -116,9 +117,61 @@ public class PermissionInterceptor implements HandlerInterceptor {
         }
 
         if (!allowed) {
-            response.sendError(403, "ไม่มีสิทธิ์ดำเนินการนี้");
+            String msg = "VIEWER".equals(user.getRole())
+                ? "คุณอยู่ในโหมดผู้รับชม ไม่สามารถเพิ่ม แก้ไข หรือลบข้อมูลได้"
+                : "ไม่มีสิทธิ์ดำเนินการนี้";
+            response.sendError(403, msg);
             return false;
         }
         return true;
+    }
+
+    private boolean isPathMatchingMenu(String path, String menuUrl) {
+        if (menuUrl == null || menuUrl.isBlank()) return false;
+
+        String menu = menuUrl.toLowerCase().replaceAll("[/-]", "");
+        String normalizedPath = path.toLowerCase().replaceAll("/api/", "").replaceAll("[/-]", "");
+
+        if ("household".equals(menu)) {
+            return normalizedPath.startsWith("household") && !normalizedPath.startsWith("householdeconomic");
+        }
+        if ("person".equals(menu)) {
+            return normalizedPath.startsWith("person") && !normalizedPath.startsWith("personskill");
+        }
+        if ("healthrecord".equals(menu)) {
+            return normalizedPath.startsWith("healthrecord");
+        }
+        if ("visitlog".equals(menu)) {
+            return normalizedPath.startsWith("visitlog");
+        }
+        if ("training".equals(menu)) {
+            return normalizedPath.startsWith("trainingevent") || normalizedPath.startsWith("trainingparticipant") || normalizedPath.startsWith("training");
+        }
+        if ("communityissue".equals(menu)) {
+            return normalizedPath.startsWith("communityissue") || normalizedPath.startsWith("communityissuelog");
+        }
+        if ("householdeconomic".equals(menu)) {
+            return normalizedPath.startsWith("householdeconomic");
+        }
+        if ("personskill".equals(menu)) {
+            return normalizedPath.startsWith("personskill");
+        }
+        if ("villagesurvey".equals(menu)) {
+            return normalizedPath.startsWith("villageneedsurvey") || normalizedPath.startsWith("villagesurvey");
+        }
+        if ("villageresource".equals(menu)) {
+            return normalizedPath.startsWith("villageresource");
+        }
+        if ("village".equals(menu)) {
+            return normalizedPath.startsWith("village") 
+                && !normalizedPath.startsWith("villagesurvey") 
+                && !normalizedPath.startsWith("villageresource")
+                && !normalizedPath.startsWith("villageneedsurvey");
+        }
+        if ("manageusers".equals(menu)) {
+            return normalizedPath.startsWith("adminusers") || normalizedPath.startsWith("appuser") || normalizedPath.startsWith("manageuser");
+        }
+
+        return false;
     }
 }

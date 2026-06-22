@@ -63,7 +63,7 @@ public class ProfileService {
     public String buildScopeLabel(AppUser u) {
         if ("ADMIN".equals(u.getRoleLevel())) return "ดูแลข้อมูลทั้งระบบ";
         StringBuilder sb = new StringBuilder();
-        if ("VILLAGE".equals(u.getRoleLevel()) && u.getScopeId() != null) {
+        if (("VILLAGE".equals(u.getRoleLevel()) || "VIEWER".equals(u.getRoleLevel())) && u.getScopeId() != null) {
             Village v = villageRepo.findById(u.getScopeId()).orElse(null);
             if (v != null) {
                 sb.append(v.getVillageName());

@@ -45,7 +45,7 @@ public class GeoScopeService {
         if (role == null || scopeId == null) return List.of();
 
         return switch (role) {
-            case "VILLAGE" -> List.of(scopeId);
+            case "VILLAGE", "VIEWER" -> List.of(scopeId);
 
             case "TAMBON" -> villageRepo.findByTambonId(scopeId)
                     .stream().map(Village::getVillageId).distinct().toList();

@@ -45,7 +45,7 @@ public class TambonService {
             }
             case "AMPHUR"  -> repo.findByAmphurId(scopeId);
             case "TAMBON"  -> repo.findById(scopeId).map(List::of).orElse(List.of());
-            case "VILLAGE" -> {
+            case "VILLAGE", "VIEWER" -> {
                 Village v = villageRepo.findById(scopeId).orElse(null);
                 if (v == null || v.getTambonId() == null) yield List.of();
                 yield repo.findById(v.getTambonId()).map(List::of).orElse(List.of());

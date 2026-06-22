@@ -26,7 +26,7 @@ public class AppUserService {
     }
 
     private void ensureVillageExists(String roleLevel, Integer scopeId) {
-        if ("VILLAGE".equals(roleLevel) && scopeId != null) {
+        if (("VILLAGE".equals(roleLevel) || "VIEWER".equals(roleLevel)) && scopeId != null) {
             try { villageRepo.ensureVillage(scopeId, "หมู่บ้านหมู่ " + scopeId); } catch (Exception ignored) {}
         }
     }

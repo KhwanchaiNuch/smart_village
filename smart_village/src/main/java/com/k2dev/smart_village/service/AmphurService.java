@@ -59,7 +59,7 @@ public class AmphurService {
                 if (t == null) yield List.of();
                 yield repo.findById(t.getAmphurId()).map(List::of).orElse(List.of());
             }
-            case "VILLAGE"  -> {
+            case "VILLAGE", "VIEWER" -> {
                 Village v = villageRepo.findById(scopeId).orElse(null);
                 if (v == null || v.getTambonId() == null) yield List.of();
                 Tambon t = tambonRepo.findById(v.getTambonId()).orElse(null);

@@ -371,7 +371,7 @@ function ReportPageContent() {
               onChange={handleVillageChange}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             >
-              {role !== "VILLAGE" && <option value="">-- สรุปผลทุกหมู่บ้าน --</option>}
+              {role !== "VILLAGE" && role !== "VIEWER" && <option value="">-- สรุปผลทุกหมู่บ้าน --</option>}
               {scopedVillages.map((v) => (
                 <option key={v.villageId} value={v.villageId}>
                   {v.villageName} {v.moo ? `(หมู่ ${v.moo})` : ""}

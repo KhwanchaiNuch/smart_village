@@ -32,7 +32,7 @@ export default function VillageResourceAdd() {
     document.title = "Smart Village | เพิ่มทรัพยากรชุมชน";
     const r = localStorage.getItem("role");
     setRole(r);
-    if (r !== "VILLAGE") {
+    if (r !== "VILLAGE" && r !== "VIEWER") {
       axios.get<Village[]>("/villages/scoped").then(res => setVillages(res.data)).catch(() => {});
     }
   }, []);
@@ -58,7 +58,7 @@ export default function VillageResourceAdd() {
     setSaving(true);
     try {
       await axios.post("/village-resources/add", {
-        villageId: role !== "VILLAGE" && selectedVillageId ? Number(selectedVillageId) : null,
+        villageId: role !== "VILLAGE" && role !== "VIEWER" && selectedVillageId ? Number(selectedVillageId) : null,
         villageCode: form.villageCode || null,
         resourceType: form.resourceType,
         resourceName: form.resourceName,
@@ -87,7 +87,7 @@ export default function VillageResourceAdd() {
     <ComponentCard title="เพิ่มทรัพยากรชุมชน">
 
       {/* non-VILLAGE: เลือกหมู่บ้าน */}
-      {role !== "VILLAGE" && (
+      {role !== "VILLAGE" && role !== "VIEWER" && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
           <Label>หมู่บ้านที่ทรัพยากรนี้อยู่ <span className="text-red-500">*</span></Label>
           <select

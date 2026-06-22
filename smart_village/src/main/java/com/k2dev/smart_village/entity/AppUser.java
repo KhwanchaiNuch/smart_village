@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class AppUser {
 
     public static final java.util.Set<String> VALID_ROLES =
-        java.util.Set.of("ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE");
+        java.util.Set.of("ADMIN", "PROVINCE", "AMPHUR", "TAMBON", "VILLAGE", "VIEWER");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

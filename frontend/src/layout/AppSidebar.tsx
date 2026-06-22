@@ -418,7 +418,7 @@ const AppSidebar: React.FC = () => {
 					</Link>
 				</div>
 			{/* Village indicator chip */}
-			{role !== "VILLAGE" && (isExpanded || isMobileOpen) && (
+			{role !== "VILLAGE" && role !== "VIEWER" && (isExpanded || isMobileOpen) && (
 				<div className="relative z-10 mb-3 rounded-xl bg-white/10 border border-white/20 px-3 py-2.5">
 					{village ? (
 						<div className="flex items-center justify-between gap-2">

@@ -56,7 +56,7 @@ export default function TrainingAdd() {
   };
 
   const resolveVillageId = (): number | null => {
-    if (role === "VILLAGE") {
+    if (role === "VILLAGE" || role === "VIEWER") {
       const scopeId = localStorage.getItem("scopeId");
       return scopeId ? Number(scopeId) : null;
     }
@@ -110,7 +110,7 @@ export default function TrainingAdd() {
     <PermissionGuard menuUrl="/training" action="add">
     <ComponentCard title="เพิ่มโครงการอบรม (Add Training Event)">
 
-      {role === "VILLAGE" ? (
+      {role === "VILLAGE" || role === "VIEWER" ? (
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700 flex items-center gap-2 text-sm text-green-700 dark:text-green-400 font-medium">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-green-500 flex-shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
@@ -212,7 +212,7 @@ export default function TrainingAdd() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={saving || (!selectedVillage && role !== "VILLAGE")}
+          disabled={saving || (!selectedVillage && role !== "VILLAGE" && role !== "VIEWER")}
           className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
