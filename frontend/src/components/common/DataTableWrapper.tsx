@@ -180,13 +180,13 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
   return (
     <div>
       {/* ── Toolbar ── */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         {/* Left: Add / Delete / Export */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           {canAdd && addUrl && (
             <a
               href={addUrl}
-              className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 transition-colors"
+              className="inline-flex justify-center items-center gap-1.5 rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 transition-colors w-full sm:w-auto"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -198,7 +198,7 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
             <button
               onClick={handleDelete}
               disabled={selected.size === 0 || loading}
-              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex justify-center items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -210,7 +210,7 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
             <button
               onClick={handleExport}
               disabled={processed.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex justify-center items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -219,12 +219,14 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
             </button>
           )}
           {/* Extra toolbar slots (e.g. filter dropdowns) */}
-          {toolbarExtra}
+          <div className="w-full sm:w-auto">
+            {toolbarExtra}
+          </div>
         </div>
 
         {/* Right: page size + search */}
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 justify-between sm:justify-start">
             <span>แสดง</span>
             <select
               value={pageSize}
@@ -243,14 +245,16 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
             placeholder="ค้นหา..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-48 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            className="h-9 w-full sm:w-48 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
           />
         </div>
       </div>
 
       {/* ── Table ── */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <div className="max-w-full overflow-x-auto">
+        
+        {/* ── Desktop Table View ── */}
+        <div className="hidden md:block max-w-full overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -335,6 +339,55 @@ export default function DataTableWrapper<T extends Record<string, unknown>>({
             </tbody>
           </table>
         </div>
+
+        {/* ── Mobile Card View ── */}
+        <div className="block md:hidden">
+          {loading ? (
+            <div className="py-10 text-center text-gray-400">
+              <span className="inline-block animate-spin mr-2">⏳</span> กำลังโหลด...
+            </div>
+          ) : pageData.length === 0 ? (
+            <div className="py-10 text-center text-gray-400">
+              {emptyText}
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-gray-100 dark:divide-white/[0.05]">
+              {pageData.map((row) => {
+                const id = row[idKey] as string | number;
+                const isSelected = selected.has(id);
+                return (
+                  <div
+                    key={String(id)}
+                    onDoubleClick={() => onRowDoubleClick?.(row)}
+                    className={`p-4 flex flex-col gap-3 transition-colors ${onRowDoubleClick ? "cursor-pointer" : ""} ${isSelected ? "bg-red-50 dark:bg-red-500/10" : "hover:bg-gray-50 dark:hover:bg-white/[0.03]"}`}
+                  >
+                    {canDelete && (
+                      <div className="flex justify-end mb-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => toggleOne(id, e.target.checked)}
+                          className="h-5 w-5 rounded border-gray-300 text-blue-600 cursor-pointer"
+                        />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      {columns.filter((col) => !col.onlyExport).map((col) => (
+                        <div key={col.key} className="flex justify-between items-start gap-4 text-sm">
+                          <span className="font-medium text-gray-500 dark:text-gray-400 min-w-[100px] shrink-0">{col.label}</span>
+                          <span className={`text-gray-800 dark:text-gray-200 break-words ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"}`}>
+                            {col.render ? col.render(row) : String(row[col.key] ?? "")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* ── Pagination Footer ── */}
