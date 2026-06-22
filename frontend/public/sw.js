@@ -49,11 +49,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets → Cache-First
+  // Static assets → Network-First
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         // Only cache successful same-origin responses
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
@@ -61,7 +60,10 @@ self.addEventListener("fetch", (event) => {
         const cloned = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
         return response;
-      });
-    })
+      })
+      .catch(() => {
+        // Offline → Fallback to Cache
+        return caches.match(event.request);
+      })
   );
 });
