@@ -1,8 +1,7 @@
 "use client"
 import ComponentCard from '@/components/common/ComponentCard';
+import DataTableWrapper, { DtColumn } from '@/components/common/DataTableWrapper';
 import Badge from '@/components/ui/badge/Badge';
-import Checkbox from '@/components/form/input/Checkbox';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useCallback, useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
@@ -19,30 +18,52 @@ interface Person {
 	occupation: string;
 	personId: number;
 	age?: number | null;
+	cid?: string | null;
+	title?: string | null;
+	gender?: string | null;
+	birthDate?: string | null;
+	maritalStatus?: string | null;
+	educationLevel?: string | null;
+	secondaryOccupation?: string | null;
+	incomePerMonth?: number | null;
+	diseaseList?: string | null;
+	isDisabled?: boolean | null;
+	disabilityType?: string | null;
+	isElderly?: boolean | null;
+	livingAlone?: boolean | null;
+	welfareCard?: boolean | null;
+	otherWelfare?: string | null;
+	status?: string | null;
+	[key: string]: unknown;
 }
 
-export default function Person() {
+interface Household {
+	householdId: number;
+	houseNo: string | null;
+}
+
+export default function PersonPage() {
 	const { village, loaded } = useVillage();
-	const { canAdd, canEdit, canDelete } = usePermission();
+	const { canAdd, canEdit, canDelete, canView } = usePermission();
 	const [tableData, setData] = useState<Person[]>([]);
-	const [selectedIds, setSelectedIds] = useState<number[]>([]);
+	const [householdMap, setHouseholdMap] = useState<Map<number, string>>(new Map());
 	const [loading, setLoading] = useState(false);
-	const [search, setSearch] = useState("");
 
 	const fetchData = useCallback(async () => {
 		try {
-			const url = village?.villageId ? `/persons?villageId=${village.villageId}` : "/persons";
-			const res = await axios.get<Person[]>(url);
-			const sorted = [...res.data].sort((a, b) => a.personId - b.personId);
-			setData(sorted);
-			setSelectedIds([]);
+			const vid = village?.villageId;
+			const [personsRes, householdsRes] = await Promise.all([
+				axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons"),
+				axios.get<Household[]>(vid ? `/households?villageId=${vid}` : "/households"),
+			]);
+			setData([...personsRes.data].sort((a, b) => a.personId - b.personId));
+
+			const map = new Map<number, string>();
+			householdsRes.data.forEach((h) => map.set(h.householdId, h.houseNo ?? `บ้านเลขที่ ${h.householdId}`));
+			setHouseholdMap(map);
 		} catch (error) {
 			console.error(error);
-			Swal.fire({
-				icon: "error",
-				title: "โหลดข้อมูลไม่สำเร็จ",
-				text: "ไม่สามารถดึงข้อมูลบุคคลได้ กรุณาลองใหม่อีกครั้ง",
-			});
+			Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ", text: "ไม่สามารถดึงข้อมูลบุคคลได้" });
 		}
 	}, [village]);
 
@@ -51,222 +72,127 @@ export default function Person() {
 		if (!loaded) return;
 		fetchData();
 	}, [fetchData, loaded]);
-	const filtered = tableData.filter((p) => {
-		const q = search.toLowerCase();
-		return (
-			String(p.personId).includes(q) ||
-			(p.firstName || "").toLowerCase().includes(q) ||
-			(p.lastName || "").toLowerCase().includes(q) ||
-			(p.occupation || "").toLowerCase().includes(q)
-		);
-	});
 
-	const isAllSelected = filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.personId));
-
-	const toggleSelectAll = (checked: boolean) => {
-		setSelectedIds(checked ? filtered.map((p) => p.personId) : []);
-	};
-
-	const toggleSelectOne = (id: number, checked: boolean) => {
-		setSelectedIds((prev) =>
-			checked ? [...prev, id] : prev.filter((x) => x !== id)
-		);
-	};
-
-	const handleDeleteSelected = async () => {
-		if (selectedIds.length === 0) {
-			Swal.fire({
-				icon: "warning",
-				title: "ยังไม่ได้เลือกรายการ",
-				text: "กรุณาเลือกบุคคลที่ต้องการลบอย่างน้อย 1 รายการ",
-			});
-			return;
-		}
-
+	const handleDeleteSelected = async (ids: (string | number)[]) => {
+		if (ids.length === 0) return;
 		const result = await Swal.fire({
 			icon: "warning",
 			title: "ยืนยันการลบ?",
-			html: `คุณกำลังจะลบข้อมูลบุคคลจำนวน <b>${selectedIds.length}</b> รายการ<br/>การลบไม่สามารถย้อนกลับได้`,
-			showCancelButton: true,
-			confirmButtonText: "ใช่, ลบเลย",
-			cancelButtonText: "ยกเลิก",
-			confirmButtonColor: "#dc2626",
-			cancelButtonColor: "#6b7280",
+			html: `คุณกำลังจะลบข้อมูลบุคคลจำนวน <b>${ids.length}</b> รายการ`,
+			showCancelButton: true, confirmButtonText: "ใช่, ลบเลย", cancelButtonText: "ยกเลิก",
+			confirmButtonColor: "#dc2626", cancelButtonColor: "#6b7280",
 		});
-
 		if (!result.isConfirmed) return;
-
 		try {
 			setLoading(true);
-
-			const responses = await Promise.allSettled(
-				selectedIds.map((id) => axios.delete(`/persons/${id}`))
-			);
-
+			const responses = await Promise.allSettled(ids.map((id) => axios.delete(`/persons/${id}`)));
 			const failed = responses.filter((r) => r.status === "rejected").length;
-			const success = selectedIds.length - failed;
-
 			await fetchData();
-
 			if (failed === 0) {
-				Swal.fire({
-					icon: "success",
-					title: "ลบสำเร็จ",
-					text: `ลบข้อมูลบุคคลเรียบร้อย ${success} รายการ`,
-					timer: 1800,
-					showConfirmButton: false,
-				});
+				Swal.fire({ icon: "success", title: "ลบสำเร็จ", text: `ลบ ${ids.length} รายการเรียบร้อย`, timer: 1800, showConfirmButton: false });
 			} else {
-				Swal.fire({
-					icon: "warning",
-					title: "ลบบางส่วนไม่สำเร็จ",
-					text: `สำเร็จ ${success} รายการ, ล้มเหลว ${failed} รายการ`,
-				});
+				Swal.fire({ icon: "warning", title: "ลบบางส่วนไม่สำเร็จ", text: `สำเร็จ ${ids.length - failed} รายการ, ล้มเหลว ${failed} รายการ` });
 			}
-		} catch (error) {
-			console.error(error);
-			Swal.fire({
-				icon: "error",
-				title: "เกิดข้อผิดพลาด",
-				text: "ไม่สามารถลบข้อมูลได้ กรุณาตรวจสอบสิทธิ์หรือลองใหม่อีกครั้ง",
-			});
+		} catch {
+			Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: "ไม่สามารถลบข้อมูลได้" });
 		} finally {
 			setLoading(false);
 		}
 	};
 
+	const columns: DtColumn<Person>[] = [
+		// ── CSV only (ไม่แสดงในตาราง) ────────────────────────────────────────
+		{ key: "houseNo",              label: "บ้านเลขที่",                  onlyExport: true, exportText: (p) => p.householdId != null ? (householdMap.get(p.householdId) ?? "") : "" },
+		{ key: "_birthDate",          label: "วันเกิด",                     onlyExport: true, exportText: (r) => r.birthDate ?? "" },
+		{ key: "_maritalStatus",      label: "สถานะสมรส",                   onlyExport: true, exportText: (r) => r.maritalStatus ?? "" },
+		{ key: "_educationLevel",     label: "ระดับการศึกษา",               onlyExport: true, exportText: (r) => r.educationLevel ?? "" },
+		{ key: "_secondaryOccupation",label: "อาชีพรอง",                    onlyExport: true, exportText: (r) => r.secondaryOccupation ?? "" },
+		{ key: "_incomePerMonth",     label: "รายได้/เดือน (โดยประมาณ)",   onlyExport: true, exportText: (r) => r.incomePerMonth != null ? String(r.incomePerMonth) : "" },
+		{ key: "_diseaseList",        label: "รายการโรคประจำตัว",           onlyExport: true, exportText: (r) => r.diseaseList ?? "" },
+		{ key: "_disabilityType",     label: "ประเภทความพิการ",             onlyExport: true, exportText: (r) => r.disabilityType ?? "" },
+		{ key: "_isElderly",          label: "ผู้สูงอายุ",                  onlyExport: true, exportText: (r) => r.isElderly ? "ใช่" : "ไม่ใช่" },
+		{ key: "_livingAlone",        label: "อยู่คนเดียว",                 onlyExport: true, exportText: (r) => r.livingAlone ? "ใช่" : "ไม่ใช่" },
+		{ key: "_otherWelfare",       label: "สวัสดิการอื่น ๆ",            onlyExport: true, exportText: (r) => r.otherWelfare ?? "" },
+		{ key: "_status",             label: "สถานะ",                       onlyExport: true, exportText: (r) => r.status ?? "" },
+		// ── แสดงในตาราง ──────────────────────────────────────────────────────
+		{ key: "cid",       label: "เลขบัตรประชาชน", onlyExport: true, exportText: (r) => r.cid ?? "" },
+		{ key: "title",     label: "คำนำหน้า",        align: "center", exportText: (r) => r.title ?? "",     render: (r) => <span>{r.title || "-"}</span> },
+		{ key: "firstName", label: "ชื่อ",             align: "center", exportText: (r) => r.firstName ?? "" },
+		{ key: "lastName",  label: "นามสกุล",          align: "center", exportText: (r) => r.lastName ?? "" },
+		{ key: "gender",    label: "เพศ",              align: "center", exportText: (r) => r.gender ?? "",    render: (r) => <span>{r.gender || "-"}</span> },
+		{
+			key: "age", label: "อายุ", align: "center",
+			searchText: (r) => r.age != null ? `${r.age}` : "",
+			exportText:  (r) => r.age != null ? `${r.age}` : "",
+			render: (r) => <span>{r.age != null ? `${r.age} ปี` : "—"}</span>,
+		},
+		{
+			key: "occupation", label: "อาชีพหลัก", align: "center",
+			exportText: (r) => r.occupation ?? "",
+			render: (r) => <span>{r.occupation || "—"}</span>,
+		},
+		{
+			key: "isSick", label: "ป่วย/เรื้อรัง", align: "center",
+			searchText: (r) => r.isSick ? "ป่วย" : "ไม่ป่วย",
+			exportText:  (r) => r.isSick ? "ป่วย" : "ไม่ป่วย",
+			render: (r) => <Badge size="sm" color={r.isSick ? "error" : "success"}>{r.isSick ? "ป่วย" : "ไม่ป่วย"}</Badge>,
+		},
+		{
+			key: "isBedridden", label: "ติดเตียง", align: "center",
+			searchText: (r) => r.isBedridden ? "ติดเตียง" : "ไม่ติดเตียง",
+			exportText:  (r) => r.isBedridden ? "ติดเตียง" : "ไม่ติดเตียง",
+			render: (r) => <Badge size="sm" color={r.isBedridden ? "error" : "success"}>{r.isBedridden ? "ติดเตียง" : "ไม่ติดเตียง"}</Badge>,
+		},
+		{
+			key: "isDisabled", label: "พิการ", align: "center",
+			searchText: (r) => r.isDisabled ? "พิการ" : "ไม่พิการ",
+			exportText: (r) => r.isDisabled ? "พิการ" : "ไม่พิการ",
+			render: (r) => <Badge size="sm" color={r.isDisabled ? "error" : "success"}>{r.isDisabled ? "พิการ" : "ไม่พิการ"}</Badge>,
+		},
+		{
+			key: "welfareCard", label: "บัตรสวัสดิการ", align: "center",
+			searchText: (r) => r.welfareCard ? "มี" : "ไม่มี",
+			exportText: (r) => r.welfareCard ? "มี" : "ไม่มี",
+			render: (r) => <Badge size="sm" color={r.welfareCard ? "success" : "error"}>{r.welfareCard ? "มี" : "ไม่มี"}</Badge>,
+		},
+		{
+			key: "_action", label: "Action", align: "center", sortable: false, noExport: true,
+			render: (row) => (
+				<div className="flex justify-center gap-2">
+					{canEdit("/person") && (
+						<a href={`/person/edit?id=${row.personId}`}
+							className="flex h-9 w-9 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white hover:bg-yellow-600">
+							<svg className="fill-current" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+								<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" />
+							</svg>
+						</a>
+					)}
+				</div>
+			),
+		},
+	];
+
 	return (
 		<PermissionGuard menuUrl="/person">
-		<>
 			<ComponentCard title=''>
-				<div className="flex items-center justify-between mb-4">
-					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-						รหัสบุคคล (Person)
-					</h3>
-
-					<div className="flex items-center gap-2">
-						<input
-							type="text"
-							placeholder="ค้นหา..."
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-							className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-						/>
-						{canDelete("/person") && (
-						<button
-							onClick={handleDeleteSelected}
-							disabled={selectedIds.length === 0 || loading}
-							className="flex items-center gap-2 rounded-full border border-red-600 bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
-								<path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-							</svg>
-							ลบที่เลือก{selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
-						</button>
-						)}
-
-						{canAdd("/person") && (
-						<a
-							href="/person/add"
-							className="flex items-center gap-2 rounded-full border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-green-700"
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
-								<path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-							</svg>
-							Add
-						</a>
-						)}
-					</div>
+				<div className="mb-4">
+					<h3 className="text-lg font-semibold text-gray-800 dark:text-white">บุคคล (Person)</h3>
+					{village && <p className="text-xs text-gray-500 mt-0.5">{village.villageName}{village.moo ? ` หมู่ ${village.moo}` : ""}</p>}
 				</div>
-
-				<div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-					<div className="max-w-full overflow-x-auto">
-						<div className="min-w-[1102px]">
-							<Table>
-								<TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-									<TableRow>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">
-											<div className="flex items-center justify-center">
-												<Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
-											</div>
-										</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ชื่อ</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">นามสกุล</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อาชีพ</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">อายุ</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ป่วย/มีโรคเรื้อรังหรือไม่</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">ติดเตียงหรือไม่</TableCell>
-										<TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400">Action</TableCell>
-									</TableRow>
-								</TableHeader>
-
-								<TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-									{filtered.map((person) => {
-										const isSelected = selectedIds.includes(person.personId);
-										return (
-											<TableRow key={person.personId} className={isSelected ? "bg-red-50 dark:bg-red-500/10" : ""}>
-												<TableCell className="px-4 py-3 text-center">
-													<div className="flex items-center justify-center">
-														<Checkbox
-															checked={isSelected}
-															onChange={(checked) => toggleSelectOne(person.personId, checked)}
-														/>
-													</div>
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.firstName}
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.lastName}
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.occupation || "—"}
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													{person.age != null ? `${person.age} ปี` : "—"}
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													<Badge size="sm" color={person.isSick === true ? "error" : person.isSick === false ? "success" : "warning"}>
-														{person.isSick === true ? "ป่วย" : person.isSick === false ? "ไม่ป่วย" : "ไม่มีข้อมูล"}
-													</Badge>
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													<Badge size="sm" color={person.isBedridden === true ? "error" : person.isBedridden === false ? "success" : "warning"}>
-														{person.isBedridden === true ? "ติดเตียง" : person.isBedridden === false ? "ไม่ติดเตียง" : "ไม่มีข้อมูล"}
-													</Badge>
-												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
-													<div className="flex items-center justify-center gap-2">
-														{canEdit("/person") && (
-														<a
-															href={`/person/edit?id=${person.personId}`}
-															className="flex h-11 w-11 items-center justify-center rounded-full border border-yellow-500 bg-yellow-500 text-white shadow-theme-xs hover:bg-yellow-600 hover:border-yellow-600"
-														>
-															<svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-																<path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
-															</svg>
-														</a>
-														)}
-													</div>
-												</TableCell>
-											</TableRow>
-										);
-									})}
-
-									{filtered.length === 0 && (
-										<TableRow>
-											<TableCell className="px-4 py-6 text-center text-gray-400 text-theme-sm">
-												ไม่มีข้อมูลบุคคล
-											</TableCell>
-										</TableRow>
-									)}
-								</TableBody>
-							</Table>
-						</div>
-					</div>
-				</div>
+				<DataTableWrapper<Person>
+					data={tableData}
+					columns={columns}
+					idKey="personId"
+					addUrl="/person/add"
+					canAdd={canAdd("/person")}
+					canDelete={canDelete("/person")}
+					canExport={canView("/person")}
+					onDeleteSelected={handleDeleteSelected}
+					exportFilename="persons"
+					loading={loading}
+					emptyText="ไม่พบข้อมูลบุคคล"
+				/>
 			</ComponentCard>
-		</>
 		</PermissionGuard>
 	);
 }

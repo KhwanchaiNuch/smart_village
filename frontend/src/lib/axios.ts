@@ -16,6 +16,24 @@ apiClient.interceptors.request.use((config) => {
 	return config;
 });
 
+// ── Refresh Queue Lock ──────────────────────────────────────────────────────
+// ป้องกัน race condition: ถ้ามีหลาย request ได้ 401 พร้อมกัน
+// จะ refresh แค่ครั้งเดียว ที่เหลือรอ token ใหม่
+let isRefreshing = false;
+let failedQueue: Array<{
+	resolve: (token: string) => void;
+	reject: (err: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null = null) {
+	failedQueue.forEach(({ resolve, reject }) => {
+		if (error) reject(error);
+		else resolve(token!);
+	});
+	failedQueue = [];
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 // ดักจับ 401 → ขอ token ใหม่ → retry request เดิม
 apiClient.interceptors.response.use(
 	(response) => response,
@@ -24,6 +42,20 @@ apiClient.interceptors.response.use(
 
 		if (error.response?.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
+
+			// ถ้ากำลัง refresh อยู่ → ใส่ request นี้เข้า queue แล้วรอ
+			if (isRefreshing) {
+				return new Promise<string>((resolve, reject) => {
+					failedQueue.push({ resolve, reject });
+				})
+					.then((newToken) => {
+						originalRequest.headers.Authorization = `Bearer ${newToken}`;
+						return apiClient(originalRequest);
+					})
+					.catch((err) => Promise.reject(err));
+			}
+
+			isRefreshing = true;
 
 			try {
 				const expiredToken = localStorage.getItem("token");
@@ -38,11 +70,16 @@ apiClient.interceptors.response.use(
 				localStorage.setItem("role", role);
 				localStorage.setItem("scopeId", String(scopeId));
 
+				// แจ้ง queue ว่าได้ token ใหม่แล้ว
+				processQueue(null, token);
+
 				// retry request เดิมด้วย token ใหม่
 				originalRequest.headers.Authorization = `Bearer ${token}`;
 				return apiClient(originalRequest);
-			} catch {
-				// refresh ล้มเหลว → ล้าง localStorage + redirect login
+			} catch (refreshError) {
+				// refresh ล้มเหลว → แจ้ง queue ให้ reject ทั้งหมด
+				processQueue(refreshError, null);
+
 				localStorage.removeItem("token");
 				localStorage.removeItem("role");
 				localStorage.removeItem("scopeId");
@@ -55,6 +92,9 @@ apiClient.interceptors.response.use(
 				});
 
 				window.location.href = "/signin";
+				return Promise.reject(refreshError);
+			} finally {
+				isRefreshing = false;
 			}
 		}
 

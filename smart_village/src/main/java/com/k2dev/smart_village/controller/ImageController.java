@@ -20,6 +20,21 @@ public class ImageController {
     private UploadProperties uploadProperties;
 
     /**
+     * Default avatar: SVG user-circle icon encoded as data URL
+     * ใช้เมื่อไฟล์ avatar ไม่มีอยู่บน disk (เช่น ถูกลบหรือ server เปลี่ยน)
+     */
+    private static final String DEFAULT_AVATAR_DATA_URL;
+    static {
+        String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\">"
+                + "<circle cx=\"50\" cy=\"50\" r=\"50\" fill=\"#e5e7eb\"/>"
+                + "<circle cx=\"50\" cy=\"38\" r=\"18\" fill=\"#9ca3af\"/>"
+                + "<ellipse cx=\"50\" cy=\"85\" rx=\"28\" ry=\"20\" fill=\"#9ca3af\"/>"
+                + "</svg>";
+        String b64 = Base64.getEncoder().encodeToString(svg.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        DEFAULT_AVATAR_DATA_URL = "data:image/svg+xml;base64," + b64;
+    }
+
+    /**
      * GET /api/image/avatars/xxx.jpg
      * returns { "dataUrl": "data:image/jpeg;base64,..." }
      */
@@ -43,6 +58,10 @@ public class ImageController {
         }
 
         if (!Files.exists(filePath)) {
+            // ถ้าเป็น avatar path → คืน default avatar SVG แทน 404
+            if (relativePath.startsWith("avatars/")) {
+                return ResponseEntity.ok(Map.of("dataUrl", DEFAULT_AVATAR_DATA_URL));
+            }
             return ResponseEntity.notFound().build();
         }
 

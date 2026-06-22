@@ -3,10 +3,19 @@ import ComponentCard from '@/components/common/ComponentCard';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PermissionGuard from "@/components/common/PermissionGuard";
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import axios from "@/lib/axios";
 import Swal from "sweetalert2";
 import { usePermission } from "@/context/PermissionContext";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/smart_village/api";
+const UPLOADS_BASE = API_BASE.replace(/\/api$/, "");
+
+function getHouseImgSrc(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("data:")) return url;
+  return `${UPLOADS_BASE}/uploads/${url.replace(/^\.?\/uploads\//, "")}`;
+}
 
 interface HouseHold {
 	householdId: number;
@@ -17,6 +26,7 @@ interface HouseHold {
 	waterSystem: string;
 	remark: string;
 	villageId: number;
+	houseImageUrl?: string | null;
 }
 
 interface Person {
@@ -32,7 +42,6 @@ interface Person {
 }
 
 function HouseholdDetailContent() {
-	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { canAdd, canEdit, canDelete } = usePermission();
 	const householdId = searchParams.get("id") ?? "";
@@ -40,6 +49,8 @@ function HouseholdDetailContent() {
 	const [household, setHousehold] = useState<HouseHold | null>(null);
 	const [persons, setPersons] = useState<Person[]>([]);
 	const [loading, setLoading] = useState(true);
+
+	const houseImgSrc = getHouseImgSrc(household?.houseImageUrl);
 
 	useEffect(() => {
 		document.title = "Smart Village | Household Detail";
@@ -49,11 +60,10 @@ function HouseholdDetailContent() {
 			try {
 				setLoading(true);
 				const [hhRes, personRes] = await Promise.all([
-					axios.get<HouseHold[]>("/households"),
+					axios.get<HouseHold>(`/households/${householdId}`), // fetch ตรงๆ ไม่ดึง all
 					axios.get<Person[]>(`/persons/by-household/${householdId}`),
 				]);
-				const found = hhRes.data.find(h => String(h.householdId) === householdId) ?? null;
-				setHousehold(found);
+				setHousehold(hhRes.data);
 				setPersons(personRes.data);
 			} catch {
 				Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ" });
@@ -102,6 +112,27 @@ function HouseholdDetailContent() {
 					{loading ? (
 						<p className="text-sm text-gray-400">กำลังโหลด...</p>
 					) : household ? (
+						<div className="flex flex-col gap-4">
+						{/* รูปบ้าน */}
+						<div className="flex items-center gap-4">
+							{houseImgSrc ? (
+								<img
+									src={houseImgSrc}
+									alt="รูปบ้าน"
+									className="w-40 h-28 rounded-xl object-cover border border-gray-200 dark:border-gray-700 shadow-sm"
+								/>
+							) : (
+								<div className="w-40 h-28 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-center text-gray-400 dark:text-gray-500">
+									<svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+									</svg>
+								</div>
+							)}
+							<div className="text-sm text-gray-500 dark:text-gray-400">
+								<p className="font-medium text-gray-700 dark:text-gray-200">รูปภาพบ้าน</p>
+								<p className="text-xs mt-1">บ้านเลขที่ {household.houseNo || "-"}</p>
+							</div>
+						</div>
 						<div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
 								<p className="text-gray-400">รหัสครัวเรือน</p>
@@ -133,6 +164,7 @@ function HouseholdDetailContent() {
 								<p className="text-gray-400">หมายเหตุ</p>
 								<p className="font-semibold text-gray-800 dark:text-white">{household.remark || "-"}</p>
 							</div>
+						</div>
 						</div>
 					) : (
 						<p className="text-sm text-gray-400">ไม่พบข้อมูลครัวเรือน</p>
