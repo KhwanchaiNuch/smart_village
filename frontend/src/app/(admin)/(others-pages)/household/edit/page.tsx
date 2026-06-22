@@ -33,7 +33,7 @@ function HouseHoldEditContent() {
 		remark: "",
 	});
 	const [loading, setLoading] = useState(false);
-	const [houseImageUrl, setHouseImageUrl] = useState<string | null>(null);
+	const [houseImageUrl, setHouseImageUrl] = useState<string>("");
 	const [imageLoading, setImageLoading] = useState(false);
 	const { src: houseImgSrc } = useImageBase64(houseImageUrl);
 
@@ -59,7 +59,7 @@ function HouseHoldEditContent() {
 					electricity_access: data.electricityAccess ?? true,
 					remark: data.remark || "",
 				});
-				setHouseImageUrl(data.houseImageUrl || null);
+				setHouseImageUrl(data.houseImageUrl || "");
 			} catch (err) {
 				console.error(err);
 				Swal.fire({
@@ -99,6 +99,7 @@ function HouseHoldEditContent() {
 				internetAccess: form.internet_access,
 				electricityAccess: form.electricity_access,
 				remark: form.remark,
+				houseImageUrl: houseImageUrl, // ส่ง "" เพื่อ clear, ส่ง filename เพื่อ set, backend preserve ถ้า null
 			};
 
 			await axios.post(`/households/edit`, householdPayload);
@@ -125,18 +126,19 @@ function HouseHoldEditContent() {
 
 	const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (!file || !id) return;
+		if (!file) return;
 		const fd = new FormData();
 		fd.append("file", file);
 		setImageLoading(true);
 		try {
-			const res = await axios.post(`/households/${id}/image`, fd, {
+			const res = await axios.post(`/upload`, fd, {
 				headers: { "Content-Type": "multipart/form-data" },
 			});
-			setHouseImageUrl(res.data.imageUrl);
+			setHouseImageUrl(res.data.filename); // เก็บแค่ filename
 			Swal.fire({ icon: "success", title: "อัปโหลดรูปสำเร็จ", timer: 1500, showConfirmButton: false });
-		} catch (err: any) {
-			Swal.fire({ icon: "error", title: "อัปโหลดรูปไม่สำเร็จ", text: err?.response?.data?.message || err?.message });
+		} catch (err: unknown) {
+			const msg = (err as {response?: {data?: {message?: string}}})?.response?.data?.message;
+			Swal.fire({ icon: "error", title: "อัปโหลดรูปไม่สำเร็จ", text: msg });
 		} finally {
 			setImageLoading(false);
 			e.target.value = "";
@@ -144,23 +146,14 @@ function HouseHoldEditContent() {
 	};
 
 	const handleDeleteImage = async () => {
-		if (!id) return;
 		const result = await Swal.fire({
-			icon: "warning", title: "ลบรูปบ้าน?", text: "ยืนยันการลบรูปภาพ",
+			icon: "warning", title: "ลบรูปบ้าน?", text: "รูปจะถูกลบเมื่อกด บันทึก",
 			showCancelButton: true, confirmButtonText: "ลบ", cancelButtonText: "ยกเลิก",
 			confirmButtonColor: "#dc2626",
 		});
 		if (!result.isConfirmed) return;
-		setImageLoading(true);
-		try {
-			await axios.delete(`/households/${id}/image`);
-			setHouseImageUrl(null);
-			Swal.fire({ icon: "success", title: "ลบรูปสำเร็จ", timer: 1200, showConfirmButton: false });
-		} catch (err: any) {
-			Swal.fire({ icon: "error", title: "ลบรูปไม่สำเร็จ", text: err?.response?.data?.message || err?.message });
-		} finally {
-			setImageLoading(false);
-		}
+		setHouseImageUrl(""); // ส่ง "" ให้ backend clear (ไม่ใช่ null ซึ่ง backend จะ preserve)
+		Swal.fire({ icon: "success", title: "ลบรูปสำเร็จ", timer: 1200, showConfirmButton: false });
 	};
 
 	return (
@@ -334,7 +327,7 @@ function HouseHoldEditContent() {
 					<div className="flex flex-col sm:flex-row gap-4 items-start">
 						{/* preview */}
 						<div className="w-48 h-36 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-							{houseImageUrl ? (
+							{houseImageUrl && houseImgSrc ? (
 								<img
 									src={houseImgSrc}
 									alt="รูปบ้าน"

@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "@/lib/axios";
+import { useGeoScope } from "./GeoScopeContext";
 
 export interface ActiveVillage {
   villageId: number;
@@ -23,64 +24,42 @@ export const useVillage = () => {
 };
 
 export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { selectedVillage, setSelectedVillage } = useGeoScope();
   const [village, setVillageState] = useState<ActiveVillage | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  // Sync selectedVillage from GeoScopeContext to VillageContext
   useEffect(() => {
-    const role    = localStorage.getItem("role");
-    const scopeId = localStorage.getItem("scopeId");
-
-    // PROVINCE / AMPHUR / TAMBON → restore activeVillage จาก localStorage ถ้ามี
-    const higherRoles = ["PROVINCE", "AMPHUR", "TAMBON"];
-    if (role && higherRoles.includes(role)) {
-      const raw = localStorage.getItem("activeVillage");
-      if (raw) {
-        try { setVillageState(JSON.parse(raw)); } catch { /* ignore */ }
-      }
-      setLoaded(true);
-      return;
-    }
-
-    // 1. ลอง restore จาก localStorage (ADMIN หรือ VILLAGE)
-    const raw = localStorage.getItem("activeVillage");
-    if (raw) {
-      try {
-        const stored: ActiveVillage = JSON.parse(raw);
-        // VILLAGE: ใช้ cache ได้เฉพาะเมื่อ villageId ตรงกับ scopeId ของตัวเอง
-        // ADMIN: ใช้ cache ได้เสมอ
-        if (role === "ADMIN" || !scopeId || stored.villageId === Number(scopeId)) {
-          setVillageState(stored);
-          setLoaded(true);
-          return;
-        }
-        localStorage.removeItem("activeVillage");
-      } catch { /* ignore */ }
-    }
-
-    // 2. Auto-init: VILLAGE role → fetch village จาก scopeId อัตโนมัติ
-    if (role === "VILLAGE" && scopeId) {
-      axios
-        .get<{ villageId: number; villageName: string; moo?: string }>(`/villages/ensure/${scopeId}`)
-        .then((res) => {
-          const v: ActiveVillage = {
-            villageId:   res.data.villageId,
-            villageName: res.data.villageName,
-            moo:         res.data.moo ?? null,
-          };
-          setVillageState(v);
-          localStorage.setItem("activeVillage", JSON.stringify(v));
-        })
-        .catch(() => {})
-        .finally(() => setLoaded(true));
+    if (selectedVillage) {
+      setVillageState({
+        villageId: selectedVillage.villageId,
+        villageName: selectedVillage.villageName,
+        moo: selectedVillage.moo,
+      });
     } else {
-      setLoaded(true);
+      setVillageState(null);
     }
-  }, []);
+    setLoaded(true);
+  }, [selectedVillage]);
 
   const setVillage = (v: ActiveVillage | null) => {
     setVillageState(v);
-    if (v) localStorage.setItem("activeVillage", JSON.stringify(v));
-    else    localStorage.removeItem("activeVillage");
+    if (v) {
+      localStorage.setItem("activeVillage", JSON.stringify(v));
+      if (selectedVillage?.villageId !== v.villageId) {
+        setSelectedVillage({
+          villageId: v.villageId,
+          villageName: v.villageName,
+          moo: v.moo,
+          tambonId: selectedVillage?.tambonId ?? 0,
+        });
+      }
+    } else {
+      localStorage.removeItem("activeVillage");
+      if (selectedVillage) {
+        setSelectedVillage(null);
+      }
+    }
   };
 
   return (

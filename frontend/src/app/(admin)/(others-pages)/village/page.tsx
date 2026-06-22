@@ -137,6 +137,32 @@ export default function VillagePage() {
 		Swal.fire({ icon: "success", title: "ยกเลิกการเลือกแล้ว", timer: 1000, showConfirmButton: false });
 	};
 
+	// ===== ลบรายการเดี่ยว =====
+	const handleDelete = async (id: number) => {
+		const result = await Swal.fire({
+			icon: "warning",
+			title: "ยืนยันการลบ?",
+			html: `คุณกำลังจะลบข้อมูลหมู่บ้านนี้<br/>หากมีครัวเรือนอยู่ภายในจะลบไม่ได้`,
+			showCancelButton: true,
+			confirmButtonText: "ใช่, ลบเลย",
+			cancelButtonText: "ยกเลิก",
+			confirmButtonColor: "#dc2626",
+			cancelButtonColor: "#6b7280",
+		});
+		if (!result.isConfirmed) return;
+		try {
+			setLoading(true);
+			await axios.delete(`/villages/${id}`);
+			await fetchData();
+			Swal.fire({ icon: "success", title: "ลบสำเร็จ", text: "ลบหมู่บ้านเรียบร้อย", timer: 1500, showConfirmButton: false });
+		} catch (error) {
+			console.error(error);
+			Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด", text: "ไม่สามารถลบข้อมูลได้" });
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	// ===== ลบรายการที่เลือก =====
 	const handleDeleteSelected = async () => {
 		if (selectedIds.length === 0) {
@@ -327,10 +353,10 @@ export default function VillagePage() {
 														</span>
 													)}
 												</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.tambonName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.amphurName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.provinceName}</TableCell>
-												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{v.zipcode}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.tambonName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.amphurName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.provinceName}</TableCell>
+												<TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">{g.zipcode}</TableCell>
 												<TableCell className="px-4 py-3 text-center">
 													<div className="flex items-center justify-center gap-2">
 														{/* ปุ่มเลือกจัดการ */}
