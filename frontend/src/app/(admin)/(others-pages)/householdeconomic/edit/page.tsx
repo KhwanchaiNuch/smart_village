@@ -43,7 +43,7 @@ function HouseholdEconomicEditContent() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขข้อมูลเศรษฐกิจครัวเรือน";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขข้อมูลเศรษฐกิจครัวเรือน";
     fetchHouseholds();
     if (!id) return;
     axios.get(`/household-economics/${id}`)

@@ -50,7 +50,7 @@ export default function HouseholdEconomicPage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | เศรษฐกิจครัวเรือน";
+    document.title = "หมู่บ้านดิจิตอล | เศรษฐกิจครัวเรือน";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

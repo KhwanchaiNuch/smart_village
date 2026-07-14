@@ -32,7 +32,7 @@ export default function TambonPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | ตำบล";
+    document.title = "หมู่บ้านดิจิตอล | ตำบล";
     axios.get<Province[]>("/provinces").then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId))).catch(err);
     axios.get<Amphur[]>("/amphurs/all").then((r) => setAllAmphurs(r.data)).catch(err);
     fetchAll();

@@ -35,7 +35,7 @@ export default function TrainingAdd() {
   });
 
   useEffect(() => {
-    document.title = "Smart Village | Training Add";
+    document.title = "หมู่บ้านดิจิตอล | Training Add";
     const r = localStorage.getItem("role");
     setRole(r);
   }, []);

@@ -29,7 +29,7 @@ export default function VillageResourceAdd() {
   });
 
   useEffect(() => {
-    document.title = "Smart Village | เพิ่มทรัพยากรชุมชน";
+    document.title = "หมู่บ้านดิจิตอล | เพิ่มทรัพยากรชุมชน";
     const r = localStorage.getItem("role");
     setRole(r);
     if (r !== "VILLAGE" && r !== "VIEWER") {

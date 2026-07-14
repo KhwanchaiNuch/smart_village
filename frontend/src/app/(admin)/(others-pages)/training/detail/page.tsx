@@ -80,7 +80,7 @@ function TrainingDetailContent() {
   }, [id]);
 
   useEffect(() => {
-    document.title = "Smart Village | Training Detail";
+    document.title = "หมู่บ้านดิจิตอล | Training Detail";
     if (!id) return;
     // ดึง event ก่อนเพื่อรู้ villageId แล้วค่อย filter persons ตาม village นั้น
     axios.get<TrainingEvent>(`/training-events/${id}`)

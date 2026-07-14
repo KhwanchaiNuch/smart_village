@@ -60,7 +60,7 @@ function PersonAddContent() {
     const returnUrl = searchParams.get("returnUrl") ?? "/person";
 
     useEffect(() => {
-        document.title = "Smart Village | Person Add";
+        document.title = "หมู่บ้านดิจิตอล | Person Add";
         if (!village) { setHouseholds([]); return; }
         setHouseholds([]);
         axios.get<HouseholdOption[]>(`/households?villageId=${village.villageId}`)

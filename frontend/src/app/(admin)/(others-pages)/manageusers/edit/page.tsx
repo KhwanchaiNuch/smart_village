@@ -67,7 +67,7 @@ function EditUserContent() {
 
   // fetch user แล้ว pre-populate cascade
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขผู้ใช้";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขผู้ใช้";
     if (!id) { router.push("/manageusers"); return; }
 
     axios.get(`/admin/users/${id}`).then(async (res) => {

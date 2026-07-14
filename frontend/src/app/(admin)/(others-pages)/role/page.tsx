@@ -23,7 +23,7 @@ export default function RolePage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | จัดการ Role";
+    document.title = "หมู่บ้านดิจิตอล | จัดการ Role";
     fetchData();
   }, [fetchData]);
 

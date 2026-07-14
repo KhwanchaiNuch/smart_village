@@ -77,7 +77,7 @@ function CommunityIssueEditContent() {
   }, [loaded, village]);
 
   useEffect(() => {
-    document.title = "Smart Village | Edit Community Issue";
+    document.title = "หมู่บ้านดิจิตอล | Edit Community Issue";
     fetchHouseholds();
     if (!id) return;
     axios.get(`/community-issues/${id}`)

@@ -80,7 +80,7 @@ export default function VillageSurveyPage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | สำรวจความต้องการ";
+    document.title = "หมู่บ้านดิจิตอล | สำรวจความต้องการ";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

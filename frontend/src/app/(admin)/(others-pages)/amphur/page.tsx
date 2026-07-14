@@ -29,7 +29,7 @@ export default function AmphurPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | อำเภอ";
+    document.title = "หมู่บ้านดิจิตอล | อำเภอ";
     axios.get<Province[]>("/provinces").then((r) => setProvinces([...r.data].sort((a, b) => a.provinceId - b.provinceId))).catch(err);
     fetchAll();
   }, [fetchAll]);

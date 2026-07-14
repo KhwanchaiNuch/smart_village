@@ -36,7 +36,7 @@ function TrainingEditContent() {
   });
 
   useEffect(() => {
-    document.title = "Smart Village | Training Edit";
+    document.title = "หมู่บ้านดิจิตอล | Training Edit";
     const r = localStorage.getItem("role");
     const scopeId = localStorage.getItem("scopeId");
     setRole(r);

@@ -4,7 +4,8 @@
 
 @theme {
   --font-*: initial;
-  --font-outfit: Outfit, sans-serif;
+  --font-prompt: Prompt, sans-serif;
+  --font-display: Prompt, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -216,7 +217,7 @@
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-[#f0f5ff];
+    @apply relative font-normal font-prompt z-1 bg-[#f0f5ff];
   }
 }
 

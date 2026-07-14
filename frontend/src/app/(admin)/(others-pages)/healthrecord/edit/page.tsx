@@ -41,7 +41,7 @@ function HealthRecordEditContent() {
 	});
 
 	useEffect(() => {
-		document.title = "Smart Village | Health Record Edit";
+		document.title = "หมู่บ้านดิจิตอล | Health Record Edit";
 		if (!id) return;
 		async function fetchData() {
 			try {

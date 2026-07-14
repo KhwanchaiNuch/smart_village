@@ -35,7 +35,7 @@ export default function LandingPage() {
                 const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
                 if (fallback) fallback.style.display = "flex";
               }}
-              alt="Smart Village"
+              alt="หมู่บ้านดิจิตอล"
               className="w-9 h-9 object-contain"
             />
             <div style={{ display: "none" }} className="w-9 h-9 rounded-xl bg-brand-500 items-center justify-center">
@@ -44,7 +44,7 @@ export default function LandingPage() {
               </svg>
             </div>
             <span className="font-display font-bold text-[18px] text-brand-600">
-              Smart <span className="text-amber-500">Village</span>
+              หมู่บ้าน<span className="text-amber-500">ดิจิตอล</span>
             </span>
           </a>
 
@@ -77,7 +77,7 @@ export default function LandingPage() {
             <div>
               <div className="promo-reveal inline-flex items-center gap-2 bg-brand-25 border border-brand-100 text-brand-500 text-xs font-semibold tracking-widest uppercase px-3.5 py-1.5 rounded-full mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-                Smart Village Management System
+                หมู่บ้านดิจิตอล Management System
               </div>
 
               <h1 className="promo-reveal font-display font-extrabold text-[2.6rem] sm:text-5xl lg:text-[3rem] text-gray-900 leading-[1.1] tracking-tight mb-5">
@@ -606,7 +606,7 @@ export default function LandingPage() {
                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                   </svg>
                 </div>
-                <span className="font-display font-bold text-lg text-brand-600">Smart <span className="text-amber-500">Village</span></span>
+                <span className="font-display font-bold text-lg text-brand-600">หมู่บ้าน<span className="text-amber-500">ดิจิตอล</span></span>
               </a>
               <p className="text-gray-500 text-sm leading-relaxed max-w-sm">แพลตฟอร์มบริหารจัดการหมู่บ้านอัจฉริยะ ที่ช่วยยกระดับคุณภาพชีวิตชุมชนด้วยการใช้ Data-driven Management</p>
             </div>

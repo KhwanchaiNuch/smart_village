@@ -26,12 +26,12 @@ export default function AuthLayout({
                     width={180}
                     height={180}
                     src="/images/logo/smart-village-logo.png"
-                    alt="Smart Village Logo"
+                    alt="หมู่บ้านดิจิตอล Logo"
                     className="object-contain"
                   />
                 </Link>
                 <p className="text-center text-white text-xl font-bold tracking-wide">
-                  Smart Village
+                  หมู่บ้านดิจิตอล
                 </p>
                 <p className="text-center text-gray-400 dark:text-white/60 mt-2 text-sm">
                   ระบบบริหารจัดการหมู่บ้านอัจฉริยะ

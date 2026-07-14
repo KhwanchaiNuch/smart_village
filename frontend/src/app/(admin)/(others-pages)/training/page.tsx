@@ -62,7 +62,7 @@ export default function TrainingPage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | Training";
+    document.title = "หมู่บ้านดิจิตอล | Training";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

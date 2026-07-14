@@ -132,7 +132,7 @@ function CommunityIssueDetailPageContent() {
   }, [id]);
 
   useEffect(() => {
-    document.title = "Smart Village | รายละเอียดปัญหา";
+    document.title = "หมู่บ้านดิจิตอล | รายละเอียดปัญหา";
     fetchAll();
   }, [fetchAll]);
 

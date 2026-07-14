@@ -84,7 +84,7 @@ export default function HouseHoldAdd() {
   };
 
   useEffect(() => {
-    document.title = "Smart Village | House Hold Add";
+    document.title = "หมู่บ้านดิจิตอล | House Hold Add";
     const r   = localStorage.getItem("role");
     const sid = localStorage.getItem("scopeId");
     setRole(r);

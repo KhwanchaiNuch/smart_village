@@ -29,7 +29,7 @@ function VillageEditContent() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขหมู่บ้าน";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขหมู่บ้าน";
     Promise.all([
       axios.get<Province[]>("/provinces"),
       axios.get<Amphur[]>("/amphurs/all"),

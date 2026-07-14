@@ -1,6 +1,6 @@
 {
-  "name": "Smart Village",
-  "short_name": "SmartVillage",
+  "name": "หมู่บ้านดิจิตอล",
+  "short_name": "หมู่บ้านดิจิตอล",
   "description": "ระบบจัดการข้อมูลหมู่บ้านอัจฉริยะ",
   "start_url": "/",
   "display": "standalone",

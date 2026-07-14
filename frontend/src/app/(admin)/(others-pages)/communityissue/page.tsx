@@ -105,7 +105,7 @@ export default function CommunityIssuePage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | Community Issues";
+    document.title = "หมู่บ้านดิจิตอล | Community Issues";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

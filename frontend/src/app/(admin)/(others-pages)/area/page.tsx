@@ -54,7 +54,7 @@ export default function AreaPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | จัดการพื้นที่";
+    document.title = "หมู่บ้านดิจิตอล | จัดการพื้นที่";
     loadProvinces();
   }, [loadProvinces]);
 

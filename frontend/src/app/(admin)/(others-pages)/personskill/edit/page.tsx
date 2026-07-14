@@ -41,7 +41,7 @@ function PersonSkillEditContent() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขทักษะบุคคล";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขทักษะบุคคล";
     fetchPersons();
     if (!id) return;
     axios.get(`/person-skills/${id}`)

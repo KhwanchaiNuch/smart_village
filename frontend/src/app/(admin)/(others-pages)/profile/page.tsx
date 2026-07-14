@@ -8,7 +8,7 @@ export default function Profile() {
   const { user, loading, reload } = useCurrentUser();
 
   useEffect(() => {
-    document.title = "Smart Village | โปรไฟล์ของฉัน";
+    document.title = "หมู่บ้านดิจิตอล | โปรไฟล์ของฉัน";
   }, []);
 
   return (

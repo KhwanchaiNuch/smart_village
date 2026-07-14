@@ -86,7 +86,7 @@ export default function HouseHold() {
 	}, [village]);
 
 	useEffect(() => {
-		document.title = "Smart Village | House Hold";
+		document.title = "หมู่บ้านดิจิตอล | House Hold";
 		if (!loaded) return;
 		fetchData();
 	}, [fetchData, loaded]);

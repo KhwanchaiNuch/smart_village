@@ -38,7 +38,7 @@ function HouseHoldEditContent() {
 	const { src: houseImgSrc } = useImageBase64(houseImageUrl);
 
 	useEffect(() => {
-		document.title = "Smart Village | House Hold Edit";
+		document.title = "หมู่บ้านดิจิตอล | House Hold Edit";
 		if (!id) return;
 		async function fetchData() {
 			try {

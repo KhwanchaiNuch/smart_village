@@ -67,7 +67,7 @@ export default function VisitLogPage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | Visit Log";
+    document.title = "หมู่บ้านดิจิตอล | Visit Log";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

@@ -63,7 +63,7 @@ function VillageMapPageContent() {
   }, [loaded, village, activeVillageId, activeTambonId, activeAmphurId, activeProvinceId]);
 
   useEffect(() => {
-    document.title = "Smart Village | แผนที่หมู่บ้าน";
+    document.title = "หมู่บ้านดิจิตอล | แผนที่หมู่บ้าน";
     fetchData();
   }, [fetchData]);
 

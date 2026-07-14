@@ -50,7 +50,7 @@ export default function PersonSkillAdd() {
   }, [loaded, village]);
 
   useEffect(() => {
-    document.title = "Smart Village | เพิ่มทักษะบุคคล";
+    document.title = "หมู่บ้านดิจิตอล | เพิ่มทักษะบุคคล";
     fetchPersons();
   }, [fetchPersons]);
 

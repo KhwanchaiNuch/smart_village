@@ -61,7 +61,7 @@ export default function CommunityIssueAdd() {
   }, [loaded, village]);
 
   useEffect(() => {
-    document.title = "Smart Village | Add Community Issue";
+    document.title = "หมู่บ้านดิจิตอล | Add Community Issue";
     setRole(localStorage.getItem("role"));
     fetchHouseholds();
   }, [fetchHouseholds]);

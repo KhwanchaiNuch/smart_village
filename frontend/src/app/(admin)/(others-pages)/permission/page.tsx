@@ -62,7 +62,7 @@ export default function PermissionPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | ตั้งค่าสิทธิ์";
+    document.title = "หมู่บ้านดิจิตอล | ตั้งค่าสิทธิ์";
     fetchMatrix();
   }, [fetchMatrix]);
 

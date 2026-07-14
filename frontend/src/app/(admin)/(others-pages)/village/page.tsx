@@ -50,7 +50,7 @@ export default function VillagePage() {
 	}, []);
 
 	useEffect(() => {
-		document.title = "Smart Village | หมู่บ้าน";
+		document.title = "หมู่บ้านดิจิตอล | หมู่บ้าน";
 		setUserRole(localStorage.getItem("role"));
 		if (isAdmin) {
 			axios.get<Province[]>("/provinces")

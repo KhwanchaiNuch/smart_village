@@ -53,7 +53,7 @@ const MapIcon = (
 );
 
 const adminNavItems: NavItem[] = [
-	{ icon: <GridIcon />, name: "Dashboard", path: "/" },
+	{ icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
 	{ icon: MapIcon, name: "แผนที่หมู่บ้าน", path: "/villagemap" },
 	{
 		icon: (
@@ -411,9 +411,9 @@ const AppSidebar: React.FC = () => {
 				<div
 					className={`relative z-10 py-8 flex  ${!isExpanded ? "lg:justify-center" : "justify-start"}`}
 				>
-					<Link href={role === "VILLAGE" ? "/" : "/"} className="flex items-center gap-3">
+					<Link href={role === "VILLAGE" ? "/dashboard" : "/dashboard"} className="flex items-center gap-3">
 						{(isExpanded || isMobileOpen) && (
-							<span className="text-4xl font-bold text-white tracking-wide">Smart <span className="text-[#fcd34d]">Village</span></span>
+							<span className="text-4xl font-bold text-white tracking-wide">หมู่บ้าน<span className="text-[#fcd34d]">ดิจิตอล</span></span>
 						)}
 					</Link>
 				</div>

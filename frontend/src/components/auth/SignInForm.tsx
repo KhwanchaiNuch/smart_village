@@ -61,10 +61,10 @@ export default function SignInForm() {
         <div className="flex flex-col items-center mb-8">
           <img
             src="/images/logo/smart-village-logo.png"
-            alt="Smart Village"
+            alt="หมู่บ้านดิจิตอล"
             className="w-24 h-24 object-contain mb-3"
           />
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Smart Village</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">หมู่บ้านดิจิตอล</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ระบบบริหารจัดการหมู่บ้านอัจฉริยะ</p>
         </div>
 

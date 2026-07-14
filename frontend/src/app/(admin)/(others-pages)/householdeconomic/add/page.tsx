@@ -52,7 +52,7 @@ export default function HouseholdEconomicAdd() {
   }, [loaded, village]);
 
   useEffect(() => {
-    document.title = "Smart Village | เพิ่มข้อมูลเศรษฐกิจครัวเรือน";
+    document.title = "หมู่บ้านดิจิตอล | เพิ่มข้อมูลเศรษฐกิจครัวเรือน";
     fetchData();
   }, [fetchData]);
 

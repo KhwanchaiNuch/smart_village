@@ -23,7 +23,7 @@ export default function MenuPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | จัดการ Menu";
+    document.title = "หมู่บ้านดิจิตอล | จัดการ Menu";
     fetchData();
   }, [fetchData]);
 

@@ -44,7 +44,7 @@ export default function VisitLogAdd() {
     });
 
     useEffect(() => {
-        document.title = "Smart Village | Visit Log Add";
+        document.title = "หมู่บ้านดิจิตอล | Visit Log Add";
         if (!loaded) return;
         const vid = village?.villageId;
 

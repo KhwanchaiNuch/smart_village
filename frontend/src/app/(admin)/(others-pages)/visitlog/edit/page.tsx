@@ -44,7 +44,7 @@ function VisitLogEditContent() {
 	});
 
 	useEffect(() => {
-		document.title = "Smart Village | Visit Log Edit";
+		document.title = "หมู่บ้านดิจิตอล | Visit Log Edit";
 		if (!id) return;
 		async function fetchData() {
 			try {

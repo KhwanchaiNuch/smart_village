@@ -53,7 +53,7 @@ function HouseholdDetailContent() {
 	const houseImgSrc = getHouseImgSrc(household?.houseImageUrl);
 
 	useEffect(() => {
-		document.title = "Smart Village | Household Detail";
+		document.title = "หมู่บ้านดิจิตอล | Household Detail";
 		if (!householdId) return;
 
 		const fetchAll = async () => {

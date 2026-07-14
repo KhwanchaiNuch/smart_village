@@ -40,7 +40,7 @@ export default function HealthRecordAdd() {
     });
 
     useEffect(() => {
-        document.title = "Smart Village | Health Record Add";
+        document.title = "หมู่บ้านดิจิตอล | Health Record Add";
         if (!loaded) return;
         const vid = village?.villageId;
         axios.get<Person[]>(vid ? `/persons?villageId=${vid}` : "/persons")

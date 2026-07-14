@@ -136,7 +136,7 @@ export default function Dashboard() {
     };
   }, [activeVillageId, village, villages, tambons, amphurs, provinces]);
 
-  useEffect(() => { document.title = "Smart Village | Dashboard"; }, []);
+  useEffect(() => { document.title = "หมู่บ้านดิจิตอล | Dashboard"; }, []);
 
  useEffect(() => {
   const effectiveVillageId = activeVillageId ?? village?.villageId ?? null;

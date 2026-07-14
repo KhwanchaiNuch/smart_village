@@ -39,7 +39,7 @@ function VillageSurveyEditContent() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขความต้องการชุมชน";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขความต้องการชุมชน";
     fetchRefs();
     if (!id) return;
     axios.get(`/village-need-surveys/${id}`)

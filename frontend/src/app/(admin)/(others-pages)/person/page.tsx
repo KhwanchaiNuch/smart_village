@@ -68,7 +68,7 @@ export default function PersonPage() {
 	}, [village]);
 
 	useEffect(() => {
-		document.title = "Smart Village | Person";
+		document.title = "หมู่บ้านดิจิตอล | Person";
 		if (!loaded) return;
 		fetchData();
 	}, [fetchData, loaded]);

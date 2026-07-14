@@ -55,7 +55,7 @@ export default function VillageResourcePage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | ทรัพยากรชุมชน";
+    document.title = "หมู่บ้านดิจิตอล | ทรัพยากรชุมชน";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

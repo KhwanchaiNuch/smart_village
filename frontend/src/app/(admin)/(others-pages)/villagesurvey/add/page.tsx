@@ -42,7 +42,7 @@ export default function VillageSurveyAdd() {
   }, [loaded, village]);
 
   useEffect(() => {
-    document.title = "Smart Village | เพิ่มความต้องการชุมชน";
+    document.title = "หมู่บ้านดิจิตอล | เพิ่มความต้องการชุมชน";
     setRole(localStorage.getItem("role"));
     fetchRefs();
   }, [fetchRefs]);

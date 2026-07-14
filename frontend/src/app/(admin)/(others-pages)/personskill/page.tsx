@@ -55,7 +55,7 @@ export default function PersonSkillPage() {
   }, [village]);
 
   useEffect(() => {
-    document.title = "Smart Village | ทักษะบุคคล";
+    document.title = "หมู่บ้านดิจิตอล | ทักษะบุคคล";
     if (!loaded) return;
     fetchData();
   }, [fetchData, loaded]);

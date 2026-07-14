@@ -51,7 +51,7 @@ export default function HealthRecordPage() {
 	}, [village]);
 
 	useEffect(() => {
-		document.title = "Smart Village | Health Record";
+		document.title = "หมู่บ้านดิจิตอล | Health Record";
 		if (!loaded) return;
 		fetchData();
 	}, [fetchData, loaded]);

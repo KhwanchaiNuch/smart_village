@@ -84,7 +84,7 @@ function PersonEditContent() {
     const [birthDay, setBirthDay] = useState("");
 
     useEffect(() => {
-        document.title = "Smart Village | Person Edit";
+        document.title = "หมู่บ้านดิจิตอล | Person Edit";
         if (!id) return;
         async function fetchData() {
             try {

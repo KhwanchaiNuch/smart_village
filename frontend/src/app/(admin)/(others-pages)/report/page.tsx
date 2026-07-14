@@ -109,7 +109,7 @@ function ReportPageContent() {
 
   // 1. Fetch geographic databases and scoped villages on mount
   useEffect(() => {
-    document.title = "Smart Village | Report Summary";
+    document.title = "หมู่บ้านดิจิตอล | Report Summary";
     setLoading(true);
 
     Promise.all([
@@ -405,7 +405,7 @@ function ReportPageContent() {
           {/* 1. Header Metadata Section */}
           <div className="border-b-4 border-double border-emerald-600 pb-5 text-center mb-8">
             <h1 className="text-xl font-bold uppercase tracking-wider mb-2 text-emerald-800">รายงานสรุปผลคุณภาพชีวิตและการพัฒนาหมู่บ้านอัจฉริยะ</h1>
-            <p className="text-sm font-bold text-gray-700">ประจำโครงการหมู่บ้านอัจฉริยะ (Smart Village)</p>
+            <p className="text-sm font-bold text-gray-700">ประจำโครงการหมู่บ้านอัจฉริยะ (หมู่บ้านดิจิตอล)</p>
             
             <div className="mt-5 text-sm space-y-1.5 text-left max-w-2xl mx-auto border border-emerald-500 p-3.5 bg-emerald-50/10 rounded-lg">
               {resolvedGeo ? (

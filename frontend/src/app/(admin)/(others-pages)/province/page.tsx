@@ -25,7 +25,7 @@ export default function ProvincePage() {
     } catch (e) { err(e); }
   }, []);
 
-  useEffect(() => { document.title = "Smart Village | จังหวัด"; fetchData(); }, [fetchData]);
+  useEffect(() => { document.title = "หมู่บ้านดิจิตอล | จังหวัด"; fetchData(); }, [fetchData]);
 
   const promptName = async (title: string, current = "") => {
     const r = await Swal.fire({

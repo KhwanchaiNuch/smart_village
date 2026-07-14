@@ -10,7 +10,7 @@ import DemographicCard from "@/components/ecommerce/DemographicCard";
 export default function Home() {
 
     useEffect(() => {
-        document.title = "Smart Village | Home";
+        document.title = "หมู่บ้านดิจิตอล | Home";
         async function fetchData() {
             try {
                 const res = await fetch(

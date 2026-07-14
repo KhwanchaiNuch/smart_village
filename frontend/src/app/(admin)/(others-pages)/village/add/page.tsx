@@ -37,7 +37,7 @@ export default function VillageAdd() {
 
   // ── init ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    document.title = "Smart Village | เพิ่มหมู่บ้าน";
+    document.title = "หมู่บ้านดิจิตอล | เพิ่มหมู่บ้าน";
     const r   = localStorage.getItem("role");
     const sid = localStorage.getItem("scopeId");
     const sidNum = sid ? Number(sid) : null;

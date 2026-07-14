@@ -31,7 +31,7 @@ function VillageResourceEditContent() {
   });
 
   useEffect(() => {
-    document.title = "Smart Village | แก้ไขทรัพยากรชุมชน";
+    document.title = "หมู่บ้านดิจิตอล | แก้ไขทรัพยากรชุมชน";
     const r = localStorage.getItem("role");
     setRole(r);
     if (r !== "VILLAGE" && r !== "VIEWER") {

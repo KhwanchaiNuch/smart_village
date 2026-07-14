@@ -40,7 +40,7 @@ export default function ManageUsersPage() {
   }, []);
 
   useEffect(() => {
-    document.title = "Smart Village | จัดการผู้ใช้";
+    document.title = "หมู่บ้านดิจิตอล | จัดการผู้ใช้";
     fetchData();
   }, [fetchData]);
 
