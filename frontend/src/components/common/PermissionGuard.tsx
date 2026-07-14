@@ -31,7 +31,7 @@ export default function PermissionGuard({ menuUrl, action, adminOnly, children }
 
   useEffect(() => {
     if (!loading && !hasPermission()) {
-      router.replace("/");
+      router.replace("/dashboard");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);

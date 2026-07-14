@@ -34,3 +34,4 @@ build/
 
 ### Uploaded files (avatars ฯลฯ) ###
 uploads/
+/.apt_generated_tests/

@@ -1,0 +1,64 @@
+/* Styles scoped to the public landing page (app/page.tsx). All selectors are
+   prefixed with .promo-page to avoid leaking into the admin dashboard app. */
+
+.promo-page .promo-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.promo-page .promo-reveal.promo-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sidebar gradient (mockup screenshot in hero) */
+.promo-page .promo-sidebar-grad {
+  background: linear-gradient(180deg, #14532d 0%, #052e16 100%);
+}
+
+/* Subtle grid pattern */
+.promo-page .promo-grid-bg {
+  background-image: linear-gradient(rgba(22, 163, 74, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 163, 74, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Nav underline */
+.promo-page .promo-nav-link {
+  position: relative;
+}
+.promo-page .promo-nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #d97706;
+  border-radius: 2px;
+  transition: width 0.22s ease;
+}
+.promo-page .promo-nav-link:hover::after {
+  width: 100%;
+}
+
+/* Floating card animation */
+@keyframes promoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.promo-page .promo-float {
+  animation: promoFloat 5s ease-in-out infinite;
+}
+.promo-page .promo-float-2 {
+  animation: promoFloat 6s ease-in-out 1.8s infinite;
+}
+
+/* Feature card hover */
+.promo-page .promo-f-card {
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+.promo-page .promo-f-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -10px rgba(22, 163, 74, 0.14);
+}

@@ -42,7 +42,7 @@ export default function SignInForm() {
       } catch {
         localStorage.removeItem("permissions");
       }
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch {
       Swal.fire({
         icon: "error",
