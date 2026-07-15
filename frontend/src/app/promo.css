@@ -1,6 +1,21 @@
 /* Styles scoped to the public landing page (app/page.tsx). All selectors are
    prefixed with .promo-page to avoid leaking into the admin dashboard app. */
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Kanit:wght@300;400;500;600;700;800&display=swap');
+
+.promo-page {
+  font-family: 'Outfit', 'Kanit', sans-serif !important;
+}
+
+.promo-page h1,
+.promo-page h2,
+.promo-page h3,
+.promo-page h4 {
+  font-family: 'Space Grotesk', 'Kanit', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em;
+}
+
 .promo-page .promo-reveal {
   opacity: 0;
   transform: translateY(20px);
@@ -13,102 +28,130 @@
 
 /* Sidebar gradient (mockup screenshot in hero) */
 .promo-page .promo-sidebar-grad {
-  background: linear-gradient(180deg, #14532d 0%, #052e16 100%);
+  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
 }
 
-/* Subtle grid pattern */
+/* Tech grid pattern with cyber emerald details */
 .promo-page .promo-grid-bg {
   background-image:
-    radial-gradient(circle at 85% 16%, rgba(187, 247, 208, 0.55), transparent 27%),
-    linear-gradient(rgba(22, 163, 74, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(22, 163, 74, 0.022) 1px, transparent 1px);
-  background-size: 32px 32px;
+    radial-gradient(circle at 50% 50%, rgba(21, 128, 61, 0.04) 0%, transparent 60%),
+    linear-gradient(rgba(21, 128, 61, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 128, 61, 0.02) 1px, transparent 1px);
+  background-size: auto, 24px 24px, 24px 24px;
 }
 
 .promo-page .max-w-6xl {
   max-width: 1400px;
 }
 
+/* Glassmorphism for cards */
+.promo-page .tech-glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(241, 245, 249, 0.9);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+}
+
+.promo-page .tech-glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.promo-page .tech-glass-card-hover:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(21, 128, 61, 0.25);
+  box-shadow: 
+    0 15px 35px -10px rgba(21, 128, 61, 0.08),
+    0 0 15px rgba(21, 128, 61, 0.05);
+}
+
+/* Glow blur background blobs */
+.promo-page .tech-glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
 .promo-page .promo-cta-light {
   background:
-    radial-gradient(ellipse at 15% 110%, rgba(22, 101, 52, 0.22) 0 16%, transparent 16.5%),
-    radial-gradient(ellipse at 85% 115%, rgba(21, 128, 61, 0.18) 0 18%, transparent 18.5%),
-    linear-gradient(180deg, #f0fdf4 0%, #ecfdf3 100%);
+    radial-gradient(ellipse at 15% 110%, rgba(202, 138, 4, 0.08) 0 18%, transparent 18.5%),
+    radial-gradient(ellipse at 85% 115%, rgba(21, 128, 61, 0.08) 0 20%, transparent 20.5%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid rgba(21, 128, 61, 0.08);
+}
+
+.promo-page .promo-footer-dark {
+  background-color: #052e16;
+  border-top: 1px solid #14532d;
 }
 
 .promo-page .promo-footer-dark .text-gray-800,
 .promo-page .promo-footer-dark .text-gray-900 {
-  color: #ffffff;
+  color: #f1f5f9;
 }
 
 .promo-page .promo-footer-dark .text-gray-400,
 .promo-page .promo-footer-dark .text-gray-500 {
-  color: #a7b7ad;
+  color: #64748b;
 }
 
 .promo-page .promo-footer-dark .bg-gray-100 {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .promo-page .promo-footer-dark .border-gray-100 {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Reports section dark space styling */
 .promo-page .promo-report-section {
   background-color: #062e1d;
   background-image:
-    radial-gradient(circle at 15% 20%, rgba(34, 197, 94, 0.12), transparent 28%),
-    radial-gradient(circle at 90% 80%, rgba(202, 138, 4, 0.08), transparent 24%),
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: auto, auto, 28px 28px, 28px 28px;
+    radial-gradient(circle at 10% 20%, rgba(21, 128, 61, 0.06), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(202, 138, 4, 0.06), transparent 30%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px;
 }
 
-/* Nav underline */
+/* Nav link tech hover */
 .promo-page .promo-nav-link {
   position: relative;
 }
 .promo-page .promo-nav-link::after {
   content: "";
   position: absolute;
-  bottom: -2px;
+  bottom: -4px;
   left: 0;
   width: 0;
   height: 2px;
-  background: #d97706;
-  border-radius: 2px;
-  transition: width 0.22s ease;
+  background: linear-gradient(90deg, #15803d, #ca8a04);
+  border-radius: 4px;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .promo-page .promo-nav-link:hover::after {
   width: 100%;
 }
 
-/* Floating card animation */
-@keyframes promoFloat {
+/* Floating animation */
+@keyframes techFloat {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
+  50% { transform: translateY(-8px); }
 }
 .promo-page .promo-float {
-  animation: promoFloat 5s ease-in-out infinite;
+  animation: techFloat 6s ease-in-out infinite;
 }
 .promo-page .promo-float-2 {
-  animation: promoFloat 6s ease-in-out 1.8s infinite;
-}
-
-/* Feature card hover */
-.promo-page .promo-f-card {
-  transition: transform 0.28s ease, box-shadow 0.28s ease;
-}
-.promo-page .promo-f-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px -10px rgba(22, 163, 74, 0.14);
+  animation: techFloat 7s ease-in-out 2s infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .promo-page .promo-reveal,
   .promo-page .promo-float,
   .promo-page .promo-float-2,
-  .promo-page .promo-f-card {
+  .promo-page .tech-glass-card-hover {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -117,6 +160,6 @@
 
 @media (max-width: 640px) {
   .promo-page .promo-grid-bg {
-    background-size: auto, 24px 24px, 24px 24px;
+    background-size: auto, 20px 20px, 20px 20px;
   }
 }
