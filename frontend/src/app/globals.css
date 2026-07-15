@@ -1,11 +1,43 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'PromptLocal';
+  src: url('/fonts/prompt-thai-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PromptLocal';
+  src: url('/fonts/prompt-thai-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PromptLocal';
+  src: url('/fonts/prompt-thai-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PromptLocal';
+  src: url('/fonts/prompt-thai-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-*: initial;
-  --font-prompt: Prompt, sans-serif;
-  --font-display: Prompt, sans-serif;
+  --font-prompt: PromptLocal, Tahoma, sans-serif;
+  --font-display: PromptLocal, Tahoma, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;

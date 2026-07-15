@@ -1,4 +1,3 @@
-import { Prompt } from 'next/font/google';
 import './globals.css';
 import "flatpickr/dist/flatpickr.css";
 import { SidebarProvider } from '@/context/SidebarContext';
@@ -6,18 +5,13 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import type { Metadata, Viewport } from 'next';
 import SwRegister from '@/components/common/SwRegister';
 
-const prompt = Prompt({
-  subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
 export const viewport: Viewport = {
-  themeColor: '#3b82f6',
+  themeColor: '#166534',
 };
 
 export const metadata: Metadata = {
   title: 'หมู่บ้านดิจิตอล',
-  description: 'ระบบจัดการข้อมูลหมู่บ้านอัจฉริยะ',
+  description: 'ระบบบริหารข้อมูลครัวเรือน แผนที่ชุมชน การเยี่ยมบ้าน การอบรม และรายงานสำหรับหน่วยงานท้องถิ่น',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -36,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${prompt.className} dark:bg-gray-900`}>
+    <html lang="th">
+      <body className="font-prompt dark:bg-gray-900">
         <ThemeProvider>
           <SidebarProvider>{children}</SidebarProvider>
         </ThemeProvider>

@@ -18,9 +18,50 @@
 
 /* Subtle grid pattern */
 .promo-page .promo-grid-bg {
-  background-image: linear-gradient(rgba(22, 163, 74, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(22, 163, 74, 0.04) 1px, transparent 1px);
+  background-image:
+    radial-gradient(circle at 85% 16%, rgba(187, 247, 208, 0.55), transparent 27%),
+    linear-gradient(rgba(22, 163, 74, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 163, 74, 0.022) 1px, transparent 1px);
   background-size: 32px 32px;
+}
+
+.promo-page .max-w-6xl {
+  max-width: 1400px;
+}
+
+.promo-page .promo-cta-light {
+  background:
+    radial-gradient(ellipse at 15% 110%, rgba(22, 101, 52, 0.22) 0 16%, transparent 16.5%),
+    radial-gradient(ellipse at 85% 115%, rgba(21, 128, 61, 0.18) 0 18%, transparent 18.5%),
+    linear-gradient(180deg, #f0fdf4 0%, #ecfdf3 100%);
+}
+
+.promo-page .promo-footer-dark .text-gray-800,
+.promo-page .promo-footer-dark .text-gray-900 {
+  color: #ffffff;
+}
+
+.promo-page .promo-footer-dark .text-gray-400,
+.promo-page .promo-footer-dark .text-gray-500 {
+  color: #a7b7ad;
+}
+
+.promo-page .promo-footer-dark .bg-gray-100 {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.promo-page .promo-footer-dark .border-gray-100 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.promo-page .promo-report-section {
+  background-color: #062e1d;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(34, 197, 94, 0.12), transparent 28%),
+    radial-gradient(circle at 90% 80%, rgba(202, 138, 4, 0.08), transparent 24%),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: auto, auto, 28px 28px, 28px 28px;
 }
 
 /* Nav underline */
@@ -61,4 +102,21 @@
 .promo-page .promo-f-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 18px 40px -10px rgba(22, 163, 74, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-page .promo-reveal,
+  .promo-page .promo-float,
+  .promo-page .promo-float-2,
+  .promo-page .promo-f-card {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .promo-page .promo-grid-bg {
+    background-size: auto, 24px 24px, 24px 24px;
+  }
 }
