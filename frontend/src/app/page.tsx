@@ -16,6 +16,7 @@ const FILTER_RAIL_ICONS = [
 function HeroMapFilterPanel() {
   const compact = true;
   return (
+    
     <div className="absolute inset-y-0 left-0 z-20 flex pointer-events-none">
       {/* Icon rail */}
       <div className={`flex flex-col items-center gap-3 bg-gradient-to-b from-[#075b38] to-[#063b28] py-4 flex-shrink-0 shadow-lg pointer-events-auto ${compact ? "w-12" : "w-14"}`}>
@@ -151,7 +152,7 @@ export default function LandingPage() {
           </ul>
 
           <a
-            href="/signin"
+            href="/signup"
             className="inline-flex items-center gap-2 bg-[#15803d] hover:bg-[#166534] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-200 shadow-sm"
           >
             ขอชมระบบ
@@ -188,7 +189,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 mb-12">
                 <a
-                  href="/signin"
+                  href="/signup"
                   className="inline-flex items-center justify-center gap-2 bg-[#15803d] hover:bg-[#166534] text-white font-bold px-7 py-3 rounded-full transition-all duration-200 text-sm shadow-sm"
                 >
                   ขอชมระบบ
@@ -272,7 +273,8 @@ export default function LandingPage() {
                         </svg>
                       </div>
                     ))}
-
+                    {/* Top overlay for search bar contrast */}
+                  <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/100 to-transparent pointer-events-none" />
                     {/* Search bar overlay */}
                     <div className="absolute top-3 left-[52px] right-3 flex gap-2">
                       <div className="flex-1 bg-white rounded-lg px-3 py-2 text-xs text-gray-400 flex items-center gap-2 shadow">
@@ -379,7 +381,7 @@ export default function LandingPage() {
                 ),
                 color: "bg-yellow-500/10 text-yellow-700",
                 title: "การเยี่ยมบ้าน",
-                desc: "บันทึกการเยี่ยมบ้าน พร้อมภาพถ่าย และรายงานพิกัดที่แท้จริง",
+                desc: "บันทึกวันที่เยี่ยม ผู้เยี่ยม สรุปผล และแผนติดตามครั้งถัดไป",
               },
               {
                 icon: (
@@ -391,11 +393,11 @@ export default function LandingPage() {
               },
               {
                 icon: (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 ),
                 color: "bg-green-500/10 text-green-700",
-                title: "การวางแผนกิจกรรม",
-                desc: "โครงการกิจกรรม จัดลำดับความสำคัญ กลุ่มเป้าหมาย",
+                title: "สิทธิ์และพื้นที่รับผิดชอบ",
+                desc: "กำหนดสิทธิ์เข้าถึงตามตำแหน่ง และแบ่งพื้นที่ดูแลตามจังหวัด อำเภอ ตำบล หมู่บ้าน",
               },
               {
                 icon: (
@@ -464,6 +466,8 @@ export default function LandingPage() {
                       </svg>
                     </div>
                   ))}
+                  {/* Top overlay for search bar contrast */}
+                  <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/100 to-transparent pointer-events-none" />
                   {/* Search bar overlay */}
                   <div className="absolute top-3 left-14 right-3 flex gap-2">
                     <div className="flex-1 bg-white rounded-lg px-3 py-2 text-xs text-gray-400 flex items-center gap-2 shadow">
@@ -552,12 +556,12 @@ export default function LandingPage() {
               <div>
                 <h3 className="font-bold text-2xl text-slate-800 mb-3">บันทึกการเยี่ยมบ้าน</h3>
                 <p className="text-sm text-slate-500 mb-6 leading-relaxed font-medium">
-                  บันทึกข้อมูลเจ้าหน้าที่ทำงาน พร้อมแสดงแผนที่ และจัดประเภทกิจกรรม
+                  บันทึกข้อมูลเจ้าหน้าที่ผู้เยี่ยม วันที่ และสรุปผลการเยี่ยมบ้าน
                 </p>
                 <ul className="space-y-4">
                   {[
-                    "บันทึกข้อมูลและพิกัดได้ทันที",
-                    "แนบภาพถ่ายขณะลงเยี่ยมบ้าน",
+                    "บันทึกวันที่ ผู้เยี่ยม และเหตุผลการเยี่ยม",
+                    "สรุปผลการเยี่ยมและแผนติดตามครั้งถัดไป",
                     "ตรวจสอบข้อมูลประวัติเก่าได้",
                     "ติดตามสถานะการเยี่ยมบ้าน"
                   ].map((t) => (
@@ -574,32 +578,32 @@ export default function LandingPage() {
               {/* 2. Phone Mockup */}
               <div className="flex justify-center">
                 {/* Real Phone Outer Titanium Bezel */}
-                <div className="relative mx-auto rounded-[2.8rem] bg-gradient-to-b from-[#8e8e93] via-[#e5e5ea] to-[#8e8e93] p-[3px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] flex-shrink-0 w-[245px] h-[450px]">
-                  
+                <div className="relative mx-auto rounded-[3rem] bg-gradient-to-b from-[#8e8e93] via-[#e5e5ea] to-[#8e8e93] p-[3px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] flex-shrink-0 w-[250px] h-[540px]">
+
                   {/* Action Button (Left) */}
-                  <div className="absolute -left-[3px] top-[55px] w-[3px] h-[15px] bg-[#8e8e93] rounded-l"></div>
-                  
+                  <div className="absolute -left-[3px] top-[66px] w-[3px] h-[18px] bg-[#8e8e93] rounded-l"></div>
+
                   {/* Volume Buttons (Left) */}
-                  <div className="absolute -left-[3px] top-[85px] w-[3px] h-[30px] bg-[#8e8e93] rounded-l"></div>
-                  <div className="absolute -left-[3px] top-[125px] w-[3px] h-[30px] bg-[#8e8e93] rounded-l"></div>
-                  
+                  <div className="absolute -left-[3px] top-[102px] w-[3px] h-[36px] bg-[#8e8e93] rounded-l"></div>
+                  <div className="absolute -left-[3px] top-[150px] w-[3px] h-[36px] bg-[#8e8e93] rounded-l"></div>
+
                   {/* Power Button (Right) */}
-                  <div className="absolute -right-[3px] top-[110px] w-[3px] h-[50px] bg-[#8e8e93] rounded-r"></div>
+                  <div className="absolute -right-[3px] top-[132px] w-[3px] h-[60px] bg-[#8e8e93] rounded-r"></div>
 
                   {/* Black Screen Border (Inner Bezel) */}
-                  <div className="w-full h-full bg-black rounded-[2.6rem] p-[8px] relative flex flex-col justify-between shadow-inner">
-                    
+                  <div className="w-full h-full bg-black rounded-[2.8rem] p-[8px] relative flex flex-col justify-between shadow-inner">
+
                     {/* Ear Speaker */}
-                    <div className="absolute top-[3px] left-1/2 -translate-x-1/2 w-10 h-[1px] bg-zinc-800 rounded-full z-30"></div>
-                    
+                    <div className="absolute top-[4px] left-1/2 -translate-x-1/2 w-10 h-[1px] bg-zinc-800 rounded-full z-30"></div>
+
                     {/* Dynamic Island */}
-                    <div className="absolute top-[12px] left-1/2 -translate-x-1/2 w-15 h-4 bg-black rounded-full z-30 flex items-center justify-end px-1.5 gap-0.5 border border-zinc-900 shadow-inner">
+                    <div className="absolute top-[14px] left-1/2 -translate-x-1/2 w-16 h-[18px] bg-black rounded-full z-30 flex items-center justify-end px-1.5 gap-0.5 border border-zinc-900 shadow-inner">
                       {/* Lens reflection */}
                       <div className="w-1.5 h-1.5 bg-[#0b1b3d] rounded-full mr-0.5 opacity-85"></div>
                     </div>
 
                     {/* Inner Screen */}
-                    <div className="bg-white rounded-[2rem] overflow-hidden w-full h-full flex flex-col justify-between relative shadow-inner" style={{ height: "430px" }}>
+                    <div className="bg-white rounded-[2.2rem] overflow-hidden w-full h-full flex flex-col justify-between relative shadow-inner">
                       
                       {/* Status Bar (Simulated iPhone Status Bar) */}
                       <div className="absolute top-0 inset-x-0 h-6 px-5 flex items-center justify-between text-[8px] font-semibold text-white z-20 select-none pointer-events-none">
@@ -627,15 +631,15 @@ export default function LandingPage() {
                       {/* Content */}
                       <div className="p-4 flex-1 flex flex-col justify-between text-xs overflow-y-auto">
                         <div>
-                          <div className="font-bold text-gray-700 mb-1 border-b border-gray-100 pb-1 text-xs">ข้อมูลครัวเรือน</div>
-                          <div className="flex justify-between text-gray-400 text-[10px] mb-1.5">
+                          <div className="font-bold text-gray-700 mb-1.5 border-b border-gray-100 pb-1.5 text-xs">ข้อมูลครัวเรือน</div>
+                          <div className="flex justify-between text-gray-400 text-[10px] mb-2">
                             <span>รหัสบ้าน: S-005-0123/1</span>
                             <span>12 พ.ค. 2567</span>
                           </div>
-                          <div className="font-bold text-[#15803d] text-sm mb-2">นายสมชาย ใจดี</div>
-                          
+                          <div className="font-bold text-[#15803d] text-sm mb-2.5">นายสมชาย ใจดี</div>
+
                           {/* Dummy house image */}
-                          <div className="w-full h-24 rounded-xl overflow-hidden bg-gray-100 relative mb-2.5 shadow-sm border border-gray-100">
+                          <div className="w-full h-32 rounded-xl overflow-hidden bg-gray-100 relative mb-3 shadow-sm border border-gray-100">
                             <Image
                               src="/images/promo/thai_wooden_house.jpg"
                               alt="House photo"
@@ -645,13 +649,29 @@ export default function LandingPage() {
                           </div>
 
                           {/* Badges */}
-                          <div className="flex gap-1.5 mb-2.5 flex-wrap text-[10px]">
+                          <div className="flex gap-1.5 mb-3 flex-wrap text-[10px]">
                             <span className="bg-green-50 text-[#15803d] border border-green-200 px-2 py-0.5 rounded-full font-semibold">เยี่ยมแล้ว</span>
                             <span className="bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-semibold">ต้องการช่วยเหลือ</span>
                           </div>
+
+                          {/* Extra detail rows */}
+                          <div className="space-y-1.5 border-t border-gray-100 pt-2.5 text-[10px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">สมาชิกในครัวเรือน</span>
+                              <span className="font-bold text-gray-700">4 คน</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">กลุ่มเป้าหมาย</span>
+                              <span className="bg-orange-100 text-orange-600 rounded-full px-1.5 text-[9px] font-semibold">ผู้สูงอายุ</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400">ผู้บันทึก</span>
+                              <span className="font-bold text-gray-700">ผู้ใหญ่บ้าน</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <button className="w-full py-2 bg-[#15803d] text-white font-bold rounded-lg hover:bg-green-800 transition-colors shadow-md mt-2 flex-shrink-0 text-xs">
+                        <button className="w-full py-2.5 bg-[#15803d] text-white font-bold rounded-lg hover:bg-green-800 transition-colors shadow-md mt-3 flex-shrink-0 text-xs">
                           บันทึกข้อมูล
                         </button>
                       </div>
@@ -669,19 +689,41 @@ export default function LandingPage() {
               {/* 3. Timeline Card */}
               <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50">
                 <h4 className="font-bold text-gray-800 text-sm sm:text-base mb-4 border-b border-gray-100 pb-2.5">ประวัติการเยี่ยม</h4>
-                <div className="relative border-l border-green-200 pl-6 space-y-6 text-xs py-1.5">
+                <div className="relative pl-9 space-y-7 text-xs py-2">
+                  {/* Progress line: green for completed, grey for pending */}
+                  <div
+                    className="absolute left-[14px] top-[10px] bottom-[18px] w-0.5 rounded-full -translate-x-1/2"
+                    style={{ background: "linear-gradient(to bottom, #16a34a 0%, #16a34a 75%, #d1d5db 75%, #d1d5db 100%)" }}
+                  />
                   {[
-                    { date: "12 พ.ค. 2567", status: "เยี่ยมแล้ว", by: "โดย ผู้ใหญ่บ้าน" },
-                    { date: "20 เม.ย. 2567", status: "เยี่ยมแล้ว", by: "โดย อสม." },
-                    { date: "15 มี.ค. 2567", status: "ย้ายเข้าในพื้นที่", by: "โดย ผู้ใหญ่บ้าน" }
+                    { date: "12 พ.ค. 2567", status: "เยี่ยมแล้ว", by: "โดย ผู้ใหญ่บ้าน", type: "visited" },
+                    { date: "20 เม.ย. 2567", status: "เยี่ยมแล้ว", by: "โดย อสม.", type: "visited" },
+                    { date: "15 มี.ค. 2567", status: "ย้ายเข้าในพื้นที่", by: "โดย ผู้ใหญ่บ้าน", type: "moved" },
+                    { date: "-", status: "ยังไม่เยี่ยม", by: "", type: "pending" },
                   ].map((item, idx) => (
                     <div key={idx} className="relative">
-                      {/* Circle indicator */}
-                      <span className="absolute -left-[30px] top-0.5 w-3 h-3 rounded-full bg-[#15803d] border-2 border-white flex-shrink-0 shadow-sm" />
+                      {/* Node indicator */}
+                      {item.type === "pending" ? (
+                        <span className="absolute left-[-22px] top-0 w-5 h-5 -translate-x-1/2 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center shadow-sm z-10">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                        </span>
+                      ) : (
+                        <span className="absolute left-[-22px] top-0 w-5 h-5 -translate-x-1/2 rounded-full bg-[#15803d] border-2 border-white flex items-center justify-center shadow-sm z-10">
+                          {item.type === "visited" ? (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z" />
+                            </svg>
+                          )}
+                        </span>
+                      )}
                       <div>
                         <div className="text-gray-400 text-[10px] font-semibold">{item.date}</div>
-                        <div className="font-bold text-gray-800 text-sm mt-0.5">{item.status}</div>
-                        <div className="text-gray-500 text-[10.5px] mt-0.5">{item.by}</div>
+                        <div className={`font-bold text-sm mt-0.5 ${item.type === "pending" ? "text-gray-400" : "text-green-700"}`}>{item.status}</div>
+                        {item.by && <div className="text-gray-500 text-[10.5px] mt-0.5">{item.by}</div>}
                       </div>
                     </div>
                   ))}
@@ -690,19 +732,19 @@ export default function LandingPage() {
 
             </div>
 
-            {/* Right Column: Training checklist & Activity box */}
+            {/* Right Column: Training/Activity checklist + Event box */}
             <div className="space-y-6 promo-reveal">
               <div>
-                <h3 className="font-bold text-2xl text-gray-800 mb-3">จัดการกิจกรรมและโครงการ</h3>
+                <h3 className="font-bold text-2xl text-gray-800 mb-3">จัดการฝึกอบรมและกิจกรรมชุมชน</h3>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  วางแผนกิจกรรม จัดลำดับความสำคัญ แก่กลุ่มเป้าหมาย
+                  บันทึกกิจกรรม พร้อมรายชื่อผู้เข้าร่วมและผลลัพธ์รายบุคคล
                 </p>
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-3 mb-4">
                   {[
-                    "กำหนดเป้าหมายและผู้ร่วมกิจกรรม",
-                    "บันทึกงบประมาณการดูแล",
-                    "เลือกช่วงเวลา / ผู้รับผิดชอบ",
-                    "สรุปภาพรวมประเมินผลลัพธ์"
+                    "บันทึกชื่อกิจกรรม ประเภท และรายละเอียด",
+                    "กำหนดวันที่และสถานที่จัดกิจกรรม",
+                    "เพิ่มรายชื่อผู้เข้าร่วมกิจกรรม",
+                    "ติดตามผลหลังกิจกรรมรายบุคคล"
                   ].map((t) => (
                     <li key={t} className="flex items-center gap-2 text-sm text-gray-600 font-medium">
                       <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
@@ -714,44 +756,48 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              {/* Activity event card with donut chart side-by-side */}
+              {/* Activity event card with participant list */}
               <div className="border border-gray-150 rounded-2xl overflow-hidden bg-white shadow-sm text-xs">
                 <div className="bg-gray-900 text-white px-4 py-3 font-bold text-sm tracking-wide">
-                  โครงการส่งเสริมอาชีพชุมชน
+                  อบรมอาชีพเสริมรายได้ชุมชน
                 </div>
                 <div className="p-4.5">
                   <div className="flex gap-4 items-center justify-between border-b border-gray-100 pb-3.5 mb-3.5">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-500 flex-1 leading-normal text-xs">
                       <span>วันที่</span><span className="text-right font-bold text-gray-800">18 พ.ค. 2567</span>
                       <span>สถานที่</span><span className="text-right font-bold text-gray-800">ศาลาประชาคมบ้าน</span>
-                      <span>เป้าหมาย</span><span className="text-right font-bold text-gray-800">120 คน</span>
-                      <span>ผู้เข้าร่วม</span><span className="text-right font-bold text-gray-800">98 คน</span>
+                      <span>ประเภท</span><span className="text-right font-bold text-gray-800">อาชีพ/รายได้</span>
+                      <span>งบประมาณ</span><span className="text-right font-bold text-gray-800">15,000 บาท</span>
                     </div>
-                    {/* Donut chart */}
+                    {/* Donut chart: attendance rate */}
                     <div className="flex flex-col items-center gap-1 flex-shrink-0">
                       <div className="relative w-16 h-16 flex items-center justify-center">
                         <svg viewBox="0 0 36 36" className="w-16 h-16 transform -rotate-90">
                           <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" strokeWidth="4.5"/>
                           <circle cx="18" cy="18" r="15.9" fill="none" stroke="#15803d" strokeWidth="4.5"
-                            strokeDasharray="81.67 18.33" strokeDashoffset="0"/>
+                            strokeDasharray="66.7 33.3" strokeDashoffset="0"/>
                         </svg>
-                        <div className="absolute text-[10px] font-bold text-gray-800">81.6%</div>
+                        <div className="absolute text-[10px] font-bold text-gray-800">66.7%</div>
                       </div>
-                      <span className="text-[9px] text-[#15803d] font-bold">คิดเป็นร้อยละ</span>
+                      <span className="text-[9px] text-[#15803d] font-bold">เข้าร่วมจริง</span>
                     </div>
                   </div>
 
                   <table className="w-full text-xs mb-3.5">
                     <tbody className="divide-y divide-gray-100">
                       {[
-                        { name: "นายกมล รักดี", role: "ดูรายละเอียด >" },
-                        { name: "นางวิภา คำมา", role: "ดูรายละเอียด >" },
-                        { name: "นายเอกชัย โอชา", role: "ดูรายละเอียด >" }
+                        { name: "นายกมล รักดี", status: "เข้าร่วม" },
+                        { name: "นางวิภา คำมา", status: "เข้าร่วม" },
+                        { name: "นายเอกชัย โอชา", status: "ไม่มา" }
                       ].map((item, idx) => (
                         <tr key={idx} className="text-gray-700">
                           <td className="py-2 text-gray-400 font-semibold">{idx + 1}</td>
                           <td className="py-2 font-medium">{item.name}</td>
-                          <td className="py-2 text-right text-[#15803d] font-bold hover:underline cursor-pointer">{item.role}</td>
+                          <td className="py-2 text-right">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${item.status === "เข้าร่วม" ? "bg-green-50 text-[#15803d] border border-green-200" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
+                              {item.status}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -776,7 +822,7 @@ export default function LandingPage() {
             <p className="text-gray-300 text-base">สนับสนุนการทำงานวิเคราะห์ข้อมูล รายงานสถิติสำคัญ คัดกรองและประเมินผลได้ทันที</p>
           </div>
 
-          <div className="grid lg:grid-cols-[290px_1fr_260px] gap-8 items-start">
+          <div className="grid lg:grid-cols-[290px_1fr_340px] gap-8 items-start">
             {/* Sidebar */}
             <div className="promo-reveal space-y-3">
               {[
@@ -857,28 +903,51 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Bar Chart: ผลการเยี่ยมบ้านรายเดือน side-by-side */}
+                {/* Bar Chart: ผลการเยี่ยมบ้านรายเดือน (side-by-side) */}
                 <div>
                   <div className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">ผลการเยี่ยมบ้านรายเดือน</div>
-                  <div className="flex items-end gap-3 h-[90px] border-b border-gray-100 pb-2">
-                    {[
-                      ["ม.ค.", 65, 20], ["ก.พ.", 85, 15], ["มี.ค.", 55, 12],
-                      ["เม.ย.", 98, 38], ["พ.ค.", 112, 10], ["มิ.ย.", 90, 8],
-                    ].map(([m, done, pending]) => (
-                      <div key={m as string} className="flex flex-col items-center gap-1.5 flex-1">
-                        <div className="flex items-end gap-1 h-[68px] justify-center w-full">
-                          {/* Green bar - เยี่ยมจริง */}
-                          <div className="w-2 bg-[#15803d] rounded-t-sm" style={{ height: `${(done as number) / 1.5}px` }} />
-                          {/* Orange bar - ที่บันทึก */}
-                          <div className="w-2 bg-orange-400 rounded-t-sm" style={{ height: `${(pending as number) / 1.5}px` }} />
-                        </div>
-                        <span className="text-[9.5px] text-gray-400 leading-none">{m}</span>
+                  <div className="flex gap-2">
+                    {/* Y-axis scale */}
+                    <div className="flex flex-col justify-between h-[130px] text-[9px] text-gray-400 text-right pb-[1px]">
+                      {[100, 80, 60, 40, 20, 0].map((v) => (
+                        <span key={v} className="leading-none">{v}</span>
+                      ))}
+                    </div>
+                    <div className="relative flex-1 h-[130px]">
+                      {/* Gridlines aligned to scale */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="border-t border-gray-100 w-full" />
+                        ))}
                       </div>
-                    ))}
+                      <div className="relative flex items-end justify-between gap-2.5 h-full px-1">
+                        {[
+                          ["ม.ค.", 55, 20], ["ก.พ.", 65, 15], ["มี.ค.", 45, 12],
+                          ["เม.ย.", 60, 35], ["พ.ค.", 90, 10], ["มิ.ย.", 95, 8],
+                        ].map(([m, done, pending]) => (
+                          <div key={m as string} className="flex flex-col items-center flex-1 h-full justify-end">
+                            <div className="flex items-end gap-1 w-full justify-center">
+                              {/* Green bar - เยี่ยมแล้ว */}
+                              <div className="w-3 rounded-t-sm" style={{ height: `${(done as number) / 100 * 130}px`, background: "#15803d" }} />
+                              {/* Yellow bar - ยังไม่เยี่ยม */}
+                              <div className="w-3 rounded-t-sm" style={{ height: `${(pending as number) / 100 * 130}px`, background: "#eab308" }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-1.5">
+                    <div className="w-[18px] flex-shrink-0" />
+                    <div className="flex-1 flex justify-between gap-2.5 px-1">
+                      {["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."].map((m) => (
+                        <span key={m} className="flex-1 text-center text-[9.5px] text-gray-400 leading-none">{m}</span>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex items-center gap-4.5 mt-3.5 text-xs justify-center">
-                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#15803d]"/><span className="text-gray-500 font-semibold">เยี่ยมจริง</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-orange-400"/><span className="text-gray-500 font-semibold">ที่บันทึก</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#15803d]" /><span className="text-gray-500 font-semibold">เยี่ยมแล้ว</span></div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#eab308]" /><span className="text-gray-500 font-semibold">ยังไม่เยี่ยม</span></div>
                   </div>
                 </div>
               </div>
@@ -938,6 +1007,41 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== HOW TO START ===== */}
+      <section className="py-20 bg-slate-50/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="font-bold text-3xl lg:text-4xl text-center text-slate-800 mb-4 promo-reveal">เริ่มใช้งานยังไง</h2>
+          <p className="text-center text-slate-500 mb-14 promo-reveal">ไม่ต้องเก่งคอมพิวเตอร์ ก็เริ่มใช้งานได้ใน 3 ขั้นตอน</p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                title: "ติดต่อขอชมระบบ",
+                desc: "กดปุ่ม “ขอชมระบบ” หรือโทร/แชทติดต่อทีมงาน แจ้งชื่อหมู่บ้านหรือหน่วยงาน",
+              },
+              {
+                step: "2",
+                title: "รับบัญชีทดลองใช้ฟรี",
+                desc: "ทีมงานตั้งค่าและอบรมการใช้งานเบื้องต้นให้ ไม่ต้องติดตั้งโปรแกรมเพิ่ม",
+              },
+              {
+                step: "3",
+                title: "เริ่มบันทึกข้อมูลได้ทันที",
+                desc: "ใช้งานผ่านมือถือหรือคอมพิวเตอร์ พร้อมทีมงานคอยช่วยเหลือตลอดการใช้งาน",
+              },
+            ].map((s) => (
+              <div key={s.step} className="promo-reveal tech-glass-card rounded-2xl p-8 text-center relative">
+                <div className="w-12 h-12 rounded-full bg-[#15803d] text-white font-bold text-lg flex items-center justify-center mx-auto mb-5 shadow-sm">
+                  {s.step}
+                </div>
+                <h3 className="font-bold text-slate-800 text-lg mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1009,9 +1113,13 @@ export default function LandingPage() {
       </section>
 
       {/* ===== CTA ===== */}
-      <section className="py-24 bg-[#eef5f3] text-gray-900 text-center relative overflow-hidden">
-       
-        
+      <section
+        className="py-17.5 text-gray-900 text-center relative overflow-hidden bg-cover"
+        style={{ backgroundImage: "url('/images/promo/cta-village-lake.png')", backgroundPosition: "center 0%" }}
+      >
+        {/* Light wash for text legibility */}
+        <div className="absolute inset-0 bg-white/0" />
+
         <div className="max-w-2xl mx-auto px-6 relative z-10 promo-reveal">
           <h2 className="font-bold text-3xl sm:text-[34px] text-[#0f2e22] mb-4 tracking-tight">
             เริ่มจัดการข้อมูลชุมชนอย่างเป็นระบบ
@@ -1020,7 +1128,7 @@ export default function LandingPage() {
             เพิ่มประสิทธิภาพการทำงาน ลดงานซ้ำซ้อน และยกระดับคุณภาพชีวิตของคนในชุมชน
           </p>
           <a
-            href="/signin"
+            href="/signup"
             className="inline-flex items-center justify-center gap-2 bg-[#15803d] hover:bg-[#166534] text-white font-bold px-8 py-3.5 rounded-xl transition-all duration-200 shadow-md text-sm hover:scale-[1.02]"
           >
             ขอชมระบบ
