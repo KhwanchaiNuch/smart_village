@@ -33,4 +33,23 @@ public class WaterRateSetting {
 
     @PrePersist
     protected void onCreate() { this.createdAt = LocalDateTime.now(); }
+
+    // ระบุ getter/setter เอง เพราะ Lombok annotation processing ไม่ทำงานในบางสภาพแวดล้อม build
+    public Long getRateId() { return rateId; }
+    public void setRateId(Long rateId) { this.rateId = rateId; }
+
+    public Integer getVillageId() { return villageId; }
+    public void setVillageId(Integer villageId) { this.villageId = villageId; }
+
+    public BigDecimal getRatePerUnit() { return ratePerUnit; }
+    public void setRatePerUnit(BigDecimal ratePerUnit) { this.ratePerUnit = ratePerUnit; }
+
+    public LocalDate getEffectiveFrom() { return effectiveFrom; }
+    public void setEffectiveFrom(LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

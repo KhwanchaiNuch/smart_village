@@ -42,4 +42,32 @@ public class WaterPayment {
 
     @PrePersist
     protected void onCreate() { this.createdAt = LocalDateTime.now(); }
+
+    // ระบุ getter/setter เอง เพราะ Lombok annotation processing ไม่ทำงานในบางสภาพแวดล้อม build
+    public Long getPaymentId() { return paymentId; }
+    public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
+
+    public Long getBillId() { return billId; }
+    public void setBillId(Long billId) { this.billId = billId; }
+
+    public String getReceiptNo() { return receiptNo; }
+    public void setReceiptNo(String receiptNo) { this.receiptNo = receiptNo; }
+
+    public BigDecimal getPaidAmount() { return paidAmount; }
+    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
+
+    public LocalDate getPaidDate() { return paidDate; }
+    public void setPaidDate(LocalDate paidDate) { this.paidDate = paidDate; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public Long getReceivedBy() { return receivedBy; }
+    public void setReceivedBy(Long receivedBy) { this.receivedBy = receivedBy; }
+
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
