@@ -1,546 +1,1251 @@
 <!DOCTYPE html>
-<html lang="th" class="scroll-smooth">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>หมู่บ้านดิจิตอล — ระบบบริหารจัดการหมู่บ้านและค่าน้ำประปา</title>
+<meta name="description" content="ระบบจัดการข้อมูลชุมชน พร้อมระบบประปาหมู่บ้านและการออกใบแจ้งหนี้ จดมิเตอร์ คำนวณค่าน้ำ ออกบิล และพิมพ์ใบแจ้งหนี้ได้ทันที">
+<link rel="icon" href="assets/icons/brand-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ['Sarabun', 'sans-serif'],
-          display: ['Outfit', 'sans-serif'],
-        },
-        colors: {
-          brand: {
-            25:  '#f0fdf4',
-            50:  '#dcfce7',
-            100: '#bbf7d0',
-            200: '#86efac',
-            300: '#4ade80',
-            400: '#22c55e',
-            500: '#16a34a',
-            600: '#15803d',
-            700: '#166534',
-            800: '#14532d',
-            900: '#0f4422',
-            950: '#052e16',
-          },
-          gray: {
-            25:  '#fcfcfd',
-            50:  '#f9fafb',
-            100: '#f2f4f7',
-            200: '#e4e7ec',
-            300: '#d0d5dd',
-            400: '#98a2b3',
-            500: '#667085',
-            600: '#475467',
-            700: '#344054',
-            800: '#1d2939',
-            900: '#101828',
-          }
-        }
-      }
-    }
-  }
-</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
+/* ------------------------------------------------------------------
+   หน่วยออกแบบ: 1rem = 10 หน่วยของดีไซน์ต้นฉบับ (กว้าง 750 หน่วย)
+   desktop สเกลตามความกว้างจอ (สูงสุด 1440px) / tablet+มือถือใช้ค่าคงที่
+------------------------------------------------------------------- */
+html { font-size: 13px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* ขนาด sm: ย่อทั้งหน้าเหลือ 80% ของสเกลดีไซน์ */
+@media (min-width: 1100px) { html { font-size: calc(min(100vw, 1440px) / 75 * .8); } }
+
+:root {
+  --g950: #08321f;
+  --g900: #0b3f29;
+  --g800: #0e4f34;
+  --g700: #136140;
+  --g600: #1a774d;
+  --g500: #21a05a;
+  --g400: #3cbf6e;
+  --g100: #dcf3e4;
+  --g50:  #effaf2;
+  --navy: #1b2a47;
+  --ink:  #253244;
+  --muted:#5d6878;
+  --soft: #8a94a3;
+  --line: #e3e8ee;
+  --blue: #2b8def;
+  --red:  #e5484d;
+  --orange: #f29a1f;
+  --btn: linear-gradient(180deg, #187a4f 0%, #0f5a39 55%, #0b4730 100%);
+  --card-shadow: 0 .2rem .9rem rgba(25, 60, 50, .10), 0 .05rem .2rem rgba(25, 60, 50, .06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans Thai', 'Prompt', system-ui, sans-serif;
+  color: var(--ink);
+  background: #f4f9fc;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+.font-h { font-family: 'Prompt', 'Noto Sans Thai', sans-serif; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.page { width: 100%; position: relative; overflow: hidden; background: #f4f9fc; }
+.wrap { width: 100%; max-width: 70rem; margin: 0 auto; }
+@media (max-width: 1099px) { .wrap { max-width: 1000px; padding: 0 20px; } }
+
+/* ---------- ปุ่ม ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .7rem;
+  font-family: 'Prompt', sans-serif; font-weight: 600; white-space: nowrap;
+  border-radius: .8rem; transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn-primary {
+  background: var(--btn); color: #fff;
+  box-shadow: inset 0 .1rem 0 rgba(255,255,255,.18), 0 .35rem .9rem rgba(11, 71, 48, .28);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: inset 0 .1rem 0 rgba(255,255,255,.18), 0 .5rem 1.2rem rgba(11, 71, 48, .35); }
+.btn-outline {
+  background: rgba(255,255,255,.92); color: var(--g800);
+  border: .13rem solid var(--g700);
+}
+.btn-outline:hover { background: var(--g50); }
+.chev { width: .9em; height: .9em; flex: none; }
+
+/* ---------- NAV ---------- */
+.nav {
+  position: fixed; z-index: 50; top: 1.2rem; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 2.4rem); max-width: 68.3rem; height: 4.8rem;
+  display: flex; align-items: center; padding: 0 1.4rem 0 3.9rem;
+  background: rgba(255,255,255,.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 1.2rem; box-shadow: 0 .3rem 1.4rem rgba(20, 60, 50, .12);
+}
+@media (min-width: 1100px) { .nav { width: 68.3rem; } }
+.brand { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+.brand-mark { width: 5.4rem; height: 4.2rem; }
+.brand-name { font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 1.95rem; color: var(--g800); letter-spacing: -.01em; line-height: 1; white-space: nowrap; }
+.nav-links { display: flex; flex-shrink: 0; gap: 2.2rem; margin-left: auto; margin-right: 2.6rem; list-style: none; }
+.nav-links a { white-space: nowrap; font-family: 'Prompt', sans-serif; font-size: max(12px, .86rem); font-weight: 500; color: #283445; position: relative; padding: .5rem 0; }
+.nav-links a.active { font-weight: 700; color: var(--g900); }
+.nav-links a.active::after, .nav-links a:hover::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -.15rem; height: .22rem; border-radius: 1rem; background: var(--g700);
+}
+.nav-search { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; color: #2b3647; margin-right: 1.4rem; }
+.nav-search svg { width: 1.45rem; height: 1.45rem; }
+.nav-cta { flex-shrink: 0; height: 2.75rem; padding: 0 1.5rem; font-size: max(12px, .98rem); border-radius: .75rem; }
+.nav-burger { display: none; width: 40px; height: 40px; place-items: center; color: var(--g800); margin-left: 8px; }
+.nav-burger svg { width: 24px; height: 24px; }
+.mobile-menu { display: none; }
+
+@media (max-width: 1099px) {
+  .nav { top: 10px; width: calc(100% - 24px); height: 54px; padding: 0 12px 0 14px; border-radius: 14px; }
+  .brand-mark { width: 44px; height: 35px; }
+  .brand-name { font-size: 19px; }
+  .nav-links, .nav-search { display: none; }
+  .nav-cta { margin-left: auto; height: 36px; padding: 0 14px; font-size: 13px; border-radius: 9px; }
+  .nav-burger { display: grid; }
+  .mobile-menu {
+    position: fixed; z-index: 49; top: 72px; left: 12px; right: 12px; display: block;
+    background: #fff; border-radius: 14px; box-shadow: 0 12px 32px rgba(20,60,50,.18);
+    padding: 8px; transform: translateY(-10px); opacity: 0; pointer-events: none; transition: .2s;
   }
-  .reveal.in { opacity: 1; transform: translateY(0); }
-  .nav-link { position: relative; }
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    left: 0; bottom: -4px;
-    width: 0; height: 2px;
-    background: #16a34a;
-    transition: width 0.25s ease;
-  }
-  .nav-link:hover::after, .nav-link.active::after { width: 100%; }
-  .wave-band {
-    background-image: url('assets/images/wave-strip.png');
-    background-size: cover;
-    background-position: center bottom;
-  }
-  .hero-sky {
-    background: linear-gradient(180deg, #eafbf2 0%, #f3fbff 55%, #ffffff 100%);
-  }
+  .mobile-menu.open { transform: none; opacity: 1; pointer-events: auto; }
+  .mobile-menu a { display: block; padding: 13px 14px; font-family: 'Prompt', sans-serif; font-weight: 500; font-size: 16px; border-radius: 10px; color: var(--ink); }
+  .mobile-menu a:hover, .mobile-menu a.active { background: var(--g50); color: var(--g800); }
+}
+@media (max-width: 420px) {
+  .brand-name { font-size: 19px; }
+  .brand-mark { width: 42px; height: 34px; }
+  .nav-cta { padding: 0 12px; font-size: 13px; }
+}
+
+/* ---------- HERO ---------- */
+.hero { position: relative; min-height: 44rem; background: url('assets/bg/hero.webp') center bottom / cover no-repeat; }
+.hero .wrap { position: relative; min-height: 44rem; }
+.hero-left { z-index: 1; position: absolute; left: 1.1rem; top: 8.6rem; width: 29rem; }
+.hero-pillrow { display: flex; align-items: center; gap: 1.1rem; white-space: nowrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: .5rem; height: 2.15rem; padding: 0 1.05rem 0 .85rem;
+  background: rgba(214, 240, 232, .92); border-radius: 2rem;
+  font-family: 'Prompt', sans-serif; font-weight: 600; font-size: max(11px, .88rem); color: var(--g900);
+}
+.pill svg { width: .95rem; height: 1.15rem; }
+.hero-tag { font-size: max(10px, .76rem); color: #6a7584; letter-spacing: .01em; }
+.hero-tag + .hero-tag { margin-left: .6rem; }
+.hero h1 {
+  font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 4.25rem; line-height: 1.04;
+  margin-top: 1.05rem; letter-spacing: -.012em;
+  background: linear-gradient(180deg, #11563a 0%, #0b3f2a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-sub { margin-top: .7rem; font-family: 'Prompt', sans-serif; font-weight: 400; font-size: 1.52rem; line-height: 1.3; color: #1f2b3a; }
+.hero-feats { display: flex; gap: .55rem; margin-top: 2.65rem; }
+.feat { display: flex; align-items: center; gap: .42rem; }
+.feat-ic { width: 2.35rem; height: 2.35rem; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #1b7a4f, #0b4430 70%); display: grid; place-items: center; flex: none; box-shadow: 0 .15rem .4rem rgba(11,68,48,.3); }
+.feat-ic svg { width: 1.25rem; height: 1.25rem; color: #fff; }
+.feat p { font-size: max(10px, .74rem); line-height: 1.45; color: #2d3a4a; position: relative; z-index: 1; text-shadow: 0 0 .5rem #fff, 0 0 .25rem #fff, 0 0 .12rem #fff; }
+.hero-btns { display: flex; gap: 1.2rem; margin-top: 2.6rem; }
+.hero-btns .btn { height: 3.45rem; font-size: 1.22rem; border-radius: .85rem; }
+.hero-btns .btn-primary { width: 12.8rem; }
+.hero-btns .btn-outline { width: 10.9rem; gap: .8rem; }
+.play { width: 1.9rem; height: 1.9rem; }
+.tower {
+  position: absolute; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 46% 50% at 50% 42%, #000 45%, transparent 92%);
+          mask-image: radial-gradient(ellipse 46% 50% at 50% 42%, #000 45%, transparent 92%);
+}
+.hero .tower { left: 26rem; top: 24.1rem; width: 6.3rem; height: 8.9rem; object-fit: contain;
+  -webkit-mask-image: none; mask-image: none;
+  /* ภาพไดคัทพื้นใสแล้ว (ใส่หมอกฟ้าในตัวภาพ) เติมเงาหมอกบางๆ ให้กลืนกับฉาก */
+  filter: drop-shadow(0 0 .6rem rgba(205, 230, 250, .55)); }
+
+/* dashboard mockup */
+.dash-wrap { position: absolute; left: 30.8rem; top: 8.9rem; width: 40.6rem; perspective: 95rem; perspective-origin: 0 50%; }
+.dash {
+  position: relative; display: flex; height: 31rem;
+  transform: rotateY(-9deg) rotateX(1.5deg) rotateZ(-1.2deg); transform-origin: 0 50%;
+  border: .42rem solid #0e4a32; border-radius: 1.3rem; background: #f6f9fb;
+  box-shadow: .5rem .3rem 0 #0a3a27, 1.2rem 1.8rem 3rem rgba(20, 50, 40, .35);
+  overflow: hidden; font-size: .5rem;
+}
+.dash-side {
+  width: 8.4rem; flex: none; padding: 1.4rem .5rem; color: #e9f5ee;
+  background: linear-gradient(180deg, #145a3c 0%, #0d4630 100%);
+}
+.dash-logo { display: flex; flex-direction: column; align-items: center; gap: .3rem; margin-bottom: 1.6rem; }
+.dash-logo svg { width: 3.2rem; height: 2.6rem; }
+.dash-logo span { font-family: 'Prompt'; font-weight: 600; font-size: .62rem; color: #fff; }
+.dash-menu { list-style: none; display: flex; flex-direction: column; gap: .25rem; }
+.dash-menu li { display: flex; align-items: center; gap: .45rem; padding: .46rem .55rem; border-radius: .55rem; font-family: 'Prompt'; font-size: .56rem; white-space: nowrap; min-width: 0; overflow: hidden; }
+.dash-menu li.on { background: #2a8a5b; }
+.dash-menu svg { width: 1rem; height: 1rem; flex: none; color: #fff; }
+.dash-main { flex: 1; padding: 1.25rem 1.2rem 0 1.1rem; min-width: 0; }
+.dash-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.dash-burger { width: 1.1rem; height: 1.1rem; color: #42506a; margin-top: .4rem; }
+.dash-date { display: flex; align-items: center; gap: .6rem; height: 2.3rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: .5rem; background: #fff; font-family: 'Prompt'; font-size: .55rem; color: #3b475a; width: 11.3rem; }
+.dash-date svg { width: .95rem; height: .95rem; color: #3b475a; }
+.dash-date .chev { margin-left: auto; width: .8rem; }
+.dash-title { font-family: 'Prompt'; font-weight: 700; font-size: 1.25rem; color: var(--navy); margin-top: -.3rem; }
+.dash-subt { font-size: .56rem; color: #6b7686; margin-top: .25rem; word-spacing: .3em; }
+.dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: .7rem; }
+.dstat { background: #fff; border-radius: .6rem; padding: .7rem .7rem .55rem; box-shadow: 0 .1rem .35rem rgba(30,50,70,.07); display: grid; grid-template-columns: auto 1fr; column-gap: .55rem; }
+.dstat .ic { width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; }
+.dstat .ic svg { width: 1.7rem; height: 1.7rem; }
+.dstat .lbl { font-size: .52rem; color: #5d6878; margin-top: .35rem; white-space: nowrap; }
+.dstat .val { font-family: 'Prompt'; font-weight: 700; font-size: 1.5rem; color: var(--navy); line-height: 1.15; }
+.dstat .foot { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; margin-top: .25rem; gap: .3rem; }
+.dstat .of { font-size: .5rem; color: #6b7686; line-height: 1.35; }
+.dstat .donut { width: 3rem; height: 3rem; }
+.mini-bars { display: flex; align-items: flex-end; gap: .14rem; height: 2.1rem; }
+.mini-bars i { width: .36rem; border-radius: .08rem; background: linear-gradient(180deg, #7fd0f6, #3aa6ea); }
+.trend { display: inline-flex; align-items: center; gap: .2rem; padding: .3rem .45rem; background: #e3f6e9; color: #1f9d55; border-radius: .35rem; font-family: 'Prompt'; font-weight: 600; font-size: .5rem; }
+.trend svg { width: .65rem; height: .65rem; }
+.dash-table { margin-top: .6rem; background: #fff; border-radius: .6rem; padding: .8rem .7rem 0; box-shadow: 0 .1rem .35rem rgba(30,50,70,.07); }
+.dash-table-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .55rem; }
+.dash-table-hd h4 { display: flex; align-items: center; gap: .45rem; font-family: 'Prompt'; font-weight: 600; font-size: .76rem; color: var(--navy); }
+.dash-table-hd h4 svg { width: 1rem; height: 1rem; color: var(--navy); }
+.dash-add { display: inline-flex; align-items: center; gap: .4rem; height: 1.75rem; padding: 0 .75rem; border-radius: .4rem; background: var(--btn); color: #fff; font-family: 'Prompt'; font-size: .5rem; font-weight: 500; }
+.dash-add svg { width: .75rem; height: .75rem; color: #a8e063; }
+table { border-collapse: collapse; width: 100%; }
+.dt th { background: #eef2f5; font-weight: 500; font-size: .46rem; color: #5d6878; padding: .55rem .2rem; white-space: nowrap; }
+.dt td { font-size: .54rem; color: #3a4658; padding: .34rem .2rem; text-align: center; border-bottom: 1px solid #eef1f4; white-space: nowrap; }
+.dt td.nm { text-align: left; }
+.chip { display: inline-block; padding: .32rem .5rem; border-radius: .3rem; font-size: .5rem; font-weight: 600; min-width: 3.4rem; }
+.chip.ok { background: #dcf5e3; color: #1f9d55; }
+.chip.no { background: #fde2e2; color: #e5484d; }
+
+/* ---------- WATER / STEPS ---------- */
+.water { position: relative; min-height: 65rem; padding-bottom: 1rem; background: url('assets/bg/water.webp') center 33% / cover no-repeat; }
+.sec-title, .vi h2, .funcs-hd h2, .hero-sub { text-wrap: balance; }
+.sec-title { text-align: center; font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 2.8rem; line-height: 1.2; color: #123d2c; }
+.sec-sub { text-align: center; font-family: 'Prompt', sans-serif; font-size: max(13px, 1.5rem); color: #283545; margin-top: .55rem; }
+.water .sec-title { padding-top: 1.2rem; }
+.steps { display: flex; align-items: center; margin-top: 1.25rem; padding: 0 .6rem; }
+.step {
+  position: relative; flex: 1; align-self: stretch; min-height: 10.8rem; padding: .55rem 1.2rem .9rem 1.2rem;
+  background: rgba(255,255,255,.9); border-radius: .85rem; box-shadow: var(--card-shadow);
+}
+.step-ill { width: 6.4rem; height: 6.4rem; }
+.step h3 { display: flex; align-items: center; gap: .55rem; margin-top: .1rem; font-family: 'Prompt'; font-weight: 600; font-size: max(13px, 1.1rem); color: var(--navy); }
+.num { width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-family: 'Prompt'; font-weight: 600; font-size: .72rem; flex: none; }
+.step p { margin-top: .2rem; font-size: max(11px, .78rem); line-height: 1.5; color: #4f5b6b; padding-left: 1.8rem; }
+.step-arrow { flex: none; width: 3rem; display: grid; place-items: center; }
+.step-arrow span { width: 2.05rem; height: 2.05rem; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 .15rem .5rem rgba(20,50,40,.15); }
+.step-arrow svg { width: .95rem; height: .95rem; color: #2b3647; }
+
+.pipe-strip { display: none; }
+.billing {
+  display: grid; grid-template-columns: minmax(0, 30.2rem) minmax(0, 1fr); gap: 1.2rem;
+  margin-top: 5.2rem; padding: 1.2rem;
+  background: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.8);
+  border-radius: 1.2rem; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 .4rem 2rem rgba(30, 80, 110, .08);
+}
+/* invoice */
+.invoice { position: relative; display: flex; flex-direction: column; background: #fff; border-radius: 1rem; box-shadow: var(--card-shadow); padding: 1.3rem 1.05rem 1.1rem; overflow: hidden; }
+.inv-head { display: grid; grid-template-columns: 8.4rem 1fr; align-items: start; }
+.inv-logo { display: flex; flex-direction: column; align-items: center; }
+.inv-logo svg { width: 5.4rem; height: 4.2rem; }
+.inv-logo span { font-family: 'Prompt'; font-weight: 700; font-size: .95rem; color: var(--g700); margin-top: -.1rem; }
+.inv-title { font-family: 'Prompt'; font-weight: 700; font-size: 1.68rem; color: var(--navy); line-height: 1.15; margin-top: -.1rem; }
+.inv-month { font-family: 'Prompt'; font-size: 1.12rem; color: #3e4b5e; margin-top: .25rem; letter-spacing: .01em; }
+.inv-co { margin: .5rem 0 0 8.4rem; }
+.inv-co b { display: block; font-family: 'Prompt'; font-weight: 700; font-size: .92rem; color: var(--navy); }
+.inv-co p { font-size: max(10px, .74rem); line-height: 1.4; color: #5b6676; margin-top: .1rem; }
+.inv-rows { margin-top: .6rem; }
+.inv-row { display: grid; grid-template-columns: 16.3rem 4.2rem 1fr; align-items: center; height: 1.8rem; border-top: 1px solid #edf0f3; font-family: 'Prompt'; font-size: max(11px, .9rem); color: #3c4859; }
+.inv-row > :first-child { padding-left: .55rem; border-right: 1px solid #edf0f3; height: 100%; display: flex; align-items: center; }
+.inv-row > :nth-child(2) { padding-left: .8rem; font-weight: 600; color: var(--navy); font-size: 1.02em; }
+.inv-row.wide > :nth-child(2) { grid-column: 2 / 4; }
+.inv-row.total { height: 2.45rem; background: linear-gradient(90deg, #dcf3e3, #e9f8ee); border: 0; border-radius: .45rem; margin: .1rem -.35rem; padding: 0 .35rem; }
+.inv-row.total > :first-child { border: 0; font-weight: 700; font-size: 1.05rem; color: var(--navy); }
+.inv-row.total > :nth-child(2) { font-size: 1.25rem; font-weight: 700; grid-column: 2 / 4; }
+.inv-row.total small { font-size: .95rem; font-weight: 500; margin-left: .3rem; }
+.inv-row.total + .inv-row { border-top: 0; }
+.inv-pay { position: relative; display: flex; align-items: center; gap: 1.8rem; height: 8rem; margin-top: .5rem; padding-left: .9rem; }
+.qr { width: 5.6rem; height: 5.6rem; flex: none; background: #fff; position: relative; z-index: 1; }
+.inv-pay p { position: relative; z-index: 1; font-family: 'Prompt'; font-size: max(11px, 1rem); line-height: 1.45; color: #3d4a62; }
+.inv-wave { position: absolute; left: -1.05rem; width: calc(100% + 2.1rem); bottom: -1.2rem; height: 7rem; }
+.inv-print { position: relative; z-index: 1; width: calc(100% - .8rem); margin: auto auto 0; display: flex; height: 3.55rem; font-size: 1.35rem; border-radius: .7rem; }
+.inv-print svg { width: 1.8rem; height: 1.8rem; }
+
+/* stats */
+.stats { display: grid; grid-template-columns: minmax(0, 19.7rem) minmax(0, 1fr); grid-template-rows: 8.8rem 8rem 1fr; gap: 1rem .9rem; }
+.card { background: #fff; border-radius: 1rem; box-shadow: var(--card-shadow); }
+.scard { display: grid; grid-template-columns: 4rem minmax(0, 1fr) auto; align-items: center; padding: 0 1.1rem 0 1rem; }
+.halo { width: 4rem; height: 4rem; border-radius: 50%; display: grid; place-items: center; }
+.halo svg { width: 2.7rem; height: 2.7rem; }
+.scard .meta { padding-left: 1rem; min-width: 0; }
+.scard .k { font-family: 'Prompt'; font-size: max(11px, .76rem); font-weight: 500; }
+.scard .v { font-family: 'Prompt'; font-weight: 700; font-size: 1.95rem; color: var(--navy); line-height: 1.2; }
+.scard .v small { font-size: .62rem; font-weight: 400; color: #4c5869; margin-left: .45rem; }
+.scard .o { font-size: max(10px, .6rem); color: #6b7686; white-space: nowrap; }
+.scard .donut { width: 4.4rem; height: 4.4rem; }
+.rev { grid-row: 1 / 3; grid-column: 2; padding: 1.4rem 1.3rem 1.2rem 1.3rem; display: flex; flex-direction: column; }
+.rev-top { display: flex; align-items: center; gap: 1.1rem; }
+.rev-top .halo { width: 3.8rem; height: 3.8rem; }
+.rev-top .k { font-family: 'Prompt'; font-size: max(11px, .86rem); color: #3f4b5c; }
+.rev-top .v { font-family: 'Prompt'; font-weight: 700; font-size: 1.95rem; color: var(--navy); line-height: 1.2; }
+.rev-bars { display: flex; align-items: flex-end; gap: .45rem; height: 5.7rem; margin: 2.1rem .4rem 0 .6rem; }
+.rev-bars i { flex: 1 1 0; min-width: 0; max-width: 1.15rem; border-radius: .1rem; position: relative; background: linear-gradient(180deg, #6fcaf6, #2fa2ea); }
+.rev-bars i.lite { background: linear-gradient(180deg, #c3e9fb, #8fd3f6); }
+.rev .trend { align-self: flex-end; margin-top: .9rem; font-size: max(12px, 1.12rem); padding: .55rem 1rem; border-radius: .5rem; gap: .5rem; }
+.rev .trend svg { width: 1.2rem; height: 1.2rem; }
+.due { grid-column: 1 / -1; padding: 1.25rem 1.2rem 1.1rem; }
+.due h4 { font-family: 'Prompt'; font-weight: 700; font-size: 1.15rem; color: var(--navy); margin-bottom: .8rem; }
+.due-t th { background: #eef2f5; font-family: 'Prompt'; font-weight: 400; font-size: max(10px, .62rem); color: #4f5b6b; padding: .55rem .5rem; }
+.due-t th:first-child { border-radius: .35rem 0 0 .35rem; }
+.due-t th:last-child { border-radius: 0 .35rem .35rem 0; }
+.due-t td { font-family: 'Prompt'; font-size: max(10px, .66rem); color: #3c4859; padding: .45rem .5rem; text-align: center; border-bottom: 1px solid #eef1f4; border-right: 1px solid #f1f3f6; }
+.due-t td:last-child { border-right: 0; color: var(--red); }
+.due-t td:nth-child(2) { text-align: left; padding-left: 1rem; }
+.due-t td:nth-child(4) { text-align: right; padding-right: 2rem; }
+.btn-more { display: flex; width: 10.8rem; height: 2.65rem; margin: 1.15rem auto 0; font-size: max(12px, .82rem); border-radius: .65rem; gap: 1.1rem; }
+
+/* ---------- FUNCTIONS ---------- */
+.funcs { position: relative; min-height: 26.5rem; padding-bottom: 1.5rem; background: url('assets/bg/func.webp') center / cover no-repeat; }
+.funcs-hd { display: flex; align-items: center; padding-top: 2.15rem; }
+.funcs-hd svg.ppl { width: 3.4rem; height: 2.6rem; color: var(--g700); margin-right: .9rem; }
+.funcs-hd h2 { font-family: 'Prompt'; font-weight: 700; font-size: 2.05rem; color: var(--navy); white-space: nowrap; }
+.funcs-hd p { font-size: max(11px, .9rem); color: #4f5b6b; margin-left: 1rem; }
+.funcs-hd .btn { margin-left: auto; height: 2.75rem; width: 11.2rem; font-size: max(12px, .82rem); border-radius: .7rem; gap: 1.1rem; border-width: .1rem; color: var(--ink); }
+.fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem .8rem; margin-top: .8rem; }
+.fcard { position: relative; display: flex; align-items: center; min-height: 9rem; padding: .8rem 2.8rem .8rem 1.05rem; transition: transform .2s, box-shadow .2s; }
+.fcard:hover { transform: translateY(-2px); box-shadow: 0 .6rem 1.6rem rgba(25,60,50,.14); }
+.f-ill { width: 7.4rem; height: 7.4rem; flex: none; }
+.fcard div { padding-left: .8rem; }
+.fcard h3 { font-family: 'Prompt'; font-weight: 700; font-size: 1.12rem; color: var(--navy); white-space: nowrap; }
+.fcard p { font-size: max(11px, .8rem); line-height: 1.6; color: #5b6676; margin-top: .4rem; white-space: nowrap; }
+.go { position: absolute; right: 1.1rem; bottom: 1.2rem; width: 2.15rem; height: 2.15rem; border-radius: 50%; display: grid; place-items: center; background: #178050; color: #fff; }
+.go svg { width: 1rem; height: 1rem; }
+.go.blue { background: #2b97f2; }
+.go.purple { background: #a37af0; }
+
+/* ---------- VILLAGE INDEX ---------- */
+.vi { position: relative; min-height: 30rem; background: url('assets/bg/vi.webp') center 60% / cover no-repeat; }
+.vi .wrap { position: relative; min-height: 30rem; }
+.vi-pill { display: inline-flex; align-items: center; gap: .45rem; margin: 2.35rem 0 0 2.1rem; height: 2rem; padding: 0 1.1rem 0 .8rem; border-radius: 2rem; background: rgba(214, 236, 252, .92); font-family: 'Prompt'; font-weight: 600; font-size: max(11px, .86rem); color: #1c6fd1; }
+.vi-pill svg { width: .9rem; height: 1.1rem; }
+.vi h2 { margin: .45rem 0 0 2.1rem; font-family: 'Prompt'; font-weight: 700; font-size: 2.65rem; color: var(--navy); letter-spacing: -.01em; line-height: 1.15; }
+.vi-sub { margin: .25rem 0 0 2.1rem; font-family: 'Prompt'; font-size: max(12px, 1.12rem); color: #3a4757; }
+.vi-body { display: flex; align-items: flex-start; margin-top: .2rem; }
+.hex { width: 20.2rem; height: 18rem; flex: none; margin: .6rem 0 0 .6rem; }
+.scores { display: grid; grid-template-columns: repeat(2, minmax(0, 13.8rem)); gap: .65rem .8rem; margin: .7rem 0 0 .9rem; }
+.score { display: flex; align-items: center; gap: .95rem; min-height: 4.75rem; padding: 0 .9rem; border-radius: .7rem; background: rgba(255,255,255,.95); box-shadow: var(--card-shadow); }
+.score .si { width: 3.1rem; height: 3.1rem; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.score .si svg { width: 1.75rem; height: 1.75rem; }
+.score span { display: block; font-family: 'Prompt'; font-size: max(11px, .8rem); font-weight: 600; color: #2a3646; white-space: nowrap; }
+.score b { font-family: 'Prompt'; font-weight: 700; font-size: 1.45rem; color: #1f9d55; line-height: 1.4; }
+.score b small { font-size: .62rem; font-weight: 400; color: #7a8594; margin-left: .25rem; }
+.quote { position: absolute; left: 52.4rem; top: 18.5rem; width: 18.6rem; height: 8.8rem; }
+.quote svg.cloud { position: absolute; inset: 0; width: 100%; height: 100%; }
+.quote p { position: absolute; inset: 5% 6.3% 9.2% 7.7%; display: flex; align-items: center; justify-content: center; text-align: center; font-family: 'Prompt'; font-weight: 600; font-size: max(11px, 1.14rem); line-height: 1.42; color: #2b3954; }
+.quote .qm { font-family: Georgia, 'Times New Roman', serif; font-weight: 900; color: #2b3954; font-size: 1.9rem; line-height: 0; vertical-align: -.28em; letter-spacing: -.05em; }
+.quote .qh { position: absolute; right: -1.3rem; bottom: -2.3rem; width: 5.8rem; height: 5.6rem; filter: drop-shadow(0 .15rem .3rem rgba(30,60,45,.18)); }
+
+/* ---------- PRICING ---------- */
+.pricing { position: relative; min-height: 21.5rem; padding-bottom: 1.5rem; background: url('assets/bg/price.webp') center / cover no-repeat; }
+.pricing .sec-title { padding-top: 1.45rem; font-size: 2.05rem; color: var(--navy); }
+.pricing .sec-sub { margin-top: .2rem; font-size: max(12px, 1rem); color: #4f5b6b; }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 15.2fr)) minmax(0, 21fr); gap: .8rem; margin-top: 1.1rem; }
+.plan { position: relative; min-height: 13.5rem; padding: 1rem 1.25rem 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.plan svg.pi { width: 2.4rem; height: 2.4rem; }
+.plan h3 { font-family: 'Prompt'; font-weight: 700; font-size: 1.2rem; color: var(--navy); margin-top: .2rem; }
+.plan p { font-size: max(11px, .84rem); line-height: 1.55; color: #5b6676; margin-top: .15rem; }
+.plan .btn { margin-top: auto; margin-bottom: 1.05rem; width: 100%; height: 2.35rem; border-radius: .55rem; font-size: max(12px, .82rem); color: var(--ink); border-width: .1rem; border-color: #2c5e47; }
+.badge { position: absolute; top: 1.05rem; right: 1.05rem; padding: .3rem .85rem; background: #1b8a55; color: #fff; border-radius: .6rem; font-family: 'Prompt'; font-weight: 500; font-size: max(10px, .66rem); }
+.trial { position: relative; min-height: 13.6rem; padding-bottom: 4.6rem !important; padding: 1.95rem 1rem 0 1.75rem; overflow: hidden; background: linear-gradient(90deg, rgba(255,255,255,.97) 60%, rgba(255,255,255,.75)); }
+.trial ul { list-style: none; display: flex; flex-direction: column; gap: .78rem; position: relative; z-index: 1; }
+.trial li { display: flex; align-items: center; gap: .65rem; font-family: 'Prompt'; font-size: max(11px, .84rem); color: #2f3b4c; }
+.trial li svg { width: 1.15rem; height: 1.15rem; flex: none; }
+.trial .tower { right: 1.4rem; top: .5rem; width: 6rem; height: 9.4rem; object-fit: cover; }
+.trial .btn { position: absolute; left: 1.7rem; right: 1.15rem; bottom: .75rem; height: 3.05rem; font-size: 1.15rem; border-radius: .7rem; gap: 1.6rem; }
+
+/* รอยต่อระหว่าง section: แถบขาวโค้งนุ่ม ปิดเส้นตรงระหว่างภาพพื้นหลัง (ตามต้นฉบับ) */
+.water::before, .funcs::before, .vi::before, .pricing::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -5rem; height: 10rem; z-index: 0; pointer-events: none;
+  background-repeat: no-repeat; background-size: 100% 100%;
+}
+.water .wrap, .funcs .wrap, .vi .wrap, .pricing .wrap { position: relative; z-index: 1; }
+.water::before { top: -4rem; height: 8rem; }
+.water::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201440%20200%22%20preserveAspectRatio=%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22g%22%20x1=%220%22%20y1=%220%22%20x2=%220%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fbfdfe%22%20stop-opacity=%22.97%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%22.95%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%220%22/%3E%3C/linearGradient%3E%3Cfilter%20id=%22b%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%223.2%22/%3E%3C/filter%3E%3Cfilter%20id=%22r%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%221.6%22/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter=%22url%28%23b%29%22%20fill=%22url%28%23g%29%22%20d=%22M0%2066C200%2046%20380%2084%20620%2064C860%2044%201080%2082%201300%2058C1380%2050%201420%2056%201440%2060%20L1440%20200%20L0%20200Z%22/%3E%3C/svg%3E"); }
+.funcs::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201440%20200%22%20preserveAspectRatio=%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22g%22%20x1=%220%22%20y1=%220%22%20x2=%220%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fbfdfe%22%20stop-opacity=%22.97%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%22.95%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%220%22/%3E%3C/linearGradient%3E%3Cfilter%20id=%22b%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%223.2%22/%3E%3C/filter%3E%3Cfilter%20id=%22r%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%221.6%22/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter=%22url%28%23b%29%22%20fill=%22url%28%23g%29%22%20d=%22M0%2082C360%2058%201080%2058%201440%2082%20L1440%20200%20L0%20200Z%22/%3E%3C/svg%3E"); }
+.vi::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201440%20200%22%20preserveAspectRatio=%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22g%22%20x1=%220%22%20y1=%220%22%20x2=%220%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fbfdfe%22%20stop-opacity=%22.97%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%22.95%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%220%22/%3E%3C/linearGradient%3E%3Cfilter%20id=%22b%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%223.2%22/%3E%3C/filter%3E%3Cfilter%20id=%22r%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%221.6%22/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter=%22url%28%23b%29%22%20fill=%22url%28%23g%29%22%20d=%22M0%2076C300%2056%20700%2050%201000%2058C1200%2064%201360%2074%201440%2084%20L1440%20200%20L0%20200Z%22/%3E%3Cpath%20filter=%22url%28%23r%29%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%225%22%20stroke-opacity=%22.95%22%20d=%22M0%2076C300%2056%20700%2050%201000%2058C1200%2064%201360%2074%201440%2084%22/%3E%3C/svg%3E"); }
+.pricing::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%201440%20200%22%20preserveAspectRatio=%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22g%22%20x1=%220%22%20y1=%220%22%20x2=%220%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fbfdfe%22%20stop-opacity=%22.97%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%22.95%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23f5f9fc%22%20stop-opacity=%220%22/%3E%3C/linearGradient%3E%3Cfilter%20id=%22b%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%223.2%22/%3E%3C/filter%3E%3Cfilter%20id=%22r%22%20x=%22-5%25%22%20y=%22-30%25%22%20width=%22110%25%22%20height=%22160%25%22%3E%3CfeGaussianBlur%20stdDeviation=%221.6%22/%3E%3C/filter%3E%3C/defs%3E%3Cpath%20filter=%22url%28%23b%29%22%20fill=%22url%28%23g%29%22%20d=%22M0%2064C240%2040%20520%2030%20760%2034C1000%2038%201220%2054%201440%2086%20L1440%20200%20L0%20200Z%22/%3E%3Cpath%20filter=%22url%28%23r%29%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%225%22%20stroke-opacity=%22.95%22%20d=%22M0%2064C240%2040%20520%2030%20760%2034C1000%2038%201220%2054%201440%2086%22/%3E%3C/svg%3E"); }
+
+/* ---------- FOOTER ---------- */
+.footer {
+  position: relative; min-height: 13rem; color: #fff; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 .25rem, rgba(0,0,0,.02) .25rem .5rem),
+    linear-gradient(180deg, #0f4d37 0%, #0b4230 100%);
+}
+.footer .wrap { position: relative; min-height: 13rem; display: grid; grid-template-columns: minmax(0, 23.5rem) minmax(0, 12rem) minmax(0, 22rem) minmax(0, 1fr); padding: 1.6rem 0 0 .4rem; }
+.f-brand .brand-mark { width: 4.6rem; height: 3.6rem; }
+.f-brand .brand-name { color: #fff; font-size: 1.55rem; font-weight: 600; }
+.f-brand b { display: block; margin-top: 1.1rem; font-family: 'Prompt'; font-weight: 600; font-size: 1.05rem; }
+.f-brand p { margin-top: .5rem; font-size: max(11px, .88rem); line-height: 1.75; color: rgba(255,255,255,.88); }
+.f-col { border-left: 1px solid rgba(255,255,255,.18); padding-left: 2.4rem; margin: .45rem 0 2.2rem; }
+.f-col + .f-col { padding-left: 3.5rem; }
+.f-col h4 { font-family: 'Prompt'; font-weight: 600; font-size: max(11px, .86rem); margin-bottom: .4rem; }
+.f-col ul { list-style: none; }
+.f-col li { font-size: max(11px, .82rem); line-height: 1.72; color: rgba(255,255,255,.82); }
+.f-col li::before { content: '•'; margin-right: .4rem; }
+.f-col a:hover { color: #fff; text-decoration: underline; }
+.f-social { border-left: 1px solid rgba(255,255,255,.18); padding: 1.1rem 0 0 2.4rem; margin: 1rem 0 2.6rem 0; position: relative; z-index: 1; }
+.f-social h4 { font-family: 'Prompt'; font-weight: 600; font-size: max(11px, .78rem); }
+.socials { display: flex; gap: .75rem; margin-top: .7rem; }
+.socials a { width: 2.05rem; height: 2.05rem; border-radius: .45rem; display: grid; place-items: center; }
+.socials svg { width: 100%; height: 100%; }
+.f-social p { margin-top: .9rem; font-size: max(10px, .8rem); line-height: 1.75; color: rgba(255,255,255,.85); }
+.f-leaves { position: absolute; left: 50.5rem; bottom: -.6rem; width: 12.5rem; height: 9.6rem; pointer-events: none; }
+
+/* laptop จอแคบ: เมนูมีขนาดตัวอักษรขั้นต่ำ เลยต้องลดระยะห่างไม่ให้ชนโลโก้ */
+@media (min-width: 1100px) and (max-width: 1349px) {
+  .nav { padding-left: 2.2rem; }
+  .nav-links { gap: 1.5rem; margin-right: 1.6rem; }
+  .nav-search { display: none; }
+  /* ตัวอักษรฟีเจอร์ถูกล็อกขั้นต่ำ 10px แถวเลยกว้างขึ้น: บีบระยะแล้วขยับแท็งก์ให้พ้นข้อความ */
+  .hero-feats { gap: .3rem; }
+  .feat { gap: .28rem; }
+  .hero .tower { left: 26.6rem; }
+}
+
+/* ==================================================================
+   TABLET / MOBILE (< 1100px)
+   ================================================================== */
+@media (max-width: 1099px) {
+  .hero, .water, .funcs, .vi, .pricing, .footer, .hero .wrap, .vi .wrap, .footer .wrap { height: auto; min-height: 0; }
+  .hero { padding: 90px 0 150px; background: url('assets/bg/hero.webp') bottom center / 100% auto no-repeat, linear-gradient(180deg, #f1f7fb 0%, #e9f3f9 100%); }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .hero .wrap > * { min-width: 0; }
+  .hero-left, .dash-wrap, .quote { position: relative; left: auto; top: auto; }
+  .hero-left { width: auto; max-width: 560px; }
+  .hero-pillrow { flex-wrap: wrap; white-space: normal; row-gap: 8px; }
+  .hero-tags { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; }
+  .hero-tag + .hero-tag { margin-left: 0; }
+  .pill { height: 30px; font-size: 13px; padding: 0 14px 0 10px; }
+  .pill svg { width: 12px; height: 15px; }
+  .hero-tag { font-size: 12px; }
+  .hero h1 { font-size: clamp(32px, 8.2vw, 50px); margin-top: 14px; }
+  .hero-sub { font-size: clamp(15px, 3.4vw, 19px); margin-top: 10px; }
+  .hero-feats { flex-wrap: wrap; gap: 14px 22px; margin-top: 26px; }
+  .feat-ic { width: 38px; height: 38px; }
+  .feat-ic svg { width: 20px; height: 20px; }
+  .feat p { font-size: 13px; }
+  .hero-btns { margin-top: 28px; flex-wrap: wrap; gap: 12px; }
+  .hero-btns .btn { height: 46px; font-size: 15px; border-radius: 10px; }
+  .hero-btns .btn-primary { width: auto; padding: 0 28px; }
+  .hero-btns .btn-outline { width: auto; padding: 0 24px; }
+  .play { width: 22px; height: 22px; }
+  .hero .tower { display: none; }
+  .dash-wrap { width: 100%; max-width: 760px; perspective: none; overflow: hidden; }
+  .dash { transform: none; height: 32.4rem; transform-origin: 0 0; }
+
+  .water { padding: 30px 0 48px; background: url('assets/bg/func.webp') top center / cover no-repeat, #eef6fa; }
+  .pipe-strip { display: block; height: clamp(110px, 24vw, 190px); margin: 14px -20px 0; background: url('assets/bg/water.webp') center 34% / max(100%, 560px) auto no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%); }
+  .water .sec-title { padding-top: 0; }
+  .sec-title { font-size: clamp(22px, 5.2vw, 32px); }
+  .sec-sub { font-size: clamp(13px, 2.6vw, 16px); }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; padding: 0; }
+  .step-arrow { display: none; }
+  .step { height: auto; min-height: 0; padding: 14px 16px 18px; }
+  .step-ill { width: 80px; height: 80px; }
+  .step h3 { font-size: 16px; gap: 8px; }
+  .num { width: 20px; height: 20px; font-size: 12px; }
+  .step p { font-size: 13px; padding-left: 28px; }
+  .billing { grid-template-columns: 1fr 1fr; margin-top: 0; padding: 14px; gap: 14px; border-radius: 18px; }
+  .invoice { padding: 18px 16px 16px; }
+  .inv-head { grid-template-columns: 96px 1fr; }
+  .inv-logo svg { width: 70px; height: 54px; }
+  .inv-logo span { font-size: 12px; }
+  .inv-title { font-size: 22px; }
+  .inv-month { font-size: 15px; }
+  .inv-co { margin: 14px 0 0 96px; }
+  .inv-co b { font-size: 13px; }
+  .inv-row { grid-template-columns: 1.3fr 1fr auto; height: 34px; font-size: 13px; }
+  .inv-row > :last-child { padding-right: 8px; }
+  .inv-row.total { height: 42px; }
+  .inv-row.total > :first-child { font-size: 15px; }
+  .inv-row.total > :nth-child(2) { font-size: 18px; }
+  .inv-row.total small { font-size: 13px; }
+  .inv-pay { height: 110px; gap: 20px; }
+  .qr { width: 80px; height: 80px; }
+  .inv-pay p { font-size: 13px; }
+  .inv-wave { height: 90px; bottom: -24px; }
+  .inv-print { height: 46px; font-size: 15px; }
+  .inv-print svg { width: 24px; height: 24px; }
+  .stats { grid-template-columns: 1fr; grid-template-rows: none; gap: 14px; }
+  .scard { padding: 16px 16px; grid-template-columns: 58px 1fr auto; }
+  .halo { width: 58px; height: 58px; }
+  .halo svg { width: 38px; height: 38px; }
+  .scard .meta { padding-left: 14px; }
+  .scard .k { font-size: 14px; }
+  .scard .v { font-size: 28px; }
+  .scard .v small { font-size: 13px; }
+  .scard .o { font-size: 12px; }
+  .scard .donut { width: 68px; height: 68px; }
+  .rev { grid-row: auto; grid-column: auto; padding: 16px; }
+  .rev-top .halo { width: 52px; height: 52px; }
+  .rev-top .k { font-size: 14px; }
+  .rev-top .v { font-size: 28px; }
+  .rev-bars { height: 70px; gap: 8px; margin: 18px 0 0 6px; }
+  .rev-bars i { width: 16px; }
+  .rev .trend { margin-top: -30px; font-size: 15px; padding: 7px 12px; }
+  .rev .trend svg { width: 16px; height: 16px; }
+  .due { grid-column: auto; padding: 16px; overflow-x: auto; }
+  .due h4 { font-size: 17px; }
+  .due-t { min-width: 420px; }
+  .due-t th { font-size: 12px; padding: 9px 6px; }
+  .due-t td { font-size: 13px; padding: 9px 6px; }
+  .btn-more { width: auto; padding: 0 22px; height: 42px; font-size: 14px; }
+
+  .funcs { padding: 40px 0 44px; background: url('assets/bg/func.webp') top center / cover no-repeat; }
+  .funcs-hd { padding-top: 0; flex-wrap: wrap; row-gap: 6px; }
+  .funcs-hd svg.ppl { width: 42px; height: 32px; margin-right: 10px; }
+  .funcs-hd h2 { font-size: clamp(22px, 4.8vw, 30px); }
+  .funcs-hd p { font-size: 14px; margin-left: 0; flex-basis: 100%; order: 3; }
+  .funcs-hd .btn { height: 42px; width: auto; padding: 0 18px; font-size: 14px; }
+  .fgrid { grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .fcard { height: auto; min-height: 110px; padding: 14px 50px 14px 14px; }
+  .f-ill { width: 84px; height: 84px; }
+  .fcard div { padding-left: 14px; }
+  .fcard h3 { font-size: 16px; }
+  .fcard h3, .fcard p { white-space: normal; }
+  .fcard p br { display: none; }
+  .fcard p { font-size: 13px; }
+  .go { width: 30px; height: 30px; right: 12px; bottom: 12px; }
+  .go svg { width: 15px; height: 15px; }
+
+  .vi { padding: 40px 0 210px; background: url('assets/bg/vi.webp') bottom right / auto 260px no-repeat, linear-gradient(180deg, #eef6fa, #eef6f8); }
+  .vi-pill, .vi h2, .vi-sub { margin-left: 0; }
+  .vi-pill { margin-top: 0; height: 30px; font-size: 14px; padding: 0 14px 0 10px; }
+  .vi-pill svg { width: 12px; height: 15px; }
+  .vi h2 { font-size: clamp(24px, 5.2vw, 36px); margin-top: 10px; }
+  .vi-sub { font-size: 15px; margin-top: 6px; }
+  .vi-body { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: center; margin-top: 20px; }
+  .hex { width: 300px; height: 270px; margin: 0; }
+  .scores { grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+  .score { height: auto; min-height: 66px; gap: 10px; padding: 0 10px; }
+  .score .si { width: 38px; height: 38px; }
+  .score .si svg { width: 24px; height: 24px; }
+  .score span { font-size: 12.5px; white-space: normal; line-height: 1.3; }
+  .score b { font-size: 22px; }
+  .score b small { font-size: 12px; }
+  .quote { position: absolute; left: auto; right: 20px; bottom: -185px; top: auto; width: 260px; height: 130px; }
+  .quote p { font-size: 14px; }
+  .quote .qm { font-size: 20px; }
+  .quote .qh { width: 70px; height: 66px; right: -12px; bottom: -22px; }
+
+  .pricing { padding: 40px 0 44px; background: url('assets/bg/price.webp') top center / cover no-repeat; }
+  .pricing .sec-title { padding-top: 0; font-size: clamp(22px, 5vw, 32px); }
+  .pricing .sec-sub { font-size: 15px; }
+  .pgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 24px; padding: 0; }
+  .plan { height: auto; min-height: 0; padding: 18px 16px 0; }
+  .plan svg.pi { width: 40px; height: 40px; }
+  .plan h3 { font-size: 18px; margin-top: 6px; }
+  .plan p { font-size: 13px; margin-bottom: 16px; }
+  .plan .btn { height: 42px; font-size: 14px; margin-bottom: 16px; }
+  .badge { font-size: 12px; padding: 4px 12px; top: 14px; right: 14px; border-radius: 9px; }
+  .trial { grid-column: 1 / -1; height: auto; min-height: 0; padding: 22px 22px 84px !important; }
+  .trial li { font-size: 15px; gap: 10px; }
+  .trial li svg { width: 18px; height: 18px; }
+  .trial ul { gap: 12px; }
+  .trial .tower { width: 90px; height: 128px; right: 20px; top: 8px; }
+  .trial .btn { left: 22px; right: 22px; bottom: 18px; height: 46px; font-size: 15px; }
+
+  .footer { padding: 36px 0 30px; }
+  .footer .wrap { grid-template-columns: 1.4fr 1fr 1.2fr; row-gap: 28px; padding: 0 20px; }
+  .f-brand { grid-column: 1 / -1; }
+  .f-brand .brand-mark { width: 54px; height: 42px; }
+  .f-brand .brand-name { font-size: 22px; }
+  .f-brand b { font-size: 16px; margin-top: 16px; }
+  .f-brand p { font-size: 14px; }
+  .f-col, .f-col + .f-col, .f-social { margin: 0; padding: 0 0 0 18px; }
+  .f-col h4, .f-social h4 { font-size: 15px; margin-bottom: 8px; }
+  .f-col li { font-size: 14px; }
+  .socials { gap: 10px; }
+  .socials a { width: 34px; height: 34px; border-radius: 8px; }
+  .f-social p { font-size: 13px; }
+  .f-leaves { left: auto; right: -20px; width: 150px; height: 118px; opacity: .55; }
+}
+
+/* tablet: ตารางค้างชำระกินเต็มความกว้าง ไม่ต้องเลื่อนข้าง */
+@media (min-width: 761px) and (max-width: 1099px) {
+  .stats { display: contents; }
+  .invoice { grid-row: 1 / 4; }
+  .due { grid-column: 1 / -1; }
+  .due-t { min-width: 0; }
+}
+@media (max-width: 760px) {
+  .billing { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .rev { grid-column: 1 / -1; }
+  .due { grid-column: 1 / -1; }
+  .vi-body { grid-template-columns: 1fr; justify-items: center; }
+  .scores { width: 100%; }
+  .footer .wrap { grid-template-columns: 1fr 1fr; }
+  .f-social { grid-column: 1 / -1; padding-left: 0; border: 0; }
+  .f-col { padding-left: 0 !important; border: 0; }
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: 0 16px; }
+  .hero { padding-bottom: 110px; }
+  .steps { grid-template-columns: 1fr; }
+  .step { display: grid; grid-template-columns: 76px 1fr; column-gap: 12px; align-items: center; padding: 12px 14px; }
+  .step-ill { width: 76px; height: 76px; grid-row: 1 / 3; }
+  .step h3 { margin-top: 0; align-self: end; }
+  .step p { padding-left: 28px; margin-top: 4px; align-self: start; }
+  .billing { padding: 10px; }
+  .pipe-strip { margin: 10px -16px 0; }
+  .stats { grid-template-columns: 1fr; }
+  .rev, .due { grid-column: auto; }
+  .inv-head { grid-template-columns: 78px 1fr; }
+  .inv-logo svg { width: 60px; height: 46px; }
+  .inv-logo span { font-size: 11px; }
+  .inv-title { font-size: 19px; }
+  .inv-month { font-size: 13px; }
+  .inv-co { margin-left: 0; margin-top: 12px; }
+  .fgrid { grid-template-columns: 1fr; }
+  .due-t { min-width: 0; }
+  .due-t th:nth-child(3), .due-t td:nth-child(3) { display: none; }
+  .due { padding-left: 12px; padding-right: 12px; }
+  .due-t th, .due-t td { padding: 9px 3px; font-size: 11.5px; white-space: nowrap; }
+  .due-t td:nth-child(2) { padding-left: 5px; }
+  .due-t td:nth-child(4) { padding-right: 10px; }
+  .inv-row { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) auto; font-size: 12.5px; }
+  .inv-row > :nth-child(2) { padding-left: 10px; white-space: nowrap; }
+  .funcs-hd .btn { order: 4; margin: 10px 0 0; }
+  .pgrid { grid-template-columns: 1fr; }
+  .scores { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .score { flex-direction: column; align-items: flex-start; height: auto; padding: 12px; gap: 6px; }
+  .hex { width: 280px; height: 252px; }
+  .quote { right: 16px; }
+  .footer .wrap { padding: 0 16px; }
+}
+@media (max-width: 380px) {
+  .hero-btns .btn { width: 100% !important; }
+  .scores { grid-template-columns: 1fr; }
+  .score { flex-direction: row; align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 </style>
 </head>
-<body class="font-sans text-gray-900 bg-white antialiased selection:bg-brand-100 selection:text-brand-800">
+<body>
 
-<!-- ========== NAV ========== -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200" id="nav">
-  <div class="max-w-6xl mx-auto px-6 h-[66px] flex items-center justify-between">
+<!-- ================= SVG SYMBOLS ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gDrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc4f7"/><stop offset="1" stop-color="#1c78d6"/></linearGradient>
+    <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cc142"/><stop offset="1" stop-color="#2e8b3e"/></linearGradient>
+    <linearGradient id="gHouse" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d8b41"/><stop offset="1" stop-color="#1f6b33"/></linearGradient>
+    <linearGradient id="gCoin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd25a"/><stop offset="1" stop-color="#f0a21c"/></linearGradient>
+    <linearGradient id="gBag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7a066"/><stop offset="1" stop-color="#9c6431"/></linearGradient>
+    <linearGradient id="gHeart" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3a845"/><stop offset="1" stop-color="#b9611c"/></linearGradient>
+    <linearGradient id="gCalc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9c04d"/><stop offset="1" stop-color="#e8892a"/></linearGradient>
+    <linearGradient id="gMeter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6bb3"/><stop offset="1" stop-color="#11325f"/></linearGradient>
+    <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#46c071"/><stop offset=".5" stop-color="#1e9658"/><stop offset="1" stop-color="#0e6a55"/></linearGradient>
+    <linearGradient id="gRing2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2aa865"/><stop offset="1" stop-color="#0c5e48"/></linearGradient>
+    <linearGradient id="gPrinter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a5563"/><stop offset="1" stop-color="#1f2731"/></linearGradient>
+    <linearGradient id="gBlueBtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#1c74d9"/></linearGradient>
 
-    <a href="#" class="flex items-center gap-2.5 group">
-      <img src="assets/icons/brand-mark.png" alt="หมู่บ้านดิจิตอล" class="w-10 h-10 object-contain flex-shrink-0">
-      <span class="font-display font-bold text-[18px] text-gray-900">หมู่บ้าน<span class="text-brand-600">ดิจิตอล</span></span>
+    <!-- โลโก้ : หยดน้ำ + บ้าน + ใบไม้ -->
+    <symbol id="brand" viewBox="0 0 64 50">
+      <path d="M8 40c6-1 12 1 17 4-8 2-14 1-19-3l2-1z" fill="url(#gLeaf)"/>
+      <path d="M3 33c-1-7 3-12 10-14-1 6-4 11-10 14z" fill="url(#gLeaf)"/>
+      <path d="M13 19c-3 5-6 9-10 14" stroke="#2e7d32" stroke-width=".7" fill="none"/>
+      <path d="M22 45c8 3 18 3 25-2-9 0-17 0-25 2z" fill="#2e8b3e"/>
+      <path d="M26 2C21 11 15 17 15 25a11 11 0 0022 0C37 17 31 11 26 2z" fill="url(#gDrop)"/>
+      <path d="M21 20c-1 3-1 6 1 8" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".75"/>
+      <path d="M38 22l12-11 13 11v2h-3v16H40V24h-2z" fill="url(#gHouse)"/>
+      <rect x="54" y="12" width="3.5" height="6" fill="#2e7d32"/>
+      <rect x="47" y="27" width="6" height="6" rx=".6" fill="#fff"/>
+    </symbol>
+    <symbol id="brandW" viewBox="0 0 64 50">
+      <path d="M8 40c6-1 12 1 17 4-8 2-14 1-19-3l2-1z" fill="#fff" opacity=".9"/>
+      <path d="M3 33c-1-7 3-12 10-14-1 6-4 11-10 14z" fill="#fff" opacity=".9"/>
+      <path d="M22 45c8 3 18 3 25-2-9 0-17 0-25 2z" fill="#fff" opacity=".9"/>
+      <path d="M26 2C21 11 15 17 15 25a11 11 0 0022 0C37 17 31 11 26 2z" fill="url(#gDrop)"/>
+      <path d="M21 20c-1 3-1 6 1 8" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity=".75"/>
+      <path d="M38 22l12-11 13 11v2h-3v16H40V24h-2z" fill="#fff"/>
+      <rect x="54" y="12" width="3.5" height="6" fill="#fff"/>
+      <rect x="47" y="27" width="6" height="6" rx=".6" fill="#0d4a33"/>
+    </symbol>
+
+    <!-- ไอคอนเส้น/ทึบทั่วไป (currentColor) -->
+    <symbol id="i-drop" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5C9 7 5.5 10.6 5.5 14.6a6.5 6.5 0 0013 0C18.5 10.6 15 7 12 2.5z"/><path d="M9 15.5a3 3 0 003 2.6" stroke="#0e4b33" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="8.5" cy="7" r="2.6"/><circle cx="15.5" cy="7" r="2.6"/><path d="M3.5 17.5c0-3.2 2.2-5.5 5-5.5s5 2.3 5 5.5V19h-10z"/><path d="M10.5 17.5c0-3.2 2.2-5.5 5-5.5s5 2.3 5 5.5V19h-10z" opacity=".95"/></g></symbol>
+    <symbol id="i-growth" viewBox="0 0 24 24"><g fill="currentColor"><rect x="4" y="15" width="2.6" height="4.5" rx=".4"/><rect x="8.2" y="12.5" width="2.6" height="7" rx=".4"/><rect x="12.4" y="10" width="2.6" height="9.5" rx=".4"/><rect x="16.6" y="7.5" width="2.6" height="12" rx=".4"/></g><path d="M4 11.5l6-4.5 3 2 6.5-5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 4h3.3v3.3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M15.5 15.5L20 20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5l6.5 6.5L9 18.5" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevd" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.2" stroke="currentColor" stroke-width="1.9" fill="none"/><path d="M10 7.8l6.2 4.2-6.2 4.2z" fill="currentColor"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.9" fill="none"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><g fill="currentColor"><rect x="7" y="13" width="2.4" height="2.2" rx=".4"/><rect x="11" y="13" width="2.4" height="2.2" rx=".4"/><rect x="15" y="13" width="2.4" height="2.2" rx=".4"/><rect x="7" y="16.4" width="2.4" height="2.2" rx=".4"/><rect x="11" y="16.4" width="2.4" height="2.2" rx=".4"/></g></symbol>
+    <symbol id="i-burger" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.2l9 7.6-1.3 1.5-1.2-1V20h-5v-5.5h-3V20h-5v-8.7l-1.2 1-1.3-1.5z"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2.6" fill="none"/><path d="M8.5 12.5l2.4 2.4 4.6-5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.8" fill="currentColor"/><path d="M8 8h8M8 11.5h8M8 15h5" stroke="#145a3c" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path fill="currentColor" d="M7 3h10v4H7zM4.5 8h15A2.5 2.5 0 0122 10.5V17h-4v4H6v-4H2v-6.5A2.5 2.5 0 014.5 8zM8 14v5h8v-5z"/><circle cx="18.5" cy="11" r="1" fill="#145a3c"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 2h3.4l.5 2.6c.7.2 1.4.6 2 1l2.5-.9 1.7 2.9-2 1.8c.1.7.1 1.5 0 2.2l2 1.8-1.7 2.9-2.5-.9c-.6.4-1.3.8-2 1L13.7 22h-3.4l-.5-2.6c-.7-.2-1.4-.6-2-1l-2.5.9-1.7-2.9 2-1.8a7 7 0 010-2.2l-2-1.8 1.7-2.9 2.5.9c.6-.4 1.3-.8 2-1zM12 8.6a3.4 3.4 0 100 6.8 3.4 3.4 0 000-6.8z"/></symbol>
+    <symbol id="i-bars" viewBox="0 0 24 24"><g fill="currentColor"><rect x="4" y="12" width="3.6" height="8" rx=".6"/><rect x="10.2" y="4" width="3.6" height="16" rx=".6"/><rect x="16.4" y="8.5" width="3.6" height="11.5" rx=".6"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M5 19L18 6M9 6h9v9" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1f9d55"/><path d="M7 12.3l3.3 3.3L17.2 8.7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+
+    <!-- ไอคอนสถิติ -->
+    <symbol id="s-check" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#22a85d"/><path d="M12.5 20.5l5.2 5.2 10-10.5" stroke="#fff" stroke-width="3.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="s-alert" viewBox="0 0 40 40"><path d="M20 3.5c9.1 0 16.5 7.4 16.5 16.5S29.1 36.5 20 36.5 3.5 29.1 3.5 20c0-4.7 2-9 5.2-12z" fill="#ef4444"/><circle cx="20" cy="20" r="16" fill="#ef4444"/><rect x="17.7" y="9.5" width="4.6" height="13.5" rx="2.3" fill="#fff"/><circle cx="20" cy="28" r="2.6" fill="#fff"/></symbol>
+    <symbol id="s-coins" viewBox="0 0 40 40">
+      <g><ellipse cx="16" cy="29" rx="9.5" ry="3.5" fill="#e3921b"/><rect x="6.5" y="25.5" width="19" height="3.5" fill="#f2b230"/><ellipse cx="16" cy="25.5" rx="9.5" ry="3.5" fill="#ffd25a"/>
+      <rect x="6.5" y="19.5" width="19" height="6" fill="#f2b230"/><ellipse cx="16" cy="19.5" rx="9.5" ry="3.5" fill="#ffd25a"/>
+      <rect x="6.5" y="13.5" width="19" height="6" fill="#f2b230"/><ellipse cx="16" cy="13.5" rx="9.5" ry="3.5" fill="#ffdb73"/>
+      <path d="M6.5 22.5h19M6.5 16.5h19" stroke="#e39a1f" stroke-width=".8"/></g>
+      <circle cx="27.5" cy="26" r="8" fill="url(#gCoin)" stroke="#e0901a" stroke-width="1.2"/>
+      <text x="27.5" y="30" text-anchor="middle" font-family="Prompt,sans-serif" font-weight="700" font-size="11" fill="#fff">$</text>
+    </symbol>
+
+    <!-- ภาพประกอบขั้นตอน -->
+    <symbol id="ill-meter" viewBox="0 0 80 80">
+      <circle cx="40" cy="42" r="34" fill="#dff1fd"/>
+      <circle cx="63" cy="16" r="3.5" fill="#bfe3fb"/><circle cx="69" cy="25" r="2.2" fill="#bfe3fb"/><circle cx="13" cy="24" r="2.4" fill="#cfe9fb"/>
+      <rect x="4" y="44" width="10" height="9" rx="2" fill="#2d74c8"/><rect x="66" y="44" width="10" height="9" rx="2" fill="#2d74c8"/>
+      <circle cx="40" cy="44" r="25" fill="url(#gMeter)"/>
+      <circle cx="40" cy="44" r="20" fill="#cfd8e3"/>
+      <circle cx="40" cy="44" r="18" fill="#f8fafc"/>
+      <path d="M26 38a16 16 0 0128 0" stroke="#9fb3c8" stroke-width="1.2" fill="none" stroke-dasharray="1.5 2"/>
+      <rect x="27" y="36.5" width="26" height="8" rx="1.4" fill="#1b2a47"/>
+      <g fill="#fff" font-family="Prompt,sans-serif" font-size="6.2" font-weight="600"><text x="28.6" y="42.8">0</text><text x="33.5" y="42.8">0</text><text x="38.4" y="42.8">1</text><text x="43.3" y="42.8">2</text></g>
+      <rect x="48" y="37.4" width="4.2" height="6.2" rx=".6" fill="#e5484d"/><text x="48.9" y="42.8" fill="#fff" font-family="Prompt,sans-serif" font-size="6.2" font-weight="600">3</text>
+      <path d="M40 48.5c-1.6 2.4-3 3.9-3 5.6a3 3 0 006 0c0-1.7-1.4-3.2-3-5.6z" fill="#2b8def"/>
+      <circle cx="47.5" cy="52" r="2.4" stroke="#7a8ca3" stroke-width="1" fill="none"/>
+      <path d="M22 31a22 22 0 018-6" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".35" fill="none"/>
+    </symbol>
+    <symbol id="ill-calc" viewBox="0 0 80 80">
+      <circle cx="40" cy="42" r="34" fill="#fdebd3"/>
+      <g transform="rotate(8 52 34)"><rect x="40" y="10" width="26" height="34" rx="2" fill="#fff" stroke="#e7d9c4"/><path d="M45 18h16M45 23h16M45 28h12M45 33h14" stroke="#c9bba8" stroke-width="1.6" stroke-linecap="round"/></g>
+      <rect x="51" y="30" width="16" height="22" rx="2" fill="#f3c46a" opacity=".55"/>
+      <g><ellipse cx="22" cy="56" rx="10" ry="3.6" fill="#e3921b"/><rect x="12" y="44" width="20" height="12" fill="#f2b230"/><ellipse cx="22" cy="50" rx="10" ry="3.6" fill="#f2b230"/><ellipse cx="22" cy="44" rx="10" ry="3.6" fill="#ffd25a"/><path d="M12 50h20" stroke="#e39a1f" stroke-width=".9"/>
+      <rect x="15" y="34" width="16" height="10" fill="#f2b230"/><ellipse cx="23" cy="39" rx="8" ry="3" fill="#f2b230"/><ellipse cx="23" cy="34" rx="8" ry="3" fill="#ffdb73"/></g>
+      <g transform="rotate(-6 42 50)"><rect x="29" y="30" width="27" height="36" rx="4" fill="url(#gCalc)"/><rect x="33" y="34" width="19" height="7.5" rx="1.4" fill="#d6eef8"/>
+      <g fill="#fff8e6"><rect x="33" y="45" width="5" height="4" rx="1"/><rect x="40" y="45" width="5" height="4" rx="1"/><rect x="47" y="45" width="5" height="4" rx="1"/><rect x="33" y="51" width="5" height="4" rx="1"/><rect x="40" y="51" width="5" height="4" rx="1"/><rect x="47" y="51" width="5" height="4" rx="1"/><rect x="33" y="57" width="5" height="4" rx="1"/><rect x="40" y="57" width="5" height="4" rx="1"/></g><rect x="47" y="57" width="5" height="4" rx="1" fill="#f06a2b"/></g>
+    </symbol>
+    <symbol id="ill-invoice" viewBox="0 0 80 80">
+      <circle cx="40" cy="42" r="34" fill="#fde3d5"/>
+      <path d="M28 18h22l6 6v40H28z" fill="#f7a64d"/>
+      <rect x="24" y="16" width="27" height="44" rx="2.4" fill="#fbbf6a"/>
+      <rect x="21" y="20" width="27" height="44" rx="2.4" fill="#fff" stroke="#efe2d6"/>
+      <g stroke="#b7bec9" stroke-width="1.7" stroke-linecap="round"><path d="M26 28h17M26 33h17M26 38h12M26 43h17M26 48h14"/></g>
+      <path d="M26 55h9" stroke="#6b7686" stroke-width="2.2" stroke-linecap="round"/>
+      <rect x="52" y="30" width="8" height="30" rx="1.5" fill="#f08a2c" opacity=".9"/>
+    </symbol>
+    <symbol id="ill-printer" viewBox="0 0 80 80">
+      <circle cx="40" cy="42" r="34" fill="#dff3e4"/>
+      <g transform="rotate(6 46 22)"><rect x="34" y="6" width="24" height="30" rx="1.6" fill="#fff" stroke="#e1e7ec"/><rect x="38" y="10" width="7" height="3" rx="1" fill="#22a05a"/><path d="M38 17h16M38 21h16M38 25h12" stroke="#b7c3cc" stroke-width="1.4" stroke-linecap="round"/><path d="M38 30h8" stroke="#22a05a" stroke-width="2" stroke-linecap="round"/></g>
+      <rect x="12" y="32" width="56" height="24" rx="4" fill="url(#gPrinter)"/>
+      <rect x="16" y="50" width="48" height="12" rx="2" fill="#2a333e"/>
+      <rect x="14" y="34" width="52" height="3" rx="1.5" fill="#5d6876" opacity=".7"/>
+      <circle cx="61" cy="40" r="1.6" fill="#3cbf6e"/>
+      <g transform="rotate(-4 34 64)"><rect x="20" y="52" width="30" height="22" rx="1.4" fill="#fff" stroke="#e1e7ec"/><rect x="23" y="55" width="7" height="2.6" rx=".8" fill="#22a05a"/><path d="M23 61h22M23 65h22M23 69h14" stroke="#b7c3cc" stroke-width="1.4" stroke-linecap="round"/></g>
+    </symbol>
+
+    <!-- ภาพประกอบฟังก์ชัน -->
+    <symbol id="f-house" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#e2f5e6"/><path d="M40 15L13 38.5l3.2 3.6 3.3-2.8V62h15V48h11v14h15V39.3l3.3 2.8 3.2-3.6-8.5-7.4V18h-7v7.3z" fill="#1f7a45"/></symbol>
+    <symbol id="f-map" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#e1eefc"/>
+      <path d="M12 30l18-5 20 6 18-5v34l-18 5-20-6-18 5z" fill="#4ea3ec"/>
+      <path d="M30 25l20 6v34l-20-6z" fill="#7cc36b"/>
+      <path d="M12 46l18-5v18l-18 5z" fill="#8bd06f"/><path d="M50 49l18-5v16l-18 5z" fill="#8bd06f"/>
+      <path d="M12 46l18-5 20 6 18-5" stroke="#fff" stroke-width="1.2" fill="none" opacity=".6"/>
+      <path d="M40 9c-7.2 0-13 5.6-13 12.6C27 31 40 44 40 44s13-13 13-22.4C53 14.6 47.2 9 40 9z" fill="#e53935"/>
+      <circle cx="40" cy="21.5" r="5" fill="#fff"/>
+    </symbol>
+    <symbol id="f-care" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#fdf0dc"/>
+      <circle cx="40" cy="17.5" r="5" fill="url(#gHeart)"/>
+      <path d="M40 66C30 57 18 49 18 36c0-7 5-12.5 11.5-12.5 4.4 0 8 2.4 10.5 6-2.5-1.5-5-2.3-7.3-2.3-5 0-8.7 3.9-8.7 9 0 9.6 9 16.5 16 24.3z" fill="url(#gHeart)"/>
+      <path d="M40 66c10-9 22-17 22-30 0-7-5-12.5-11.5-12.5-4.4 0-8 2.4-10.5 6 2.5-1.5 5-2.3 7.3-2.3 5 0 8.7 3.9 8.7 9 0 9.6-9 16.5-16 24.3z" fill="url(#gHeart)"/>
+      <path d="M40 55c-6-5-11-9-11-15 0-3.4 2.6-6 5.8-6 2.2 0 4.1 1.2 5.2 3.1 1.1-1.9 3-3.1 5.2-3.1 3.2 0 5.8 2.6 5.8 6 0 6-5 10-11 15z" fill="#c8732a"/>
+    </symbol>
+    <symbol id="f-visit" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#e2f5e6"/>
+      <rect x="20" y="17" width="40" height="49" rx="5" stroke="#1f7a45" stroke-width="4.5" fill="none"/>
+      <rect x="31" y="12" width="18" height="10" rx="3" fill="#1f7a45"/><rect x="36" y="15" width="8" height="3" rx="1.5" fill="#e2f5e6"/>
+      <path d="M40 31L27 42.5l2.4 2.6 2.1-1.8V58h7v-7h5v7h7V43.3l2.1 1.8 2.4-2.6-4.5-4V32h-3.5v3.4z" fill="#1f7a45"/>
+    </symbol>
+    <symbol id="f-fund" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#f1e5fb"/>
+      <path d="M33 22c-2-3-1-7 2-8 2 2 4 2 5 0 1 2 3 2 5 0 3 1 4 5 2 8z" fill="#a8703d"/>
+      <path d="M31 21h18l-2 5H33z" fill="#7d4f26"/>
+      <path d="M33 26c-11 6-17 15-17 25 0 10 9 15 24 15s24-5 24-15c0-10-6-19-17-25z" fill="url(#gBag)"/>
+      <circle cx="40" cy="49" r="11" fill="url(#gCoin)" stroke="#e8a021" stroke-width="1.5"/>
+      <text x="40" y="55.5" text-anchor="middle" font-family="Prompt,sans-serif" font-weight="700" font-size="17" fill="#fff">$</text>
+    </symbol>
+    <symbol id="f-dash" viewBox="0 0 80 80"><circle cx="40" cy="40" r="38" fill="#dbf3f7"/>
+      <rect x="19" y="17" width="42" height="49" rx="5" stroke="#1d6f8a" stroke-width="4.5" fill="#fff"/>
+      <rect x="31" y="12" width="18" height="10" rx="3" fill="#1d6f8a"/>
+      <path d="M27 31h26" stroke="#2bb3a2" stroke-width="3" stroke-linecap="round"/>
+      <g fill="#2f8fe8"><rect x="27" y="47" width="6" height="12" rx="1"/><rect x="36" y="41" width="6" height="18" rx="1"/><rect x="45" y="36" width="7" height="23" rx="1"/></g>
+    </symbol>
+
+    <!-- ไอคอน Village Index -->
+    <symbol id="v-road" viewBox="0 0 24 24"><path d="M8.5 3h7L21 21H3z" fill="#1d2b48"/><path d="M12 5v2.5M12 10v3M12 15.5v4" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="v-econ" viewBox="0 0 24 24"><rect x="3" y="12" width="5" height="9" rx="1" fill="#f6a723"/><rect x="9.5" y="7" width="5" height="14" rx="1" fill="#f6a723"/><rect x="16" y="3" width="5" height="18" rx="1" fill="#f6a723"/><rect x="2" y="20" width="20" height="2" rx="1" fill="#e48c12"/></symbol>
+    <symbol id="v-social" viewBox="0 0 24 24"><g fill="#f5a524"><circle cx="12" cy="6.5" r="3"/><circle cx="5.5" cy="8.5" r="2.4"/><circle cx="18.5" cy="8.5" r="2.4"/><path d="M6.5 20v-3.5c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5V20z"/><path d="M1.5 19v-2.5c0-2.4 1.8-4.2 4-4.2 1 0 1.8.3 2.5.8a7 7 0 00-1.5 4.4V19zM22.5 19v-2.5c0-2.4-1.8-4.2-4-4.2-1 0-1.8.3-2.5.8a7 7 0 011.5 4.4V19z"/></g></symbol>
+    <symbol id="v-env" viewBox="0 0 24 24"><path d="M20.5 3.5C11 3.5 4 8 4 15.5c0 1.6.4 3 1 4.2C7 12.5 12 9.5 16 8c-4 2.2-8 6-9.6 12.3 1.4.8 3 1.2 4.6 1.2 7.5 0 9.5-8.5 9.5-18z" fill="#2fa45a"/></symbol>
+    <symbol id="v-mgmt" viewBox="0 0 24 24"><path fill="#1f74d0" d="M10.3 2h3.4l.5 2.6c.7.2 1.4.6 2 1l2.5-.9 1.7 2.9-2 1.8c.1.7.1 1.5 0 2.2l2 1.8-1.7 2.9-2.5-.9c-.6.4-1.3.8-2 1L13.7 22h-3.4l-.5-2.6c-.7-.2-1.4-.6-2-1l-2.5.9-1.7-2.9 2-1.8a7 7 0 010-2.2l-2-1.8 1.7-2.9 2.5.9c.6-.4 1.3-.8 2-1zM12 8.4a3.6 3.6 0 100 7.2 3.6 3.6 0 000-7.2z"/></symbol>
+    <symbol id="v-life" viewBox="0 0 24 24"><path d="M12 21C6.5 16.6 2.5 13 2.5 8.6 2.5 5.5 4.9 3 8 3c1.7 0 3.1.8 4 2.1C12.9 3.8 14.3 3 16 3c3.1 0 5.5 2.5 5.5 5.6 0 4.4-4 8-9.5 12.4z" fill="#ef4444"/></symbol>
+
+    <!-- รูปหกเหลี่ยม -->
+    <symbol id="hexshape" viewBox="0 0 100 100"><path d="M50 2l42 24v48L50 98 8 74V26z"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+<!-- ================= NAV ================= -->
+<header>
+  <nav class="nav" aria-label="เมนูหลัก">
+    <a href="#home" class="brand" aria-label="หมู่บ้านดิจิตอล หน้าแรก">
+      <svg class="brand-mark"><use href="#brand"/></svg>
+      <span class="brand-name">หมู่บ้านดิจิตอล</span>
     </a>
-
-    <ul class="hidden lg:flex items-center gap-7 text-sm font-medium text-gray-500">
-      <li><a href="#home"     class="nav-link active hover:text-gray-800 transition-colors py-1 text-gray-800">หน้าแรก</a></li>
-      <li><a href="#functions" class="nav-link hover:text-gray-800 transition-colors py-1">ฟังก์ชัน</a></li>
-      <li><a href="#process"  class="nav-link hover:text-gray-800 transition-colors py-1">ระบบค่าน้ำ</a></li>
-      <li><a href="#vi"       class="nav-link hover:text-gray-800 transition-colors py-1">Village Index</a></li>
-      <li><a href="#pricing"  class="nav-link hover:text-gray-800 transition-colors py-1">แพ็กเกจ</a></li>
+    <ul class="nav-links">
+      <li><a href="#home" class="active">หน้าแรก</a></li>
+      <li><a href="#functions">ฟังก์ชัน</a></li>
+      <li><a href="#process">ระบบค่าน้ำ</a></li>
+      <li><a href="#vi">Village Index</a></li>
+      <li><a href="#pricing">แพ็กเกจ</a></li>
     </ul>
-
-    <div class="flex items-center gap-3">
-      <button class="hidden sm:flex w-9 h-9 rounded-full border border-gray-200 items-center justify-center hover:border-gray-300 transition-colors">
-        <img src="assets/icons/search.png" alt="ค้นหา" class="w-4 h-4 object-contain opacity-70">
-      </button>
-      <a href="/signup/"
-         class="inline-flex items-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:shadow-lg hover:shadow-brand-500/25 hover:-translate-y-px">
-        เริ่มใช้งานฟรี
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-        </svg>
-      </a>
-    </div>
+    <button class="nav-search" aria-label="ค้นหา"><svg><use href="#i-search"/></svg></button>
+    <a href="/signup/" class="btn btn-primary nav-cta">เริ่มใช้งานฟรี</a>
+    <button class="nav-burger" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobileMenu"><svg><use href="#i-burger"/></svg></button>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#home" class="active">หน้าแรก</a>
+    <a href="#functions">ฟังก์ชัน</a>
+    <a href="#process">ระบบค่าน้ำ</a>
+    <a href="#vi">Village Index</a>
+    <a href="#pricing">แพ็กเกจ</a>
   </div>
-</nav>
+</header>
 
-<!-- ========== HERO ========== -->
-<section class="relative hero-sky pt-[66px] overflow-hidden" id="home">
-  <div class="max-w-6xl mx-auto px-6 pt-16 pb-10 relative z-10">
-    <div class="grid lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
+<main>
+<!-- ================= HERO ================= -->
+<section class="hero" id="home">
+  <div class="wrap">
+    <img class="tower" src="assets/bg/tower-hero.webp" alt="">
+    <div class="hero-left">
+      <div class="hero-pillrow">
+        <span class="pill"><svg viewBox="0 0 24 30"><path d="M12 1C8 8 3 13 3 19a9 9 0 0018 0c0-6-5-11-9-18z" fill="url(#gDrop)"/></svg>ระบบประปาหมู่บ้าน</span>
+        <span class="hero-tags"><span class="hero-tag">เทคโนโลยีเพื่อชุมชน</span><span class="hero-tag">บริหารจัดการง่ายยั่งยืน</span></span>
+      </div>
+      <h1>บริหารหมู่บ้าน<br>ด้วยข้อมูลจริง</h1>
+      <p class="hero-sub">ระบบจัดการข้อมูลชุมชน<br>พร้อมระบบประปาและการออกใบแจ้งหนี้</p>
+      <div class="hero-feats">
+        <div class="feat"><span class="feat-ic"><svg><use href="#i-drop"/></svg></span><p>ใช้งานง่าย<br>เหมาะกับทุกหมู่บ้าน</p></div>
+        <div class="feat"><span class="feat-ic"><svg><use href="#i-people"/></svg></span><p>ลดภาระงาน<br>เพิ่มความโปร่งใส</p></div>
+        <div class="feat"><span class="feat-ic"><svg><use href="#i-growth"/></svg></span><p>รองรับการเติบโต<br>ของชุมชน</p></div>
+      </div>
+      <div class="hero-btns">
+        <a href="/signup/" class="btn btn-primary">เริ่มใช้งานฟรี <svg class="chev"><use href="#i-chev"/></svg></a>
+        <a href="#process" class="btn btn-outline"><svg class="play"><use href="#i-play"/></svg>ดูระบบค่าน้ำ</a>
+      </div>
+    </div>
 
-      <div>
-        <div class="reveal inline-flex items-center gap-2 bg-sky-50 border border-sky-100 text-sky-600 text-xs font-semibold tracking-wide px-3.5 py-1.5 rounded-full mb-5">
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C9 7 5 10.5 5 14.5a7 7 0 0014 0C19 10.5 15 7 12 2z"/></svg>
-          ระบบประปาหมู่บ้าน · เทคโนโลยีที่เอื้อมถึง บริหารจัดการง่ายขึ้น
-        </div>
-
-        <h1 class="reveal font-display font-extrabold text-[2.5rem] sm:text-5xl text-gray-900 leading-[1.12] tracking-tight mb-5">
-          บริหารหมู่บ้าน<br>
-          ด้วย<span style="background:linear-gradient(135deg,#15803d,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ข้อมูลจริง</span>
-        </h1>
-
-        <p class="reveal text-gray-500 text-lg leading-relaxed max-w-md mb-7">
-          ระบบจัดการข้อมูลชุมชนครบวงจร พร้อมระบบประปาหมู่บ้านและการออกใบแจ้งหนี้อัตโนมัติ
-        </p>
-
-        <div class="reveal flex flex-wrap items-center gap-x-7 gap-y-3 mb-8 text-sm">
-          <div class="flex items-center gap-2 text-gray-600">
-            <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center flex-shrink-0 p-1.5">
-              <img src="assets/icons/feature-resident.png" alt="ข้อมูลครัวเรือน" class="w-full h-full object-contain">
-            </div>
-            <span>ข้อมูลครัวเรือน <span class="text-gray-400">ครบในที่เดียว</span></span>
+    <!-- Dashboard mockup -->
+    <div class="dash-wrap" aria-label="ตัวอย่างหน้าจอระบบประปาหมู่บ้าน" role="img">
+      <div class="dash">
+        <aside class="dash-side">
+          <div class="dash-logo"><svg><use href="#brandW"/></svg><span>หมู่บ้านดิจิตอล</span></div>
+          <ul class="dash-menu">
+            <li><svg><use href="#i-home"/></svg>หน้าแรก</li>
+            <li class="on"><svg><use href="#i-drop"/></svg>ระบบประปาหมู่บ้าน</li>
+            <li><svg><use href="#i-gauge"/></svg>จดมิเตอร์</li>
+            <li><svg><use href="#i-doc"/></svg>ออกบิล</li>
+            <li><svg><use href="#i-print"/></svg>พิมพ์ใบแจ้งหนี้</li>
+            <li><svg><use href="#i-gear"/></svg>ติดตามค้างชำระ</li>
+            <li><svg><use href="#i-bars"/></svg>รายงาน</li>
+            <li><svg><use href="#i-gear"/></svg>ตั้งค่าระบบ</li>
+          </ul>
+        </aside>
+        <div class="dash-main">
+          <div class="dash-top">
+            <svg class="dash-burger"><use href="#i-burger"/></svg>
+            <div class="dash-date"><svg><use href="#i-cal"/></svg>พฤษภาคม 2567<svg class="chev"><use href="#i-chevd"/></svg></div>
           </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center flex-shrink-0 p-1.5">
-              <img src="assets/icons/feature-water.png" alt="ระบบค่าน้ำ" class="w-full h-full object-contain">
+          <div class="dash-title">ระบบประปาหมู่บ้าน</div>
+          <div class="dash-subt">หมู่ที่ 1 บ้านสันสุข &nbsp;ต. สันกลาง &nbsp;อ. เมือง &nbsp;จ. เชียงใหม่</div>
+          <div class="dash-stats">
+            <div class="dstat">
+              <span class="ic" style="background:#fff1dc"><svg><use href="#s-coins"/></svg></span>
+              <div><div class="lbl">รายรับค่าน้ำ (บาท)</div><div class="val">42,350</div></div>
+              <div class="foot"><span class="mini-bars"><i style="height:20%"></i><i style="height:32%"></i><i style="height:46%"></i><i style="height:40%"></i><i style="height:62%"></i><i style="height:52%"></i><i style="height:84%"></i><i style="height:70%"></i></span><span class="trend"><svg><use href="#i-up"/></svg>+12%</span></div>
             </div>
-            <span>ระบบค่าน้ำ <span class="text-gray-400">ออกบิลอัตโนมัติ</span></span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0 p-1.5">
-              <img src="assets/icons/feature-analytics.png" alt="รายงานครบ" class="w-full h-full object-contain">
+            <div class="dstat">
+              <span class="ic" style="background:#e1f5e8"><svg><use href="#s-check"/></svg></span>
+              <div><div class="lbl">ชำระแล้ว (ครัวเรือน)</div><div class="val">118</div></div>
+              <div class="foot"><span class="of">จากทั้งหมด 150<br>ครัวเรือน</span><svg class="donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#e7ecf0" stroke-width="5"/><circle cx="21" cy="21" r="16" fill="none" stroke="#22a85d" stroke-width="5" stroke-dasharray="79.4 100.5" transform="rotate(-90 21 21)" stroke-linecap="round"/><text x="21" y="24" text-anchor="middle" font-family="Prompt" font-weight="700" font-size="8.5" fill="#1b2a47">79%</text></svg></div>
             </div>
-            <span>รายงานครบ <span class="text-gray-400">พร้อมตัดสินใจทันที</span></span>
+            <div class="dstat">
+              <span class="ic" style="background:#fde4e4"><svg><use href="#s-alert"/></svg></span>
+              <div><div class="lbl">ค้างชำระ (ครัวเรือน)</div><div class="val" style="color:#e5484d">32</div></div>
+              <div class="foot"><span class="of">จากทั้งหมด 150<br>ครัวเรือน</span><svg class="donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#e7ecf0" stroke-width="5"/><circle cx="21" cy="21" r="16" fill="none" stroke="#ef4444" stroke-width="5" stroke-dasharray="21.1 100.5" transform="rotate(-90 21 21)" stroke-linecap="round"/><text x="21" y="24" text-anchor="middle" font-family="Prompt" font-weight="700" font-size="8.5" fill="#1b2a47">21%</text></svg></div>
+            </div>
+          </div>
+          <div class="dash-table">
+            <div class="dash-table-hd"><h4><svg><use href="#i-cal"/></svg>ข้อมูลจดมิเตอร์ประจำเดือน</h4><span class="dash-add"><svg><use href="#i-plus"/></svg>จดมิเตอร์ใหม่</span></div>
+            <table class="dt">
+              <thead><tr><th>ลำดับ</th><th>เลขที่บ้าน</th><th>ชื่อ-สกุล</th><th>เลขมิเตอร์ครั้งก่อน</th><th>เลขมิเตอร์ปัจจุบัน</th><th>หน่วยที่ใช้</th><th>ค่าน้ำ (บาท)</th><th>สถานะ</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>001</td><td class="nm">นายสมพร ใจดี</td><td>120</td><td>135</td><td>15</td><td>105</td><td><span class="chip ok">ชำระแล้ว</span></td></tr>
+                <tr><td>2</td><td>002</td><td class="nm">นางประนอม ยิ้มเยือน</td><td>98</td><td>112</td><td>14</td><td>98</td><td><span class="chip ok">ชำระแล้ว</span></td></tr>
+                <tr><td>3</td><td>003</td><td class="nm">นางสาวกาญจนา แสงสุข</td><td>215</td><td>232</td><td>17</td><td>119</td><td><span class="chip ok">ชำระแล้ว</span></td></tr>
+                <tr><td>4</td><td>004</td><td class="nm">นายประเสริฐ ดีเลิศ</td><td>76</td><td>76</td><td>0</td><td>0</td><td><span class="chip no">ค้างชำระ</span></td></tr>
+                <tr><td>5</td><td>005</td><td class="nm">นางบัวลอย น้อมจิต</td><td>184</td><td>203</td><td>19</td><td>133</td><td><span class="chip ok">ชำระแล้ว</span></td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div class="reveal flex flex-col sm:flex-row gap-3">
-          <a href="/signup/"
-             class="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-brand-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm">
-            เริ่มใช้งานฟรี
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </a>
-          <a href="#process"
-             class="inline-flex items-center justify-center gap-2 bg-white text-gray-700 font-semibold px-7 py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm">
-            <svg class="w-4 h-4 text-brand-500" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            ดูระบบค่าน้ำ
-          </a>
-        </div>
-      </div>
-
-      <div class="reveal hidden lg:flex justify-center relative">
-        <div class="absolute -inset-6 bg-gradient-to-br from-brand-100/60 via-sky-50/40 to-transparent rounded-[2rem] blur-2xl"></div>
-        <img src="assets/images/dashboard-water.png" alt="แดชบอร์ดระบบประปาหมู่บ้าน" class="relative w-full max-w-[420px] drop-shadow-2xl">
-      </div>
-    </div>
-  </div>
-
-  <div class="wave-band w-full" style="height:92px"></div>
-</section>
-
-<!-- ========== 4-STEP PROCESS ========== -->
-<section class="py-24 bg-white" id="process">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="text-center max-w-2xl mx-auto mb-14 reveal">
-      <h2 class="font-display font-bold text-3xl sm:text-4xl text-gray-900 mb-3">ระบบประปาหมู่บ้าน ครบ จบในที่เดียว</h2>
-      <p class="text-gray-400 text-lg">จดมิเตอร์ คำนวณค่าน้ำ ออกบิล และพิมพ์ใบแจ้งหนี้ได้ทันที</p>
-    </div>
-
-    <div class="flex flex-col lg:flex-row items-stretch gap-4">
-      <div class="reveal relative flex-1 bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-        <div class="absolute -top-3 left-6 w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">1</div>
-        <img src="assets/icons/step-meter.png" alt="จดมิเตอร์" class="w-16 h-16 mx-auto mb-3 object-contain">
-        <h3 class="font-semibold text-gray-800 mb-1">จดมิเตอร์</h3>
-        <p class="text-gray-400 text-xs leading-relaxed">บันทึกเลขมิเตอร์ได้ง่าย ๆ ไม่ซับซ้อน</p>
-      </div>
-
-      <div class="flex lg:flex-col items-center justify-center flex-shrink-0 py-1 lg:py-0 lg:px-1">
-        <svg class="w-6 h-6 text-brand-300 rotate-90 lg:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      </div>
-
-      <div class="reveal relative flex-1 bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm" style="transition-delay:70ms">
-        <div class="absolute -top-3 left-6 w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">2</div>
-        <img src="assets/icons/step-calculator.png" alt="คำนวณค่าน้ำ" class="w-16 h-16 mx-auto mb-3 object-contain">
-        <h3 class="font-semibold text-gray-800 mb-1">คำนวณค่าน้ำ</h3>
-        <p class="text-gray-400 text-xs leading-relaxed">คำนวณยอดอัตโนมัติตามอัตราที่กำหนด</p>
-      </div>
-
-      <div class="flex lg:flex-col items-center justify-center flex-shrink-0 py-1 lg:py-0 lg:px-1">
-        <svg class="w-6 h-6 text-brand-300 rotate-90 lg:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      </div>
-
-      <div class="reveal relative flex-1 bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm" style="transition-delay:140ms">
-        <div class="absolute -top-3 left-6 w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">3</div>
-        <img src="assets/icons/step-invoice.png" alt="ออกบิลอัตโนมัติ" class="w-16 h-16 mx-auto mb-3 object-contain">
-        <h3 class="font-semibold text-gray-800 mb-1">ออกบิลอัตโนมัติ</h3>
-        <p class="text-gray-400 text-xs leading-relaxed">สร้างใบแจ้งหนี้ ลดงานซ้ำ ลดความผิดพลาด</p>
-      </div>
-
-      <div class="flex lg:flex-col items-center justify-center flex-shrink-0 py-1 lg:py-0 lg:px-1">
-        <svg class="w-6 h-6 text-brand-300 rotate-90 lg:rotate-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      </div>
-
-      <div class="reveal relative flex-1 bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm" style="transition-delay:210ms">
-        <div class="absolute -top-3 left-6 w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">4</div>
-        <img src="assets/icons/step-printer.png" alt="พิมพ์ใบแจ้งหนี้" class="w-16 h-16 mx-auto mb-3 object-contain">
-        <h3 class="font-semibold text-gray-800 mb-1">พิมพ์ใบแจ้งหนี้</h3>
-        <p class="text-gray-400 text-xs leading-relaxed">พิมพ์หรือส่งใบแจ้งหนี้ได้ทันที พร้อม QR Code</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== INVOICE + STATS SHOWCASE ========== -->
-<section class="py-24 bg-gray-50 border-y border-gray-200" id="invoice">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="text-center max-w-2xl mx-auto mb-14 reveal">
-      <h2 class="font-display font-bold text-3xl sm:text-4xl text-gray-900 mb-3">ใบแจ้งหนี้ครบ รายงานพร้อม</h2>
-      <p class="text-gray-400 text-lg">พิมพ์ใบแจ้งหนี้ได้ทันที พร้อมสรุปยอดรายรับและยอดค้างชำระแบบเรียลไทม์</p>
+<!-- ================= ระบบประปา ================= -->
+<section class="water" id="process">
+  <div class="wrap">
+    <h2 class="sec-title">ระบบประปาหมู่บ้าน ครบ จบในที่เดียว</h2>
+    <p class="sec-sub">จดมิเตอร์ &nbsp;คำนวณค่าน้ำ &nbsp;ออกบิล และพิมพ์ใบแจ้งหนี้ได้ทันที</p>
+
+    <div class="steps">
+      <article class="step"><svg class="step-ill"><use href="#ill-meter"/></svg><h3><span class="num">1</span>จดมิเตอร์</h3><p>บันทึกเลขมิเตอร์ได้อย่างง่ายดาย</p></article>
+      <div class="step-arrow"><span><svg><use href="#i-arrow"/></svg></span></div>
+      <article class="step"><svg class="step-ill"><use href="#ill-calc"/></svg><h3><span class="num">2</span>คำนวณค่าน้ำ</h3><p>คำนวณอัตโนมัติ<br>ตามอัตราที่กำหนด</p></article>
+      <div class="step-arrow"><span><svg><use href="#i-arrow"/></svg></span></div>
+      <article class="step"><svg class="step-ill"><use href="#ill-invoice"/></svg><h3><span class="num">3</span>ออกบิลอัตโนมัติ</h3><p>สร้างใบแจ้งหนี้<br>ลดงาน ลดความผิดพลาด</p></article>
+      <div class="step-arrow"><span><svg><use href="#i-arrow"/></svg></span></div>
+      <article class="step"><svg class="step-ill"><use href="#ill-printer"/></svg><h3><span class="num">4</span>พิมพ์ใบแจ้งหนี้</h3><p>พิมพ์หรือส่งใบแจ้งหนี้<br>พร้อม QR Code</p></article>
     </div>
 
-    <div class="grid lg:grid-cols-[1fr_1.2fr] gap-6 items-start">
+    <div class="pipe-strip" aria-hidden="true"></div>
 
-      <div class="reveal flex justify-center">
-        <img src="assets/images/invoice-example.png" alt="ตัวอย่างใบแจ้งหนี้ค่าน้ำประปา" class="w-full max-w-sm rounded-2xl shadow-xl">
-      </div>
-
-      <div class="reveal flex justify-center" style="transition-delay:80ms">
-        <img src="assets/images/billing-dashboard.png" alt="สรุปยอดรายรับและรายการค้างชำระ" class="w-full max-w-md rounded-2xl shadow-xl">
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== FUNCTIONS GRID ========== -->
-<section class="py-24 bg-white" id="functions">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="flex flex-wrap items-end justify-between gap-4 mb-14 reveal">
-      <div>
-        <h2 class="font-display font-bold text-3xl sm:text-4xl text-gray-900 mb-3">ฟังก์ชันบริหารชุมชน</h2>
-        <p class="text-gray-400 text-lg">ครบทุกเรื่องของหมู่บ้าน ในระบบเดียว เพื่อการบริหารจัดการที่มีประสิทธิภาพ</p>
-      </div>
-      <a href="#" class="hidden sm:inline-flex items-center gap-2 border border-gray-200 hover:border-gray-300 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
-        ดูฟังก์ชันทั้งหมด
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </a>
-    </div>
-
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-house.png" alt="ข้อมูลครัวเรือน" class="w-full h-full object-contain">
+    <div class="billing">
+      <!-- ใบแจ้งหนี้ -->
+      <article class="invoice" aria-label="ตัวอย่างใบแจ้งหนี้ค่าน้ำประปา">
+        <div class="inv-head">
+          <div class="inv-logo"><svg><use href="#brand"/></svg><span>หมู่บ้านดิจิตอล</span></div>
+          <div>
+            <h3 class="inv-title">ใบแจ้งหนี้ค่าน้ำประปา</h3>
+            <p class="inv-month">ประจำเดือน &nbsp;พฤษภาคม 2567</p>
+          </div>
         </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">ข้อมูลครัวเรือน</h3>
-          <p class="text-gray-400 text-xs">จัดเก็บและบริหารข้อมูลครัวเรือน สมาชิกในบ้าน</p>
+        <div class="inv-co">
+          <b>บริษัท เคทูเดฟ จำกัด</b>
+          <p>123/45 หมู่ที่ 1 ต.สันกลาง<br>อ. เมือง จ. เชียงใหม่ 50000<br>โทร. 081-234-5678</p>
         </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" style="transition-delay:50ms">
-        <div class="w-12 h-12 rounded-full bg-sky-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-map.png" alt="แผนที่ชุมชน" class="w-full h-full object-contain">
+        <div class="inv-rows">
+          <div class="inv-row wide"><span>เลขที่บ้าน</span><span>001</span></div>
+          <div class="inv-row wide"><span>ชื่อ-สกุล</span><span>นายสมพร ใจดี</span></div>
+          <div class="inv-row"><span>เลขมิเตอร์ก่อนหน้า</span><span>120</span><span>หน่วย</span></div>
+          <div class="inv-row"><span>เลขมิเตอร์ปัจจุบัน</span><span>135</span><span>หน่วย</span></div>
+          <div class="inv-row"><span>หน่วยที่ใช้</span><span>15</span><span>หน่วย</span></div>
+          <div class="inv-row total"><span>ค่าน้ำประปา</span><span>105.00<small>บาท</small></span></div>
+          <div class="inv-row wide"><span>กำหนดชำระภายใน</span><span>31 พฤษภาคม 2567</span></div>
         </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">แผนที่ชุมชน</h3>
-          <p class="text-gray-400 text-xs">แสดงตำแหน่งครัวเรือน สาธารณูปโภค และโครงสร้างพื้นฐาน</p>
-        </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" style="transition-delay:100ms">
-        <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-elderly.png" alt="กลุ่มเปราะบาง" class="w-full h-full object-contain">
-        </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">กลุ่มเปราะบาง</h3>
-          <p class="text-gray-400 text-xs">ดูแลและติดตามกลุ่มเปราะบาง ผู้สูงอายุ ผู้ป่วยติดเตียง</p>
-        </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" style="transition-delay:150ms">
-        <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-visit.png" alt="บันทึกเยี่ยมบ้าน" class="w-full h-full object-contain">
-        </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">บันทึกเยี่ยมบ้าน</h3>
-          <p class="text-gray-400 text-xs">บันทึกการลงพื้นที่เยี่ยมบ้าน พร้อมประวัติการเยี่ยม</p>
-        </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" style="transition-delay:200ms">
-        <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-fund.png" alt="กองทุนหมู่บ้าน" class="w-full h-full object-contain">
-        </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">กองทุนหมู่บ้าน</h3>
-          <p class="text-gray-400 text-xs">บริหารจัดการกองทุนหมู่บ้าน รายรับ-รายจ่าย ตรวจสอบได้</p>
-        </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-
-      <div class="reveal flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all" style="transition-delay:250ms">
-        <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0 p-2">
-          <img src="assets/icons/community-dashboard.png" alt="Dashboard และรายงาน" class="w-full h-full object-contain">
-        </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 text-sm mb-0.5">Dashboard และรายงาน</h3>
-          <p class="text-gray-400 text-xs">สรุปข้อมูลภาพรวมของหมู่บ้านเพื่อการตัดสินใจ</p>
-        </div>
-        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== VILLAGE INDEX ========== -->
-<section class="py-24 bg-gray-50 border-y border-gray-200" id="vi">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="text-center max-w-2xl mx-auto mb-14 reveal">
-      <div class="inline-flex items-center gap-2 text-brand-500 font-semibold text-xs tracking-widest uppercase mb-4">
-        <span class="w-5 h-px bg-brand-400 rounded-full"></span> Village Index
-      </div>
-      <h2 class="font-display font-bold text-3xl sm:text-4xl text-gray-900 mb-3">เห็นปัญหา วางแผนพัฒนาได้ตรงจุด</h2>
-      <p class="text-gray-400 text-lg">ประเมินศักยภาพหมู่บ้านจาก 6 มิติ เพื่อใช้ในการวางแผนพัฒนาอย่างยั่งยืน</p>
-    </div>
-
-    <div class="grid lg:grid-cols-[auto_1fr] gap-10 items-center">
-      <div class="reveal flex justify-center">
-        <div class="relative w-56 h-56">
-          <svg viewBox="0 0 200 200" class="w-56 h-56">
-            <polygon points="100,10 182,55 182,145 100,190 18,145 18,55" fill="#ecfdf5" stroke="#bbf7d0" stroke-width="2"/>
-            <polygon points="100,30 165,65 165,135 100,170 35,135 35,65" fill="none" stroke="#86efac" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <polygon points="100,45 151,72.5 151,127.5 100,155 49,127.5 49,72.5" fill="#16a34a" opacity="0.9"/>
+        <div class="inv-pay">
+          <svg class="qr" id="qr" viewBox="0 0 29 29" shape-rendering="crispEdges" aria-label="QR Code สำหรับชำระเงิน"></svg>
+          <p>สแกนเพื่อชำระเงิน<br>ผ่าน Mobile Banking</p>
+          <svg class="inv-wave" viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfeafb"/><stop offset="1" stop-color="#eaf6fd"/></linearGradient>
+              <linearGradient id="gw2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9fd6f7" stop-opacity=".3"/><stop offset="1" stop-color="#58b4ef" stop-opacity=".9"/></linearGradient>
+            </defs>
+            <path d="M0 55c40-14 80 6 120-2s80-30 120-18 40 10 60 4v51H0z" fill="url(#gw1)"/>
+            <path d="M0 64c50-10 90 12 140 0s90-36 160-16v8c-60-16-100 8-150 20S50 66 0 72z" fill="url(#gw2)"/>
+            <path d="M30 70c40-8 80 6 120-4s70-26 120-14" stroke="#fff" stroke-width="2" fill="none" opacity=".9"/>
+            <g transform="translate(250 50) scale(1.35) translate(-253 -40)"><path d="M253 6c-8 14-16 21-16 31a16 16 0 0032 0c0-10-8-17-16-31z" fill="url(#gDrop)"/>
+            <path d="M246 33c-1 5 1 9 5 11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".7"/></g>
+            <path d="M226 52c12-4 22-3 30 4M262 56c8-6 16-8 26-6" stroke="#5ab0ee" stroke-width="2.4" fill="none" stroke-linecap="round"/>
           </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="font-display font-extrabold text-4xl text-white drop-shadow">78</span>
-            <span class="text-xs text-white/90 font-medium">คะแนนรวม<br>จาก 100</span>
-          </div>
         </div>
-      </div>
+        <a href="#pricing" class="btn btn-primary inv-print"><svg><use href="#i-print"/></svg>พิมพ์ใบแจ้งหนี้</a>
+      </article>
 
-      <div>
-        <div class="grid sm:grid-cols-2 gap-3 mb-6">
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-road.png" alt="โครงสร้างพื้นฐาน" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านโครงสร้างพื้นฐาน</div>
-              <div class="font-display font-bold text-gray-900">85<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3" style="transition-delay:40ms">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-economy.png" alt="เศรษฐกิจ" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านเศรษฐกิจ</div>
-              <div class="font-display font-bold text-gray-900">72<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3" style="transition-delay:80ms">
-            <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-social.png" alt="สังคม" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านสังคม</div>
-              <div class="font-display font-bold text-gray-900">76<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3" style="transition-delay:120ms">
-            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-environment.png" alt="สิ่งแวดล้อม" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านสิ่งแวดล้อม</div>
-              <div class="font-display font-bold text-gray-900">82<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3" style="transition-delay:160ms">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-management.png" alt="การบริหารจัดการ" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านการบริหารจัดการ</div>
-              <div class="font-display font-bold text-gray-900">80<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
-          <div class="reveal bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3" style="transition-delay:200ms">
-            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0 p-1.5"><img src="assets/icons/index-health.png" alt="คุณภาพชีวิต" class="w-full h-full object-contain"></div>
-            <div class="flex-1">
-              <div class="text-xs text-gray-400">ด้านคุณภาพชีวิต</div>
-              <div class="font-display font-bold text-gray-900">75<span class="text-xs text-gray-400 font-normal"> /100</span></div>
-            </div>
-          </div>
+      <!-- สถิติ -->
+      <div class="stats">
+        <div class="card scard">
+          <span class="halo" style="background:#e1f5e8"><svg><use href="#s-check"/></svg></span>
+          <div class="meta"><div class="k" style="color:#1f9d55">ชำระแล้ว</div><div class="v">118<small>ครัวเรือน</small></div><div class="o">จากทั้งหมด 150 ครัวเรือน</div></div>
+          <svg class="donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#e7ecf0" stroke-width="5.5"/><circle cx="21" cy="21" r="16" fill="none" stroke="#22a85d" stroke-width="5.5" stroke-dasharray="79.4 100.5" transform="rotate(-90 21 21)"/><text x="21" y="24" text-anchor="middle" font-family="Prompt" font-weight="700" font-size="8" fill="#1b2a47">79%</text></svg>
         </div>
-
-        <div class="reveal bg-brand-900 text-white rounded-2xl p-5 flex items-center gap-4">
-          <svg class="w-8 h-8 text-brand-300 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-2.513 3.995-4.967h-4v-10.882h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-2.513 3.996-4.967h-3.983v-10.882h9.983z"/></svg>
-          <p class="text-sm text-brand-50 leading-relaxed">ข้อมูลที่ชัดเจน นำไปสู่การวางแผนพัฒนาที่ตรงจุด เพื่อชุมชนที่ยั่งยืน</p>
+        <div class="card scard">
+          <span class="halo" style="background:#fde4e4"><svg><use href="#s-alert"/></svg></span>
+          <div class="meta"><div class="k" style="color:#e5484d">ค้างชำระ</div><div class="v">32<small>ครัวเรือน</small></div><div class="o">จากทั้งหมด 150 ครัวเรือน</div></div>
+          <svg class="donut" viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#e7ecf0" stroke-width="5.5"/><circle cx="21" cy="21" r="16" fill="none" stroke="#ef4444" stroke-width="5.5" stroke-dasharray="21.1 100.5" transform="rotate(-90 21 21)"/><text x="21" y="24" text-anchor="middle" font-family="Prompt" font-weight="700" font-size="8" fill="#1b2a47">21%</text></svg>
+        </div>
+        <div class="card rev">
+          <div class="rev-top"><span class="halo" style="background:#fff1dc"><svg><use href="#s-coins"/></svg></span><div><div class="k">รายรับค่าน้ำ (บาท)</div><div class="v">42,350</div></div></div>
+          <div class="rev-bars" aria-hidden="true">
+            <i style="height:12%"></i><i style="height:18%"></i><i style="height:38%"></i><i style="height:52%"></i><i class="lite" style="height:44%"></i><i style="height:66%"></i><i style="height:48%"></i><i style="height:92%"></i>
+          </div>
+          <span class="trend"><svg><use href="#i-up"/></svg>+12%</span>
+        </div>
+        <div class="card due">
+          <h4>รายการค้างชำระ</h4>
+          <table class="due-t">
+            <thead><tr><th>เลขที่บ้าน</th><th>ชื่อ-สกุล</th><th>หน่วยที่ใช้</th><th>จำนวนเงิน</th><th>วันครบกำหนด</th></tr></thead>
+            <tbody>
+              <tr><td>004</td><td>นางจันทร์ทิพย์ ดีดี</td><td>12</td><td>84</td><td>31 พ.ค. 2567</td></tr>
+              <tr><td>007</td><td>นายประสิทธิ์ มั่นคง</td><td>18</td><td>126</td><td>31 พ.ค. 2567</td></tr>
+              <tr><td>015</td><td>นางสาวกาญจนา ใจดี</td><td>21</td><td>147</td><td>31 พ.ค. 2567</td></tr>
+              <tr><td>022</td><td>นายวิชัย สายใจ</td><td>14</td><td>98</td><td>31 พ.ค. 2567</td></tr>
+              <tr><td>028</td><td>นางสมใจ คำดี</td><td>25</td><td>175</td><td>31 พ.ค. 2567</td></tr>
+            </tbody>
+          </table>
+          <a href="#pricing" class="btn btn-outline btn-more">ดูรายการทั้งหมด <svg class="chev"><use href="#i-chev"/></svg></a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== PRICING / PACKAGES ========== -->
-<section class="py-24 bg-white" id="pricing">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="text-center max-w-2xl mx-auto mb-14 reveal">
-      <h2 class="font-display font-bold text-3xl sm:text-4xl text-gray-900 mb-3">เริ่มต้นใช้งานหมู่บ้านดิจิตอล</h2>
-      <p class="text-gray-400 text-lg">เลือกแพ็กเกจที่เหมาะสมกับขนาดของหมู่บ้านคุณ</p>
+<!-- ================= ฟังก์ชัน ================= -->
+<section class="funcs" id="functions">
+  <div class="wrap">
+    <div class="funcs-hd">
+      <svg class="ppl" viewBox="0 0 34 26" aria-hidden="true"><g fill="currentColor"><circle cx="17" cy="6" r="5"/><circle cx="6.5" cy="9" r="3.8"/><circle cx="27.5" cy="9" r="3.8"/><path d="M8.5 26v-5c0-5 3.8-8.6 8.5-8.6s8.5 3.6 8.5 8.6v5z"/><path d="M0 26v-3.5c0-3.8 2.8-6.5 6.3-6.5 1.4 0 2.6.4 3.6 1.1A11 11 0 007 25v1zM34 26v-3.5c0-3.8-2.8-6.5-6.3-6.5-1.4 0-2.6.4-3.6 1.1A11 11 0 0127 25v1z"/></g></svg>
+      <h2>ฟังก์ชันบริหารชุมชน</h2>
+      <p>ครบทุกงานของหมู่บ้าน ในระบบเดียว เพื่อการบริหารจัดการที่มีประสิทธิภาพ</p>
+      <a href="#functions" class="btn btn-outline">ดูฟังก์ชันทั้งหมด <svg class="chev"><use href="#i-chev"/></svg></a>
     </div>
-
-    <div class="grid sm:grid-cols-3 gap-5 mb-6">
-      <div class="reveal bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-        <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mx-auto mb-4 p-2">
-          <img src="assets/icons/package-starter.png" alt="แพ็กเกจเริ่มต้น" class="w-full h-full object-contain">
-        </div>
-        <h3 class="font-bold text-gray-900 mb-1.5">เริ่มต้น</h3>
-        <p class="text-gray-400 text-sm mb-6">เหมาะสำหรับหมู่บ้านขนาดเล็ก<br>ไม่เกิน 100 ครัวเรือน</p>
-        <a href="#contact" class="block w-full py-2.5 px-4 border border-gray-200 hover:border-brand-300 hover:text-brand-600 text-gray-700 text-center font-semibold rounded-xl transition-colors text-sm">ดูรายละเอียด</a>
-      </div>
-
-      <div class="reveal bg-white border-2 border-brand-500 rounded-2xl p-6 text-center shadow-lg relative" style="transition-delay:70ms">
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-500 text-white text-[11px] font-bold px-3 py-1 rounded-full">แนะนำ</div>
-        <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center mx-auto mb-4 p-2">
-          <img src="assets/icons/package-standard.png" alt="แพ็กเกจมาตรฐาน" class="w-full h-full object-contain">
-        </div>
-        <h3 class="font-bold text-gray-900 mb-1.5">มาตรฐาน</h3>
-        <p class="text-gray-400 text-sm mb-6">เหมาะสำหรับหมู่บ้านขนาดกลาง<br>101 – 300 ครัวเรือน</p>
-        <a href="#contact" class="block w-full py-2.5 px-4 bg-brand-500 hover:bg-brand-600 text-white text-center font-semibold rounded-xl transition-colors text-sm">ดูรายละเอียด</a>
-      </div>
-
-      <div class="reveal bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm" style="transition-delay:140ms">
-        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mx-auto mb-4 p-2">
-          <img src="assets/icons/package-premium.png" alt="แพ็กเกจพรีเมียม" class="w-full h-full object-contain">
-        </div>
-        <h3 class="font-bold text-gray-900 mb-1.5">พรีเมียม</h3>
-        <p class="text-gray-400 text-sm mb-6">เหมาะสำหรับหมู่บ้านขนาดใหญ่<br>มากกว่า 300 ครัวเรือน</p>
-        <a href="#contact" class="block w-full py-2.5 px-4 border border-gray-200 hover:border-brand-300 hover:text-brand-600 text-gray-700 text-center font-semibold rounded-xl transition-colors text-sm">ดูรายละเอียด</a>
-      </div>
-    </div>
-
-    <div class="reveal bg-brand-900 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-      <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-brand-50">
-        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> ติดตั้งฟรี ใช้งานได้ทันที</li>
-        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> ทีมงานดูแลและออกแบบให้เหมาะกับหมู่บ้าน</li>
-        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> อัปเดตฟีเจอร์ใหม่อยู่เสมอ</li>
-        <li class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> รองรับการขยายตัวของชุมชน</li>
-      </ul>
-      <a href="#contact" class="flex-shrink-0 inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-brand-700 font-semibold px-7 py-3.5 rounded-xl transition-all text-sm whitespace-nowrap">
-        ขอทดลองใช้งาน
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-      </a>
+    <div class="fgrid">
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-house"/></svg><div><h3>ข้อมูลครัวเรือน</h3><p>จัดเก็บและบริหารข้อมูลครัวเรือน<br>สมาชิกในหมู่บ้าน</p></div><span class="go"><svg><use href="#i-arrow"/></svg></span></a>
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-map"/></svg><div><h3>แผนที่ชุมชน</h3><p>แสดงตำแหน่งครัวเรือน<br>สถานที่สำคัญ และโครงสร้างพื้นฐาน</p></div><span class="go"><svg><use href="#i-arrow"/></svg></span></a>
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-care"/></svg><div><h3>กลุ่มเปราะบาง</h3><p>ดูแลและติดตามกลุ่มเปราะบาง<br>ผู้สูงอายุ ผู้พิการ ผู้ด้อยโอกาส</p></div><span class="go blue"><svg><use href="#i-arrow"/></svg></span></a>
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-visit"/></svg><div><h3>บันทึกเยี่ยมบ้าน</h3><p>บันทึกการลงพื้นที่เยี่ยมบ้าน<br>พร้อมประวัติการเยี่ยม</p></div><span class="go"><svg><use href="#i-arrow"/></svg></span></a>
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-fund"/></svg><div><h3>กองทุนหมู่บ้าน</h3><p>บริหารจัดการกองทุนหมู่บ้าน<br>รายรับ-รายจ่าย ตรวจสอบได้</p></div><span class="go purple"><svg><use href="#i-arrow"/></svg></span></a>
+      <a href="#functions" class="card fcard"><svg class="f-ill"><use href="#f-dash"/></svg><div><h3>Dashboard และรายงาน</h3><p>สรุปข้อมูลภาพรวมของหมู่บ้าน<br>เพื่อการตัดสินใจ</p></div><span class="go"><svg><use href="#i-arrow"/></svg></span></a>
     </div>
   </div>
 </section>
 
-<!-- ========== FOOTER ========== -->
-<footer class="bg-brand-900 text-white pt-16 pb-8 relative overflow-hidden" id="contact">
-  <div class="absolute -right-10 -top-10 w-56 h-56 bg-brand-800/60 rounded-full pointer-events-none"></div>
-  <div class="absolute right-10 top-16 w-24 h-24 bg-brand-700/50 rounded-full pointer-events-none"></div>
+<!-- ================= VILLAGE INDEX ================= -->
+<section class="vi" id="vi">
+  <div class="wrap">
+    <span class="vi-pill"><svg viewBox="0 0 24 30"><path d="M12 1C8 8 3 13 3 19a9 9 0 0018 0c0-6-5-11-9-18z" fill="url(#gDrop)"/></svg>Village Index</span>
+    <h2>เห็นปัญหา วางแผนพัฒนาได้ตรงจุด</h2>
+    <p class="vi-sub">ประเมินศักยภาพหมู่บ้านจาก 6 มิติ เพื่อใช้ในการวางแผนพัฒนาอย่างยั่งยืน</p>
+    <div class="vi-body">
+      <svg class="hex" viewBox="0 0 220 196" role="img" aria-label="คะแนนรวม 78 จาก 100">
+        <defs>
+          <linearGradient id="hxA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fb069"/><stop offset="1" stop-color="#14794a"/></linearGradient>
+          <linearGradient id="hxB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46b8ff"/><stop offset="1" stop-color="#138be6"/></linearGradient>
+          <linearGradient id="hxC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16784a"/><stop offset="1" stop-color="#0b4f33"/></linearGradient>
+          <linearGradient id="hxD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a86e0"/><stop offset="1" stop-color="#1257b5"/></linearGradient>
+          <linearGradient id="hxE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbf2e"/><stop offset="1" stop-color="#f28a12"/></linearGradient>
+          <linearGradient id="hxF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22a35c"/><stop offset="1" stop-color="#0f6a3f"/></linearGradient>
+          <filter id="hxS" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#0b3f29" flood-opacity=".22"/></filter>
+        </defs>
+        <!-- เส้นโครงหกเหลี่ยมด้านนอก -->
+        <path d="M110 18L184 58v80l-74 40-74-40V58z" fill="rgba(255,255,255,.55)" stroke="#d5e3dc" stroke-width="1.2"/>
+        <path d="M110 18v40M184 58l-35 20M184 138l-35-20M110 178v-40M36 138l35-20M36 58l35 20" stroke="#dbe6e1" stroke-width="1"/>
+        <!-- หกเหลี่ยมกลาง -->
+        <g filter="url(#hxS)">
+          <path d="M110 56l42 24v48l-42 24-42-24V80z" fill="#fff"/>
+          <path d="M110 56l42 24v48l-42 24-42-24V80zM110 66.5l32.8 19v38l-32.8 19-32.8-19v-38z" fill="url(#gRing)" fill-rule="evenodd"/>
+          <path d="M110 56v10.5M152 80l-9.2 5.5M152 128l-9.2-4.5M110 152v-9.5M68 128l9.2-4.5M68 80l9.2 5.5" stroke="#fff" stroke-width=".9" opacity=".55"/>
+        </g>
+        <text x="110" y="93" text-anchor="middle" font-family="Prompt" font-weight="500" font-size="8.6" fill="#24313f">คะแนนรวม</text>
+        <text x="110" y="118" text-anchor="middle" font-family="Prompt" font-weight="700" font-size="25" fill="#16261f">78</text>
+        <text x="110" y="132" text-anchor="middle" font-family="Prompt" font-weight="500" font-size="8.2" fill="#24313f">จาก 100</text>
+        <!-- 6 มิติ -->
+        <g filter="url(#hxS)">
+          <g transform="translate(97 4)"><use href="#hexshape" width="26" height="28" fill="url(#hxA)"/><path d="M7 21v-9l6-5 6 5v9zM10.5 21v-4h5v4M9 11.5h8" stroke="#fff" stroke-width="1.4" fill="none" stroke-linejoin="round"/></g>
+          <g transform="translate(171 44)"><use href="#hexshape" width="26" height="28" fill="url(#hxB)"/><rect x="7.5" y="9.5" width="11" height="10" rx="1" stroke="#fff" stroke-width="1.5" fill="none"/><path d="M10 9.5V7.5h6v2" stroke="#fff" stroke-width="1.4" fill="none"/><circle cx="13" cy="14.5" r="2" stroke="#fff" stroke-width="1.3" fill="none"/></g>
+          <g transform="translate(171 124)"><use href="#hexshape" width="26" height="28" fill="url(#hxC)"/><path d="M13 7.5c-2.6 3.8-4.6 6-4.6 8.5a4.6 4.6 0 009.2 0c0-2.5-2-4.7-4.6-8.5z" fill="#fff"/><path d="M9 19.5c2.2 1.6 5.8 1.6 8 0" stroke="#0b4f33" stroke-width="1.2" fill="none"/><path d="M18.5 8.5l1.5-1.5" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></g>
+          <g transform="translate(97 164)"><use href="#hexshape" width="26" height="28" fill="url(#hxD)"/><rect x="8" y="12.5" width="10" height="8" rx="1" stroke="#fff" stroke-width="1.5" fill="none"/><path d="M10.2 12.5v-2.2a2.8 2.8 0 015.6 0" stroke="#fff" stroke-width="1.5" fill="none"/></g>
+          <g transform="translate(23 124)"><use href="#hexshape" width="26" height="28" fill="url(#hxE)"/><path d="M7.5 17l4-4 2 2 4-5M10 20.5l3-3M15.5 19.5l3-3" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+          <g transform="translate(23 44)"><use href="#hexshape" width="26" height="28" fill="url(#hxF)"/><circle cx="10" cy="10" r="1.8" fill="#fff"/><circle cx="16" cy="10" r="1.8" fill="#fff"/><path d="M7.5 20v-4.5c0-1.6 1.1-2.8 2.5-2.8s2.5 1.2 2.5 2.8V20M13.5 20v-4.5c0-1.6 1.1-2.8 2.5-2.8s2.5 1.2 2.5 2.8V20M12.5 14h1" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+        </g>
+      </svg>
 
-  <div class="max-w-6xl mx-auto px-6 relative z-10">
-    <div class="grid md:grid-cols-4 gap-8 mb-12">
-      <div class="md:col-span-1">
-        <a href="#" class="flex items-center gap-2.5 mb-4">
-          <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center p-1.5">
-            <img src="assets/icons/brand-mark.png" alt="หมู่บ้านดิจิตอล" class="w-full h-full object-contain">
-          </div>
-          <span class="font-display font-bold text-lg text-white">หมู่บ้าน<span class="text-brand-300">ดิจิตอล</span></span>
-        </a>
-        <p class="text-brand-100/80 text-sm leading-relaxed mb-1">บริษัท เคทูเทพ จำกัด</p>
-        <p class="text-brand-100/60 text-xs leading-relaxed">123/45 หมู่ 1 ต.สันทราย อ.เมือง จ.เชียงใหม่ 50000<br>โทร. 081-234-5678<br>อีเมล info@k2dev.co.th</p>
-      </div>
-
-      <div>
-        <h4 class="font-bold text-white mb-4 text-sm">เมนูเว็บไซต์</h4>
-        <ul class="space-y-2 text-sm text-brand-100/70">
-          <li><a href="#home" class="hover:text-white transition-colors">หน้าแรก</a></li>
-          <li><a href="#functions" class="hover:text-white transition-colors">ฟังก์ชัน</a></li>
-          <li><a href="#process" class="hover:text-white transition-colors">ระบบค่าน้ำ</a></li>
-          <li><a href="#vi" class="hover:text-white transition-colors">Village Index</a></li>
-          <li><a href="#pricing" class="hover:text-white transition-colors">แพ็กเกจ</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="font-bold text-white mb-4 text-sm">ข้อมูลเพิ่มเติม</h4>
-        <ul class="space-y-2 text-sm text-brand-100/70">
-          <li><a href="#" class="hover:text-white transition-colors">ข่าวสาร</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">คำถามที่พบบ่อย</a></li>
-          <li><a href="#contact" class="hover:text-white transition-colors">ติดต่อเรา</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">นโยบายความเป็นส่วนตัว</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">เงื่อนไขการใช้งาน</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="font-bold text-white mb-4 text-sm">ติดต่อเรา</h4>
-        <div class="flex gap-3">
-          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.5 9.9v-7H7.9V12h2.6V9.8c0-2.6 1.5-4 3.9-4 1.1 0 2.3.2 2.3.2v2.5h-1.3c-1.3 0-1.7.8-1.7 1.6V12h2.9l-.5 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
-          </a>
-          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.82 1.46 5.33 3.75 6.98L5 22l4.36-1.87c.84.17 1.72.26 2.64.26 5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>
-          </a>
-          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21.6 7.2s-.21-1.5-.87-2.16c-.83-.87-1.76-.88-2.19-.93C15.44 4 12 4 12 4h-.01s-3.44 0-6.54.11c-.43.05-1.36.06-2.19.93C2.6 5.7 2.4 7.2 2.4 7.2S2.18 9 2.18 10.78v1.44C2.18 14 2.4 15.8 2.4 15.8s.2 1.5.86 2.16c.83.87 1.92.84 2.4.93 1.75.17 7.34.22 7.34.22s3.44-.01 6.54-.11c.43-.05 1.36-.06 2.19-.93.66-.66.87-2.16.87-2.16s.22-1.8.22-3.58v-1.44c0-1.78-.22-3.58-.22-3.58zM9.8 14.4V8.6l5.6 2.9-5.6 2.9z"/></svg>
-          </a>
-        </div>
+      <div class="scores">
+        <div class="score"><span class="si" style="background:#e4edfa"><svg><use href="#v-road"/></svg></span><div><span>ด้านโครงสร้างพื้นฐาน</span><b>85<small>/100</small></b></div></div>
+        <div class="score"><span class="si" style="background:#fdf0d8"><svg><use href="#v-econ"/></svg></span><div><span>ด้านเศรษฐกิจ</span><b>72<small>/100</small></b></div></div>
+        <div class="score"><span class="si" style="background:#fff1d4"><svg><use href="#v-social"/></svg></span><div><span>ด้านสังคม</span><b>76<small>/100</small></b></div></div>
+        <div class="score"><span class="si" style="background:#e2f5e8"><svg><use href="#v-env"/></svg></span><div><span>ด้านสิ่งแวดล้อม</span><b>82<small>/100</small></b></div></div>
+        <div class="score"><span class="si" style="background:#e2eefb"><svg><use href="#v-mgmt"/></svg></span><div><span>ด้านการบริหารจัดการ</span><b>80<small>/100</small></b></div></div>
+        <div class="score"><span class="si" style="background:#fde3e3"><svg><use href="#v-life"/></svg></span><div><span>ด้านคุณภาพชีวิต</span><b>75<small>/100</small></b></div></div>
       </div>
     </div>
 
-    <div class="border-t border-white/10 pt-8 text-center">
-      <p class="text-xs text-brand-100/50">© 2026 บริษัท เคทูเทพ จำกัด สงวนลิขสิทธิ์ทุกประการ</p>
+    <figure class="quote">
+      <svg class="cloud" viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <filter id="cloudF" x="-8%" y="-12%" width="116%" height="134%" color-interpolation-filters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" result="soft"/>
+            <feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="3" seed="11" result="noise"/>
+            <feColorMatrix in="noise" type="matrix" values="0 0 0 0 .56  0 0 0 0 .61  0 0 0 0 .64  .55 0 0 0 -.25" result="tint"/>
+            <feComposite in="tint" in2="soft" operator="in" result="texture"/>
+            <feMerge result="cl"><feMergeNode in="soft"/><feMergeNode in="texture"/></feMerge>
+            <feDropShadow in="cl" dx="0" dy="2.5" stdDeviation="4" flood-color="#244536" flood-opacity=".2"/>
+          </filter>
+        </defs>
+        <path filter="url(#cloudF)" fill="#fff" fill-opacity=".97" d="M14 80C4 52 26 30 54 34C66 12 104 8 124 22C146 6 188 6 204 22C226 10 266 18 272 44C296 54 300 92 282 108C284 130 252 140 228 130C210 144 170 144 154 134C146 137 132 138 124 136L110 150L108 134C84 140 52 138 44 124C18 124 6 100 14 80Z"/>
+      </svg>
+      <p><span><span class="qm">&ldquo;</span> ข้อมูลที่ชัดเจน<br>นำไปสู่การพัฒนาที่ตรงจุด<br>เพื่อชุมชนที่ยั่งยืน <span class="qm">&rdquo;</span></span></p>
+      <svg class="qh" viewBox="0 0 60 58" aria-hidden="true">
+        <ellipse cx="31" cy="55" rx="25" ry="3" fill="#1f3a2e" opacity=".18"/>
+        <rect x="10" y="25" width="40" height="30" fill="#fff" stroke="#cad5d1" stroke-width=".8"/>
+        <rect x="40" y="25" width="10" height="30" fill="#e9efed"/>
+        <path d="M10 28L30 12L50 28V31L30 15L10 31Z" fill="#dfe7e4"/>
+        <path d="M2 27L30 4L58 27L54 31L30 11L6 31Z" fill="#fff" stroke="#c4cfcb" stroke-width=".8" stroke-linejoin="round"/>
+        <path d="M30 4L58 27L54 31L30 11Z" fill="#f2f5f4"/>
+        <rect x="22" y="29" width="16" height="11" rx="1.2" fill="#2f6b4c"/>
+        <path d="M30 29v11M22 34.5h16" stroke="#fff" stroke-width="1.3"/>
+        <rect x="25.5" y="43" width="9" height="12" rx="1" fill="#2f6b4c"/>
+        <circle cx="32.6" cy="49.5" r=".8" fill="#cfe3d8"/>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= แพ็กเกจ ================= -->
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <h2 class="sec-title">เริ่มต้นใช้งานหมู่บ้านดิจิตอล</h2>
+    <p class="sec-sub">เลือกแพ็กเกจที่เหมาะสมกับขนาดของหมู่บ้านคุณ</p>
+    <div class="pgrid">
+      <article class="card plan">
+        <svg class="pi" viewBox="0 0 24 24"><path d="M12 3L2.5 11.2l1.4 1.5L5 11.8V21h5.2v-5.5h3.6V21H19v-9.2l1.1.9 1.4-1.5L18 8.2V4h-2.6v2z" fill="#1f8a4c"/></svg>
+        <h3>เริ่มต้น</h3>
+        <p>เหมาะสำหรับหมู่บ้านขนาดเล็ก<br>ไม่เกิน 100 ครัวเรือน</p>
+        <a href="#contact" class="btn btn-outline">ดูรายละเอียด</a>
+      </article>
+      <article class="card plan">
+        <span class="badge">แนะนำ</span>
+        <svg class="pi" viewBox="0 0 24 24"><use href="#v-social"/></svg>
+        <h3>มาตรฐาน</h3>
+        <p>เหมาะสำหรับหมู่บ้านขนาดกลาง<br>101 - 300 ครัวเรือน</p>
+        <a href="#contact" class="btn btn-outline">ดูรายละเอียด</a>
+      </article>
+      <article class="card plan">
+        <svg class="pi" viewBox="0 0 24 24"><g fill="#2b8def"><path d="M3 21V10h6v11z"/><path d="M8.5 21V3h9v18z"/><path d="M16.5 21V8h4.5v13z"/></g><g fill="#fff"><rect x="10.5" y="5.5" width="1.6" height="1.6"/><rect x="13.8" y="5.5" width="1.6" height="1.6"/><rect x="10.5" y="9" width="1.6" height="1.6"/><rect x="13.8" y="9" width="1.6" height="1.6"/><rect x="10.5" y="12.5" width="1.6" height="1.6"/><rect x="13.8" y="12.5" width="1.6" height="1.6"/><rect x="11.8" y="17" width="2.4" height="4"/><rect x="4.8" y="12.5" width="1.4" height="1.4"/><rect x="4.8" y="15.5" width="1.4" height="1.4"/><rect x="18.1" y="11" width="1.4" height="1.4"/><rect x="18.1" y="14" width="1.4" height="1.4"/></g></svg>
+        <h3>พรีเมียม</h3>
+        <p>เหมาะสำหรับหมู่บ้านขนาดใหญ่<br>มากกว่า 300 ครัวเรือน</p>
+        <a href="#contact" class="btn btn-outline">ดูรายละเอียด</a>
+      </article>
+      <aside class="card trial">
+        <img class="tower" src="assets/bg/tower2.webp" alt="">
+        <ul>
+          <li><svg><use href="#i-check"/></svg>ติดตั้งง่าย ใช้งานได้ทันที</li>
+          <li><svg><use href="#i-check"/></svg>ทีมงานดูแลตลอดการใช้งาน</li>
+          <li><svg><use href="#i-check"/></svg>อัปเดตฟังก์ชันใหม่ต่อเนื่อง</li>
+          <li><svg><use href="#i-check"/></svg>รองรับการขยายตัวของชุมชน</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary">ขอทดลองใช้งาน <svg class="chev"><use href="#i-chev"/></svg></a>
+      </aside>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer" id="contact">
+  <div class="wrap">
+  <svg class="f-leaves" viewBox="0 0 110 86" aria-hidden="true">
+    <defs><linearGradient id="lf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ad65b"/><stop offset="1" stop-color="#3f8f2f"/></linearGradient></defs>
+    <path d="M55 86C50 60 58 30 80 8c4 26-4 56-25 78z" fill="url(#lf)"/>
+    <path d="M55 86C60 62 70 40 80 8" stroke="#2f6e22" stroke-width="1.2" fill="none"/>
+    <path d="M50 86C38 70 20 62 2 64c12 14 30 22 48 22z" fill="url(#lf)"/>
+    <path d="M60 86c12-14 30-22 48-22-10 14-28 22-48 22z" fill="url(#lf)"/>
+    <path d="M46 80C36 60 30 40 34 22c14 14 18 36 12 58z" fill="url(#lf)" opacity=".9"/>
+    <path d="M68 84c4-18 14-32 30-42 0 18-12 34-30 42z" fill="url(#lf)" opacity=".85"/>
+  </svg>
+    <div class="f-brand">
+      <a href="#home" class="brand"><svg class="brand-mark"><use href="#brandW"/></svg><span class="brand-name">หมู่บ้านดิจิตอล</span></a>
+      <b>บริษัท เคทูเดฟ จำกัด</b>
+      <p>123/45 หมู่ที่ 1 ต.สันกลาง อ.เมือง จ.เชียงใหม่ 50000<br>โทร. 081-234-5678 &nbsp;| &nbsp;อีเมล: <a href="mailto:info@k2dev.co.th">info@k2dev.co.th</a></p>
+    </div>
+    <nav class="f-col" aria-label="เมนูเว็บไซต์">
+      <h4>เมนูเว็บไซต์</h4>
+      <ul><li><a href="#home">หน้าแรก</a></li><li><a href="#functions">ฟังก์ชัน</a></li><li><a href="#process">ระบบค่าน้ำ</a></li><li><a href="#vi">Village Index</a></li><li><a href="#pricing">แพ็กเกจ</a></li></ul>
+    </nav>
+    <nav class="f-col" aria-label="ข้อมูลอื่นๆ">
+      <h4>ข้อมูลอื่นๆ</h4>
+      <ul><li><a href="#">ข่าวสาร</a></li><li><a href="#">คำถามที่พบบ่อย</a></li><li><a href="#contact">ติดต่อเรา</a></li><li><a href="#">นโยบายความเป็นส่วนตัว</a></li><li><a href="#">เงื่อนไขการใช้งาน</a></li></ul>
+    </nav>
+    <div class="f-social">
+      <h4>ติดตามเรา</h4>
+      <div class="socials">
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1877f2"/><path d="M21.5 32V19.6h4.1l.6-4.8h-4.7v-3c0-1.4.4-2.3 2.4-2.3h2.5V5.2a33 33 0 00-3.7-.2c-3.6 0-6.1 2.2-6.1 6.3v3.5h-4.1v4.8h4.1V32z" fill="#fff"/></svg></a>
+        <a href="#" aria-label="LINE"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#06c755"/><path d="M16 6.5c-6.1 0-11 4-11 8.9 0 4.4 3.9 8.1 9.2 8.8.4.1.9.3 1 .6.1.3.1.7 0 1l-.2 1c0 .3-.2 1.2 1 .6 1.3-.5 6.8-4 9.3-6.9 1.7-1.9 2.6-3.8 2.6-5.9C27 10.5 22.1 6.5 16 6.5z" fill="#fff"/><path d="M10.3 17.9v-5.3M10.3 17.9h2.4M14 12.6v5.3M15.8 17.9v-5.3l3.3 5.3v-5.3M21.1 12.6h2.4M21.1 15.2h2.4M21.1 17.9h2.4M21.1 12.6v5.3" stroke="#06c755" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a>
+        <a href="#" aria-label="YouTube"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#fff"/><rect x="5" y="8.5" width="22" height="15" rx="4.5" fill="#ff0000"/><path d="M13.5 12.5v7l6-3.5z" fill="#fff"/></svg></a>
+      </div>
+      <p>© 2024 บริษัท เคทูเดฟ จำกัด<br>สงวนลิขสิทธิ์ทุกประการ</p>
     </div>
   </div>
 </footer>
+</div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const reveals = document.querySelectorAll(".reveal");
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { rootMargin: "0px 0px -50px 0px", threshold: 0.1 });
-    reveals.forEach(reveal => observer.observe(reveal));
-  });
-</script>
+(function () {
+  // เมนูมือถือ
+  var burger = document.querySelector('.nav-burger');
+  var menu = document.getElementById('mobileMenu');
+  function setOpen(open) {
+    menu.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open);
+    burger.querySelector('use').setAttribute('href', open ? '#i-close' : '#i-burger');
+  }
+  burger.addEventListener('click', function () { setOpen(!menu.classList.contains('open')); });
+  menu.addEventListener('click', function (e) { if (e.target.tagName === 'A') setOpen(false); });
 
+  // เมนูที่ active ตาม section ที่กำลังดู
+  var links = document.querySelectorAll('.nav-links a, .mobile-menu a');
+  var ids = ['home', 'process', 'functions', 'vi', 'pricing'];
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  ids.forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
+
+  // QR Code (ลวดลายตัวอย่าง)
+  var qr = document.getElementById('qr');
+  var n = 29, cells = [], seed = 20240531;
+  function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  function finder(x, y) {
+    cells.push('<rect x="' + x + '" y="' + y + '" width="7" height="7"/>');
+    cells.push('<rect x="' + (x + 1) + '" y="' + (y + 1) + '" width="5" height="5" fill="#fff"/>');
+    cells.push('<rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3"/>');
+  }
+  function inFinder(x, y) { return (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9); }
+  for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+    if (inFinder(x, y)) continue;
+    if ((y === 6 || x === 6) ? (x + y) % 2 === 0 : rnd() > .52) cells.push('<rect x="' + x + '" y="' + y + '" width="1" height="1"/>');
+  }
+  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+  qr.innerHTML = '<rect width="29" height="29" fill="#fff"/><g fill="#111">' + cells.join('') + '</g>';
+
+  // ย่อ/ขยาย dashboard ให้พอดีความกว้างบน tablet/มือถือ (ออกแบบไว้กว้าง 40.6rem)
+  var dw = document.querySelector('.dash-wrap'), dash = document.querySelector('.dash');
+  function fitDash() {
+    if (window.innerWidth >= 1100) { dash.style.cssText = ''; dw.style.height = ''; return; }
+    var rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    var design = 40.6 * rem, z = dw.clientWidth / design;
+    dash.style.width = design + 'px';
+    dash.style.transform = 'scale(' + z + ')';
+    dw.style.height = (32.4 * rem * z) + 'px';
+  }
+  fitDash();
+  window.addEventListener('resize', fitDash);
+})();
+</script>
 </body>
 </html>
